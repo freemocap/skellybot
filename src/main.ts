@@ -6,8 +6,8 @@ import { DiscordPingService } from './discord/discordPing.service';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const discService = await app.resolve(DiscordPingService);
-  // await app.listen(3000);
-  discService.onPing();
+  await app.listen(3000);
+  // discService.onPing();
 }
 
 bootstrap();

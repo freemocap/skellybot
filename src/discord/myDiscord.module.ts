@@ -3,11 +3,9 @@ import { MyDiscordService } from './myDiscord.service';
 import { DiscordPingService } from './discordPing.service';
 import { NecordModule } from 'necord';
 import { IntentsBitField } from 'discord.js';
-
-const DISCORD_TOKEN =
-  'MTE4NjY5NzQzMzY3NDE2NjI5Mw.GLH5zY.kNF86Ed-GrE9OGLLaLOSGZ4sfRsICG65SzPbzI';
-
-const DISCORD_CLIENT_ID = '1186697433674166293';
+import { DISCORD_TOKEN } from '../constants';
+import { DiscordWowService } from './discordWow.service';
+import { DiscordChatService } from './discordLangchain.service';
 
 @Module({
   imports: [
@@ -16,6 +14,11 @@ const DISCORD_CLIENT_ID = '1186697433674166293';
       intents: [IntentsBitField.Flags.Guilds],
     }),
   ],
-  providers: [MyDiscordService, DiscordPingService],
+  providers: [
+    MyDiscordService,
+    DiscordPingService,
+    DiscordWowService,
+    DiscordChatService,
+  ],
 })
 export class MyDiscordModule {}
