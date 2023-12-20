@@ -3,8 +3,8 @@ import { Context, On, Once, ContextOf } from 'necord';
 import { Client } from 'discord.js';
 
 @Injectable()
-export class AppUpdate {
-  private readonly logger = new Logger(AppUpdate.name);
+export class DiscordReadyService {
+  private readonly logger = new Logger(DiscordReadyService.name);
 
   public constructor(private readonly client: Client) {}
 

@@ -6,9 +6,10 @@ import {
   SlashCommandContext,
   StringOption,
 } from 'necord';
-import { DEV_GUILD, OPENAI_API_KEY } from '../constants';
+import { DEV_GUILD } from '../constants';
 import { OpenAI } from 'langchain/llms/openai';
 import { ChatPromptTemplate } from 'langchain/prompts';
+import {OpenAIConfigService} from "../openapi.service";
 
 export class TextDto {
   @StringOption({
@@ -22,17 +23,19 @@ export class TextDto {
 @Injectable()
 export class DiscordChatService {
   private _model: OpenAI<any>;
-  private _logger: Logger;
 
-  constructor(logger: Logger) {
-    this._logger = logger;
-  }
+  constructor(
+    private readonly _cfg: OpenAIConfigService,
+    private readonly _logger: Logger
+  ) {}
 
-  createModel() {
+  async createModel() {
+
     if (!this._model) {
       this._model = new OpenAI({
         modelName: 'gpt-3.5-turbo',
-        openAIApiKey: OPENAI_API_KEY,
+        openAIApiKey: await this._cfg.getOpenAIKey()
+        // openAIApiKey: OPENAI_API_KEY,
       });
     }
 
@@ -49,7 +52,7 @@ export class DiscordChatService {
     @Options() { text }: TextDto,
   ) {
     await interaction.deferReply();
-    const model = this.createModel();
+    const model = await this.createModel();
 
     const promptTemplate = ChatPromptTemplate.fromMessages([
       ['system', 'You were having a conversation with a human about {topic}'],

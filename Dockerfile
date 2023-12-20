@@ -20,7 +20,10 @@ RUN useradd -m appuser && chown -R appuser /workspace && chown -R appuser "/home
 
 RUN --mount=type=cache,target=/var/cache/apt ./install_packages \
     dumb-init \
-    htop
+    htop \
+    make \
+    g++ \
+    python3
 
 ENV PATH=/root/.local/bin:$PATH
 COPY package-lock.json .
