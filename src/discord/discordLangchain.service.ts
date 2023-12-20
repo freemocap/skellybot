@@ -7,7 +7,7 @@ import {
   StringOption,
 } from 'necord';
 import { DEV_GUILD, OPENAI_API_KEY } from '../constants';
-const { OpenAI } = require('langchain/llms/openai');
+import { OpenAI } from 'langchain/llms/openai';
 
 export class TextDto {
   @StringOption({

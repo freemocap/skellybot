@@ -30,8 +30,7 @@
     "necord": "^6.4.2",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.1",
-    "utf-8-validate": "^6.0.3",
-    "zlib-sync": "^0.1.9"
+    "utf-8-validate": "^6.0.3"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.0.0",
