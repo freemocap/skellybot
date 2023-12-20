@@ -18,7 +18,7 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "deploy": "docker compose build && docker compose push"
+    "deploy": "docker compose build && docker compose push && gcloud run deploy nestbot \\\n--image us-east1-docker.pkg.dev/mocap-test-project/jonbot/nestbot:latest \\\n--platform managed \\\n--region us-central1"
   },
   "dependencies": {
     "@discordjs/voice": "^0.16.1",

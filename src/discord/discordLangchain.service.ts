@@ -9,7 +9,7 @@ import {
 import { DEV_GUILD } from '../constants';
 import { OpenAI } from 'langchain/llms/openai';
 import { ChatPromptTemplate } from 'langchain/prompts';
-import {OpenAIConfigService} from "../openapi.service";
+import { OpenAIConfigService } from '../openapi.service';
 
 export class TextDto {
   @StringOption({
@@ -26,15 +26,14 @@ export class DiscordChatService {
 
   constructor(
     private readonly _cfg: OpenAIConfigService,
-    private readonly _logger: Logger
+    private readonly _logger: Logger,
   ) {}
 
   async createModel() {
-
     if (!this._model) {
       this._model = new OpenAI({
         modelName: 'gpt-3.5-turbo',
-        openAIApiKey: await this._cfg.getOpenAIKey()
+        openAIApiKey: await this._cfg.getOpenAIKey(),
         // openAIApiKey: OPENAI_API_KEY,
       });
     }

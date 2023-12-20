@@ -1,9 +1,8 @@
-import {Module} from "@nestjs/common";
-import {SecretsManagerService} from "./secretsManager.service";
-
+import { Module } from '@nestjs/common';
+import { SecretsManagerService } from './secretsManager.service';
 
 @Module({
   providers: [SecretsManagerService],
-  exports: [SecretsManagerService]
+  exports: [SecretsManagerService],
 })
 export class GcpModule {}
