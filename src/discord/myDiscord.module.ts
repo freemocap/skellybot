@@ -1,11 +1,11 @@
 import {Logger, Module} from '@nestjs/common';
-import {MyDiscordService} from './myDiscord.service';
 import {DiscordPingService} from './discordPing.service';
 import {NecordModule} from 'necord';
 import {DiscordWowService} from './discordWow.service';
 import {DiscordChatService} from './discordLangchain.service';
 import {GcpModule} from "../gcp/gcp.module";
 import {NecordConfigService} from "./necordConfig.service";
+import {DiscordReadyService} from "./discordReady.service";
 
 @Module({
   imports: [
@@ -15,10 +15,10 @@ import {NecordConfigService} from "./necordConfig.service";
     }),
   ],
   providers: [
-    MyDiscordService,
     DiscordPingService,
     DiscordWowService,
     DiscordChatService,
+    DiscordReadyService,
     Logger,
   ],
 })

@@ -33,7 +33,6 @@
     "nestjs-slack": "^2.0.0",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.1",
-    "utf-8-validate": "^6.0.3",
     "@google-cloud/secret-manager": "^5.0.1"
   },
   "devDependencies": {

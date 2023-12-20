@@ -1,14 +1,16 @@
-import { Module } from '@nestjs/common';
-import { SlackModule } from 'nestjs-slack';
-import { SLACK_BOT_TOKEN } from '../constants';
+import {Module} from '@nestjs/common';
+import {SlackModule} from 'nestjs-slack';
+import {SlackConfigService} from "./slackConfig.service";
+import {GcpModule} from "../gcp/gcp.module";
 
 @Module({
   imports: [
-    SlackModule.forRoot({
-      type: 'api',
-      token: SLACK_BOT_TOKEN,
+    SlackModule.forRootAsync({
+      imports: [GcpModule],
+      useClass: SlackConfigService
     }),
   ],
   providers: [],
 })
-export class MySlackModule {}
+export class MySlackModule {
+}

@@ -22,8 +22,8 @@ RUN --mount=type=cache,target=/var/cache/apt ./install_packages \
     dumb-init \
     htop \
     make \
-    gcc \
-    software-properties-common
+    g++ \
+    python3
 
 ENV PATH=/root/.local/bin:$PATH
 COPY package-lock.json .
