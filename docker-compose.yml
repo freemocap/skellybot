@@ -9,10 +9,8 @@ services:
       context: .
       args:
         BUILDKIT_INLINE_CACHE: 1
-    volumes:
-      - .:/workspace
-
-  # For persistence
-  # Even if you don't think you need it, chances are you do.
-  store:
-    image: mongo:latest
+#
+#  # For persistence
+#  # Even if you don't think you need it, chances are you do.
+#  store:
+#    image: mongo:latest

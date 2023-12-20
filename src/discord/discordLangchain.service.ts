@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import {
   Context,
   Options,
@@ -8,6 +8,7 @@ import {
 } from 'necord';
 import { DEV_GUILD, OPENAI_API_KEY } from '../constants';
 import { OpenAI } from 'langchain/llms/openai';
+import { ChatPromptTemplate } from 'langchain/prompts';
 
 export class TextDto {
   @StringOption({
@@ -20,6 +21,24 @@ export class TextDto {
 
 @Injectable()
 export class DiscordChatService {
+  private _model: OpenAI<any>;
+  private _logger: Logger;
+
+  constructor(logger: Logger) {
+    this._logger = logger;
+  }
+
+  createModel() {
+    if (!this._model) {
+      this._model = new OpenAI({
+        modelName: 'gpt-3.5-turbo',
+        openAIApiKey: OPENAI_API_KEY,
+      });
+    }
+
+    return this._model;
+  }
+
   @SlashCommand({
     name: 'chat',
     description: 'chat service',
@@ -30,18 +49,22 @@ export class DiscordChatService {
     @Options() { text }: TextDto,
   ) {
     await interaction.deferReply();
+    const model = this.createModel();
 
-    const model = new OpenAI({
-      modelName: 'gpt-3.5-turbo',
-      openAIApiKey: OPENAI_API_KEY,
+    const promptTemplate = ChatPromptTemplate.fromMessages([
+      ['system', 'You were having a conversation with a human about {topic}'],
+      ['human', '{text}'],
+    ]);
+    const chain = promptTemplate.pipe(model);
+    // @ts-ignore
+    const channelDescription = interaction.channel.topic;
+    const result = await chain.invoke({
+      topic: channelDescription,
+      text,
     });
 
-    console.log('Text received ' + text);
-    const llmResult = await model.predict(text);
-    console.log('Response returned ' + llmResult);
-
     return interaction.editReply({
-      content: llmResult,
+      content: result,
     });
   }
 }

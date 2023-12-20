@@ -14,6 +14,10 @@ RUN rm -rf /etc/apt/apt.conf.d/docker-clean
 
 COPY ./bin/builds/ .
 
+# Switch to non-root user
+RUN mkdir /home/.npm
+RUN useradd -m appuser && chown -R appuser /workspace && chown -R appuser "/home/.npm"
+
 RUN --mount=type=cache,target=/var/cache/apt ./install_packages \
     dumb-init \
     htop
@@ -23,14 +27,11 @@ COPY package-lock.json .
 COPY package.json .
 RUN --mount=type=cache,target=/root/.cache npm ci
 
-RUN mkdir /home/.npm
-
-# Switch to non-root user
-RUN useradd -m appuser && chown -R appuser /workspace && chown -R appuser "/home/.npm"
 USER appuser
 
 # Copy project files
 COPY . .
 
-#ENTRYPOINT ["/usr/bin/dumb-init", "--"]
-ENTRYPOINT ["/usr/bin/dumb-init", "--", "npm", "start"]
+RUN npm run build
+
+ENTRYPOINT ["/usr/bin/dumb-init", "--", "npm", "run", "start:prod"]

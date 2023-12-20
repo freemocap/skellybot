@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Logger, Module } from '@nestjs/common';
 import { MyDiscordService } from './myDiscord.service';
 import { DiscordPingService } from './discordPing.service';
 import { NecordModule } from 'necord';
@@ -19,6 +19,7 @@ import { DiscordChatService } from './discordLangchain.service';
     DiscordPingService,
     DiscordWowService,
     DiscordChatService,
+    Logger,
   ],
 })
 export class MyDiscordModule {}
