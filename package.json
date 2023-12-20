@@ -25,10 +25,12 @@
     "@nestjs/common": "^10.0.0",
     "@nestjs/core": "^10.0.0",
     "@nestjs/platform-express": "^10.0.0",
+    "@slack/bolt": "^3.16.0",
     "bufferutil": "^4.0.8",
     "discord.js": "^14.14.1",
     "langchain": "^0.0.209",
     "necord": "^6.4.2",
+    "nestjs-slack": "^2.0.0",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.1",
     "utf-8-validate": "^6.0.3"
