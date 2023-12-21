@@ -6,7 +6,7 @@ import {
   SlashCommandContext,
   StringOption,
 } from 'necord';
-import { DEV_GUILD } from '../constants';
+import { DEV_GUILDS } from '../constants';
 import { OpenAI } from 'langchain/llms/openai';
 import { ChatPromptTemplate } from 'langchain/prompts';
 import { OpenAIConfigService } from '../openapi.service';
@@ -44,7 +44,7 @@ export class DiscordChatService {
   @SlashCommand({
     name: 'chat',
     description: 'chat service',
-    guilds: [],
+    guilds: DEV_GUILDS,
   })
   public async onChat(
     @Context() [interaction]: SlashCommandContext,
