@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { SecretsManagerService } from '../gcp/secretsManager.service';
+import { SecretsManagerService } from '../../gcp/secretsManager.service';
 import { SlackConfig } from 'nestjs-slack/dist/types';
 
 @Injectable()

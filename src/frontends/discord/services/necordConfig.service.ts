@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { NecordModuleOptions } from 'necord';
 import { IntentsBitField } from 'discord.js';
-import { SecretsManagerService } from '../gcp/secretsManager.service';
+import { SecretsManagerService } from '../../../gcp/secretsManager.service';
 
 @Injectable()
 export class NecordConfigService {

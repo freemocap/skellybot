@@ -1,45 +1,19 @@
 import { Injectable, Logger } from '@nestjs/common';
-import {
-  Context,
-  Options,
-  SlashCommand,
-  SlashCommandContext,
-  StringOption,
-} from 'necord';
-import { DEV_GUILDS } from '../constants';
+import { Context, Options, SlashCommand, SlashCommandContext } from 'necord';
+import { DEV_GUILDS } from '../../../constants';
 import { OpenAI } from 'langchain/llms/openai';
 import { ChatPromptTemplate } from 'langchain/prompts';
-import { OpenAIConfigService } from '../openapi.service';
-
-export class TextDto {
-  @StringOption({
-    name: 'text',
-    description: 'Your text',
-    required: true,
-  })
-  text: string;
-}
+import { TextDto } from '../dto/textDto';
+import { LlmModelService } from '../../../ai/langchain /langchain/llm-model/llm-model.controller';
 
 @Injectable()
 export class DiscordChatService {
   private _model: OpenAI<any>;
 
   constructor(
-    private readonly _cfg: OpenAIConfigService,
+    private readonly llmModelService: LlmModelService,
     private readonly _logger: Logger,
   ) {}
-
-  async createModel() {
-    if (!this._model) {
-      this._model = new OpenAI({
-        modelName: 'gpt-3.5-turbo',
-        openAIApiKey: await this._cfg.getOpenAIKey(),
-        // openAIApiKey: OPENAI_API_KEY,
-      });
-    }
-
-    return this._model;
-  }
 
   @SlashCommand({
     name: 'chat',
@@ -51,7 +25,7 @@ export class DiscordChatService {
     @Options() { text }: TextDto,
   ) {
     await interaction.deferReply();
-    const model = await this.createModel();
+    const model = await this.llmModelService.createModel();
 
     const promptTemplate = ChatPromptTemplate.fromMessages([
       ['system', 'You were having a conversation with a human about {topic}'],
