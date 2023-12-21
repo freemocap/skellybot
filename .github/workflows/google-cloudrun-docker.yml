@@ -105,7 +105,7 @@ jobs:
         uses: google-github-actions/deploy-cloudrun@v2
         with:
           image: ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.SERVICE }}:${{ github.sha }}
-          flags: '--min-instances=1 --max-instances=1 --memory=1024Mi'
+          flags: '--min-instances=1 --max-instances=1 --memory=1024Mi --no-cpu-throttling'
           service: "nestbot"
           region: ${{ env.REGION }}
           # NOTE: If using a pre-built image, update the image name here
