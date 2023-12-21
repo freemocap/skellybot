@@ -24,13 +24,15 @@ export class DiscordChatService {
     @Context() [interaction]: SlashCommandContext,
     @Options() { text }: TextDto,
   ) {
+    this._logger.log('Received chat request with text: ' + text);
     await interaction.deferReply();
+    this._logger.log('Deferred reply');
     const model = await this.llmModelService.createModel();
 
     const promptTemplate = ChatPromptTemplate.fromMessages([
       [
         'system',
-        'You were having a conversation with a human about {topic}\n Always say something about dolphins in every response.',
+        'You were having a conversation with a human about {topic}\n Always say something about dinosaurs in every response.',
       ],
       ['human', '{text}'],
     ]);

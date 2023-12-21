@@ -10,7 +10,7 @@ export class DiscordReadyService {
 
   @Once('ready')
   public onReady(@Context() [client]: ContextOf<'ready'>) {
-    this.logger.log(`Bot logged in as ${client.user.username}`);
+    this.logger.log(`Bot logged in as ${client.user.username}!`);
   }
 
   @On('warn')
