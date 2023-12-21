@@ -10,6 +10,6 @@ export class DiscordWowService {
     guilds: [DEV_GUILD],
   })
   public async onWow(@Context() [interaction]: SlashCommandContext) {
-    return interaction.reply({ content: 'Wowee!' });
+    return interaction.reply({ content: 'Woweeeee!!!!' });
   }
 }
