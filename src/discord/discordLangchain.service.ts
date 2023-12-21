@@ -44,7 +44,7 @@ export class DiscordChatService {
   @SlashCommand({
     name: 'chat',
     description: 'chat service',
-    guilds: [DEV_GUILD],
+    guilds: [],
   })
   public async onChat(
     @Context() [interaction]: SlashCommandContext,
