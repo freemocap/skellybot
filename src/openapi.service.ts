@@ -7,7 +7,7 @@ export class OpenAIConfigService {
 
   async getOpenAIKey() {
     const [secret] = await this.sms.getManager().accessSecretVersion({
-      name: 'projects/588063171007/secrets/OPENAPI_KEY/versions/latest',
+      name: 'projects/588063171007/secrets/OPENAI_API_KEY/versions/latest',
     });
     return secret.payload.data.toString();
   }
