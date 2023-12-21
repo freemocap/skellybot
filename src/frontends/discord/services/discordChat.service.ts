@@ -28,7 +28,10 @@ export class DiscordChatService {
     const model = await this.llmModelService.createModel();
 
     const promptTemplate = ChatPromptTemplate.fromMessages([
-      ['system', 'You were having a conversation with a human about {topic}'],
+      [
+        'system',
+        'You were having a conversation with a human about {topic}\n Always say something about dolphins in every response.',
+      ],
       ['human', '{text}'],
     ]);
     const chain = promptTemplate.pipe(model);

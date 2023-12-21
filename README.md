@@ -71,3 +71,10 @@ Nest is an MIT-licensed open source project. It can grow thanks to the sponsors 
 ## License
 
 Nest is [MIT licensed](LICENSE).
+
+
+
+GOOGLE AUTH LOGIN
+
+https://cloud.google.com/docs/authentication/provide-credentials-adc
+
