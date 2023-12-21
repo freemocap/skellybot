@@ -37,4 +37,4 @@ COPY . .
 
 RUN npm run build
 
-ENTRYPOINT ["/usr/bin/dumb-init", "--", "npm", "start"]
+ENTRYPOINT ["/usr/bin/dumb-init", "--", "npm", "run", "start:prod"]
