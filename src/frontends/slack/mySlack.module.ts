@@ -1,17 +1,10 @@
 import { Module } from '@nestjs/common';
-import { SlackModule } from 'nestjs-slack';
-import { SlackConfigService } from './slackConfig.service';
 import { GcpModule } from '../../gcp/gcp.module';
+import { SlackTestService } from './slackTest.service';
+import { createSlackModule } from './createSlackModule';
 
 @Module({
-  // imports: [
-  //   SlackModule.forRootAsync({
-  //     imports: [GcpModule],
-  //     useClass: SlackConfigService,
-  //   }),
-  //   GcpModule,
-  // ],
-  // providers: [SlackConfigService],
-  // exports: [SlackConfigService],
+  imports: [createSlackModule(), GcpModule],
+  providers: [SlackTestService],
 })
 export class MySlackModule {}

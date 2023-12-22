@@ -1,10 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Context, On, Once, ContextOf } from 'necord';
+import { Context, ContextOf, On, Once } from 'necord';
 import { Client } from 'discord.js';
 
 @Injectable()
-export class DiscordReadyService {
-  private readonly logger = new Logger(DiscordReadyService.name);
+export class DiscordReadyLoggingService {
+  private readonly logger = new Logger(DiscordReadyLoggingService.name);
 
   public constructor(private readonly client: Client) {}
 

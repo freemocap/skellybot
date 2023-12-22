@@ -1,11 +1,10 @@
 import { Logger, Module } from '@nestjs/common';
 import { DiscordPingService } from './services/discordPing.service';
 import { NecordModule } from 'necord';
-import { DiscordWowService } from './services/discordWow.service';
 import { DiscordChatService } from './services/discordChat.service';
 import { GcpModule } from '../../gcp/gcp.module';
 import { NecordConfigService } from './services/necordConfig.service';
-import { DiscordReadyService } from './services/discordReady.service';
+import { DiscordReadyLoggingService } from './services/discordReadyLogging.service';
 import { LangchainModule } from '../../ai/langchain /langchain/langchain.module';
 
 @Module({
@@ -19,9 +18,8 @@ import { LangchainModule } from '../../ai/langchain /langchain/langchain.module'
   ],
   providers: [
     DiscordPingService,
-    DiscordWowService,
     DiscordChatService,
-    DiscordReadyService,
+    DiscordReadyLoggingService,
     Logger,
   ],
 })
