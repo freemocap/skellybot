@@ -1,13 +1,9 @@
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
-import { SlackTestService } from './frontends/slack/slackTest.service';
+import { MainModule } from './main/main.module';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-  const sts = await app.resolve(SlackTestService);
-  sts.helloWorldMethod();
-
+  const app = await NestFactory.create(MainModule);
   await app.listen(process.env.PORT || 3000);
 }
 
-bootstrap();
+void bootstrap();

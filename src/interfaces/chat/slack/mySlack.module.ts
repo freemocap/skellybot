@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { GcpModule } from '../../gcp/gcp.module';
+import { GcpModule } from '../../../shared/gcp/gcp.module';
 import { SlackTestService } from './slackTest.service';
 import { createSlackModule } from './createSlackModule';
 

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Context, SlashCommand, SlashCommandContext } from 'necord';
-import { DEV_GUILDS } from '../../../constants';
+import { DEV_GUILDS } from '../../../../shared/config/constants';
 
 @Injectable()
 export class DiscordPingService {

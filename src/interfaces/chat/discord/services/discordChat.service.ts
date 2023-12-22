@@ -1,10 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Context, Options, SlashCommand, SlashCommandContext } from 'necord';
-import { DEV_GUILDS } from '../../../constants';
+import { DEV_GUILDS } from '../../../../shared/config/constants';
 import { OpenAI } from 'langchain/llms/openai';
 import { ChatPromptTemplate } from 'langchain/prompts';
 import { TextDto } from '../dto/textDto';
-import { LlmModelService } from '../../../ai/langchain/langchain/llm-model/llm-model.controller';
+import { LlmModelService } from '../../../../shared/ai/langchain/langchain/llm-model/llm-model.controller';
 
 @Injectable()
 export class DiscordChatService {
