@@ -1,5 +1,5 @@
 import { SlackModule } from 'nestjs-slack';
-import { getSlackToken } from '../../appSecrets/getSlackToken';
+import { getSlackToken } from './getSlackToken';
 
 export const createSlackModule = () => {
   return SlackModule.forRootAsync({

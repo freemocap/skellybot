@@ -1,15 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { SecretManagerServiceClient } from '@google-cloud/secret-manager';
 
+/**
+ * Nothing else should go here. this should be GCP stuff only.
+ *
+ * in the future, we'll have additional options for the secrets manager stuff from GCP.
+ */
 @Injectable()
 export class SecretsManagerService {
   getManager() {
     return new SecretManagerServiceClient();
-  }
-  async getOpenAIKey() {
-    const [secret] = await this.getManager().accessSecretVersion({
-      name: 'projects/588063171007/secrets/OPENAI_API_KEY/versions/latest',
-    });
-    return secret.payload.data.toString();
   }
 }

@@ -1,13 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OpenAI } from 'langchain/llms/openai';
-import { SecretsManagerService } from '../../../../gcp/secretsManager.service';
+import { OpenAiSecretsService } from '../openAiSecrets.service';
 
 @Injectable()
 export class LlmModelService {
   private _model: OpenAI<any>;
 
   constructor(
-    private readonly _secretsManager: SecretsManagerService,
+    private readonly _openAiSecrets: OpenAiSecretsService,
     private readonly _logger: Logger,
   ) {}
 
@@ -16,7 +16,7 @@ export class LlmModelService {
       this._logger.log('Creating model...');
       this._model = new OpenAI({
         modelName: 'gpt-3.5-turbo',
-        openAIApiKey: await this._secretsManager.getOpenAIKey(),
+        openAIApiKey: await this._openAiSecrets.getOpenAIKey(),
       });
     }
     this._logger.log('Returning model: ' + this._model.modelName);
