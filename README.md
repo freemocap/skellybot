@@ -1,9 +1,8 @@
 <p align="center">
-  <a href="http://freemocap.org/" target="blank"><img src="https://github.com/freemocap/skellybot/assets/15314521/d313c59d-abbe-4c81-b9cc-ec94ff5e736d" width="200" alt="SkellyBot Logo" /></a>
+  <a href="http://freemocap.org/" target="blank"><img src="https://github.com/freemocap/skellybot/assets/15314521/37d5a1d1-e9c9-40f5-8c8a-21eb5985eb8b" width="200" alt="SkellyBot Logo" /></a>
 </p>
 <p align="center">This bot helped me build this bot 💀🤖✨️ </p>
 <p align="center">
-
 
 [//]: # (<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>)
 
