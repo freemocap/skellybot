@@ -1,13 +1,11 @@
 import { Logger, Module } from '@nestjs/common';
-import { LlmModelController } from './llm-model/llm-model.service';
-import { LlmModelService } from './llm-model/llm-model.controller';
+import { ChainBuilderService } from './chain-builder/chain-builder.controller';
 import { GcpModule } from '../../../gcp/gcp.module';
 import { OpenAiSecretsService } from './openAiSecrets.service';
 
 @Module({
   imports: [GcpModule],
-  controllers: [LlmModelController],
-  providers: [LlmModelService, OpenAiSecretsService, Logger],
-  exports: [LlmModelService],
+  providers: [ChainBuilderService, OpenAiSecretsService, Logger],
+  exports: [ChainBuilderService],
 })
 export class LangchainModule {}

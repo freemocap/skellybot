@@ -1,16 +1,16 @@
 import { Test, TestingModule } from '@nestjs/testing';
 
-import { LlmModelService } from './llm-model.controller';
+import { ChainBuilderService } from './chain-builder.controller';
 
-describe('LlmModelService', () => {
-  let service: LlmModelService;
+describe('ChainBuilderService', () => {
+  let service: ChainBuilderService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [LlmModelService],
+      providers: [ChainBuilderService],
     }).compile();
 
-    service = module.get<LlmModelService>(LlmModelService);
+    service = module.get<ChainBuilderService>(ChainBuilderService);
   });
 
   it('should be defined', () => {
