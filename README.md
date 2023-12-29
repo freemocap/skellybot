@@ -34,7 +34,7 @@
 
 
 
-# 👇 (everything below this line was copied from the parent repo) 👇
+# 👇 (everything below this line is generic boilerplate) 👇
 ## Description
 
 [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
