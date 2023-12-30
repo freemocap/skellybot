@@ -6,6 +6,7 @@ import { GcpModule } from '../../../shared/gcp/gcp.module';
 import { NecordConfigService } from './services/necordConfig.service';
 import { DiscordReadyLoggingService } from './services/discordReadyLogging.service';
 import { LangchainModule } from '../../../shared/ai/langchain/langchain/langchain.module';
+import { DiscordThreadService } from './services/discordThread.service';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { LangchainModule } from '../../../shared/ai/langchain/langchain/langchai
   providers: [
     DiscordPingService,
     DiscordChatService,
+    DiscordThreadService,
     DiscordReadyLoggingService,
     Logger,
   ],

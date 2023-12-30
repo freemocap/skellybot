@@ -1,0 +1,65 @@
+# Notes
+
+Services: 
+- Discord
+  - /thread command
+    - opens a thread in a Discord channel
+    - Configures a langchain chain chat object
+    - Create title card for the chat, with:
+      - information about chat 
+      - interface to configure chat (with current settings)
+        - model name
+        - 
+        - temperature
+        - memory config
+          - langchain `SummaryTokenBufferMemory`? or make custom `CombinedMemory`? or make from scratch?
+        - connected vectorstores, e.g. 
+          - e.g.
+            - long term chat memory
+            - a markdown/notes repo
+            - a particular document
+              - pdf
+              - md
+              - py
+              - ..etc
+- Slack
+  - (basically what Discord is doing, but in Slack context)
+  - (interfacing with the `chatbot` module)
+  
+- shared/
+  - /chatbot-core
+    - chat features
+    - ai features
+    - file system stuff
+    - config 
+     
+  - /ai
+    - /langchain
+      - /chain
+        - components:
+          - required
+            - /llm
+                - "gpt-4", etc
+            - /prompt
+                - system prompt, built from context (e.g. channel )          - optional
+            - /conversation memory 
+                - "message buffer"
+                - "running summary"
+          - optional
+              - /long-term memory
+              - /user profile 
+                - topics discussed
+                - summary of previous chats
+                - etc
+              - /vectorstore
+                - every message from every chat
+            - /tools
+              - web search
+              - vector stores
+
+    - /image
+      - intake text produce image
+      - intake image produce text
+    - /audio
+      - intake audio produce text
+      - intake text produce audio

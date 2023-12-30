@@ -24,6 +24,7 @@
     "@nestjs/common": "^10.0.0",
     "@nestjs/core": "^10.0.0",
     "@nestjs/platform-express": "^10.0.0",
+    "@nestjs/mapped-types": "*",
     "@slack/bolt": "^3.16.0",
     "bufferutil": "^4.0.8",
     "discord.js": "^14.14.1",
