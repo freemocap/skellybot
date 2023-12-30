@@ -3,9 +3,9 @@
 Services: 
 - Discord
   - /thread command
-    - opens a thread in a Discord channel
-    - Configures a langchain chain chat object
-    - Create title card for the chat, with:
+    - [X] opens a thread in a Discord channel
+    - [ ] Configures a `chatbot` for this thread
+    - [ ] Create title card for the chat, with:
       - information about chat 
       - interface to configure chat (with current settings)
         - model name
@@ -28,10 +28,11 @@ Services:
   
 - shared/
   - /chatbot-core
-    - chat features
-    - ai features
-    - file system stuff
-    - config 
+    - /create-chatbot
+      - chat features
+      - ai features
+      - file system stuff
+      - config 
      
   - /ai
     - /langchain
