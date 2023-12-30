@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Context, Options, SlashCommand, SlashCommandContext } from 'necord';
 import { DEV_GUILDS } from '../../../../shared/config/constants';
 import { TextDto } from '../dto/textDto';
-import { ChainBuilderService } from '../../../../shared/ai/langchain/langchain/chain-builder/chain-builder.controller';
+import { ChainBuilderService } from '../../../../shared/ai/langchain/chain-builder/chain-builder.service';
 
 @Injectable()
 export class DiscordChatService {

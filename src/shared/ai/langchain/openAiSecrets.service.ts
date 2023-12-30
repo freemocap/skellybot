@@ -1,4 +1,4 @@
-import { SecretsManagerService } from '../../../gcp/secretsManager.service';
+import { SecretsManagerService } from '../../gcp/secretsManager.service';
 import { Injectable } from '@nestjs/common';
 
 @Injectable()

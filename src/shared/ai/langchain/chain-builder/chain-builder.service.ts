@@ -17,13 +17,11 @@ export class ChainBuilderService {
     if (!this.promptTemplate) {
       this._logger.log('Creating prompt...');
       this.promptTemplate = ChatPromptTemplate.fromMessages([
-        [
-          'system',
-          'You were having a conversation with a human about {topic}\n Always say something about penguins in every response.',
-        ],
+        ['system', 'You were having a conversation with a human about {topic}'],
         ['human', '{text}'],
       ]);
     }
+
     this._logger.log('Returning prompt: ' + this.promptTemplate);
     return this.promptTemplate;
   }

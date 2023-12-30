@@ -64,3 +64,7 @@ Services:
     - /audio
       - intake audio produce text
       - intake text produce audio
+
+# Bot lifetime management
+- how to manage 'long term memory'/'bot storage?'
+  - for now, just set a bot time out and pull history when re-initializing after timeout

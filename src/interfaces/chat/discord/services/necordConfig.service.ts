@@ -17,10 +17,13 @@ export class NecordConfigService {
     const token = secret.payload.data.toString();
     return {
       token,
-      intents: [IntentsBitField.Flags.Guilds],
+      intents: [
+        IntentsBitField.Flags.Guilds,
+        IntentsBitField.Flags.GuildMessages,
+        IntentsBitField.Flags.MessageContent,
+      ],
     };
   }
-
   private _createTokenByNodeEnv() {
     if (process.env.NODE_ENV === 'production') {
       return DISCORD_API_TOKEN;

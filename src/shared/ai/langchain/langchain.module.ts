@@ -1,6 +1,6 @@
 import { Logger, Module } from '@nestjs/common';
-import { ChainBuilderService } from './chain-builder/chain-builder.controller';
-import { GcpModule } from '../../../gcp/gcp.module';
+import { ChainBuilderService } from './chain-builder/chain-builder.service';
+import { GcpModule } from '../../gcp/gcp.module';
 import { OpenAiSecretsService } from './openAiSecrets.service';
 
 @Module({

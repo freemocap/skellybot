@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 
-import { ChainBuilderService } from './chain-builder.controller';
+import { ChainBuilderService } from './chain-builder.service';
 
 describe('ChainBuilderService', () => {
   let service: ChainBuilderService;
