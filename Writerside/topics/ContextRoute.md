@@ -1,11 +1,11 @@
-# ContextRoute
+# ContextRoute✨
 
 ## Description
 
 A context route defines the "location" where a conversation is taking place. 
 
 The "root" of the context tree is the [User](User.md) themselves, and the leaves are the [Couplet](Couplet.md) that that User produced
-![](../images/conversation_context_tree_diagram.drawio.png)
+![Turn it all into an f-ing tree](../images/conversation_context_tree_diagram.drawio.png)
 
 This diagram shows the context route tree in the Discord interface. 
 
@@ -26,6 +26,10 @@ A given [Couplet](Couplet.md)'s route for a 'chat' that occurs in a thread would
 												- couplet0
 													- HumanMessage
 													- AiResponse
+
+
+![](https://64.media.tumblr.com/90a3ea02f921c3d2d46013474136d82f/7b36ed59d1b14c9b-ec/s540x810/d14a5468e5240834f1dbcb5531fde7a14667211d.gif
+)
 
 ```ad-note
 title: Note on Discord "channels" contexts
@@ -49,5 +53,6 @@ Some notes:
 
 
 ```
-```ad-tip title: This is a tip This is the content of the admonition tip. ```
+
+
 

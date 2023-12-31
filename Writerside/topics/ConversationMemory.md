@@ -1,5 +1,5 @@
 # Conversation Memory
-  - [ ] Token Buffer ([Langchain](Langchain.md#TokenBufferMemory) )
+  - [ ] Token Buffer ([Langchain](https://python.langchain.com/docs/expression_language/cookbook/memory )
   - [ ] With summary?
 	  - [ ] Summarization at different scales:
 		    - Full summary
@@ -7,4 +7,3 @@
 		    - fine summary
 	- [ ] Topic/Tag extraction
 
-[LongTermMemory](LongTermMemory.md)
