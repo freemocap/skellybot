@@ -9,11 +9,6 @@
         <toc-element topic="ContextRoute.md">
             <toc-element topic="User.md">
                 <toc-element topic="Interfaces.md">
-                    <toc-element topic="FileEditors.md">
-                        <toc-element topic="JetBrains.md"/>
-                        <toc-element topic="VsCode.md"/>
-                        <toc-element topic="Obsidian.md"/>
-                    </toc-element>
                     <toc-element topic="ChatServices.md">
                         <toc-element topic="Discord.md">
                             <toc-element topic="Server.md">
@@ -27,6 +22,11 @@
                             </toc-element>
                         </toc-element>
                         <toc-element topic="Slack.md"/>
+                    </toc-element>
+                    <toc-element topic="FileEditors.md">
+                        <toc-element topic="JetBrains.md"/>
+                        <toc-element topic="VsCode.md"/>
+                        <toc-element topic="Obsidian.md"/>
                     </toc-element>
                 </toc-element>
             </toc-element>
@@ -48,6 +48,7 @@
                 <toc-element topic="HumanProvidedImage.md"/>
             </toc-element>
             <toc-element topic="TextData.md">
+                <toc-element topic="AiTranscriptionText.md"/>
                 <toc-element topic="AiText.md"/>
                 <toc-element topic="HumanText.md">
                     <toc-element topic="HumanChatText.md"/>

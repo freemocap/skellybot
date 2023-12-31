@@ -36,7 +36,7 @@
 - /image
   - [Images](Images(Images.md)
 - /audio
-  - [Audio](Audio.Md)
+  - [Audio](Audio.md)
 
 # Bot lifetime management
 - how to manage 'long term memory'/'bot storage?'

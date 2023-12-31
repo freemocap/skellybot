@@ -5,14 +5,14 @@
 A context route defines the "location" where a conversation is taking place. 
 
 The "root" of the context tree is the [User](User.md) themselves, and the leaves are the [Couplet](Couplet.md) that that User produced
-![Turn it all into an f-ing tree](../images/conversation_context_tree_diagram.drawio.png)
+<img src="conversation_context_tree_diagram.drawio.png" width="800"/>
 
 This diagram shows the context route tree in the Discord interface. 
 
 A typical chat will happen in a [Thread](Thread.md) in a [Channel](Channel.md) in a [Category](Category.md). 
 In that case, a given [Couplet](Couplet.md)'s route for a [Chat](Chat.md) that occurs in a thread would be: 
 
-(`id` is a a `number` that Discord provide to uniquely identify each element, get it by turning on developer tools in Discord and right-clicking any element in the UI])
+(`id` is a `number` that Discord provide to uniquely identify each element, get it by turning on developer tools in Discord and right-clicking any element in the UI])
 
 - [User](User.md)/
 	- [Interfaces](Interfaces.md)/

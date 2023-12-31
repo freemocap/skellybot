@@ -6,7 +6,6 @@ Either:
   - AiText can be fed into an [LLmChain](LLMChain.md) or [Agent](Agent.md)
 
 Uses:
-- [OpenAI](OpenAi)
+- [OpenAI](OpenAI.md)
   - [Dalle3](Dalle3.md), or
-- [LocalModels](LocalModels.md)
-  - [StableDiffusion](StableDiffusion.md)
+- [StableDiffusion](StableDiffusion.md)

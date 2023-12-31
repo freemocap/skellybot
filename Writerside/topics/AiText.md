@@ -2,4 +2,4 @@
 
 This is text that was produced by an AI
 
-This is one of the two kinds of [RawTextData](RawTextData.md) (the other being [HumanText](HumanText.md))
+This is one of the two main kinds of [TextData](TextData.md) (the other being [HumanText](HumanText.md))

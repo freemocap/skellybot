@@ -46,4 +46,8 @@
         <description>Created after removal of "Speakers" from SkellyBotNotes</description>
         <accepts>Speakers.html</accepts>
     </rule>
+    <rule id="748978e4">
+        <description>Created after removal of "UseCases" from SkellyBot</description>
+        <accepts>UseCases.html</accepts>
+    </rule>
 </rules>
