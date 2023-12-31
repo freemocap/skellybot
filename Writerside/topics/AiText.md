@@ -1,4 +1,4 @@
-# AiText🤖
+# AiText
 
 This is text that was produced by an AI
 

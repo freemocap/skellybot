@@ -1,6 +1,6 @@
 # Overview
 
-Knowledge base for SkellyBot
+Knowledge base for [SkellyBot](SkellyBot.md)
 
 
 - Project planning: [ProjectNotes](ProjectNotes.md)

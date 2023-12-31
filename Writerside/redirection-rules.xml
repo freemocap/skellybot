@@ -34,4 +34,16 @@
         <description>Created after removal of "Markdown" from SkellyBotNotes</description>
         <accepts>Markdown.html</accepts>
     </rule>
+    <rule id="53ef95ee">
+        <description>Created after removal of "Bots" from SkellyBotNotes</description>
+        <accepts>Bots.html</accepts>
+    </rule>
+    <rule id="186262cd">
+        <description>Created after removal of "Human" from SkellyBotNotes</description>
+        <accepts>Human.html</accepts>
+    </rule>
+    <rule id="1acc0fdc">
+        <description>Created after removal of "Speakers" from SkellyBotNotes</description>
+        <accepts>Speakers.html</accepts>
+    </rule>
 </rules>
