@@ -2,7 +2,7 @@
 <!DOCTYPE instance-profile
         SYSTEM "https://resources.jetbrains.com/writerside/1.0/product-profile.dtd">
 
-<instance-profile id="ID000"
+<instance-profile id="s"
                   name="SkellyBot" start-page="Overview.md">
 
     <toc-element topic="Concepts.md">
