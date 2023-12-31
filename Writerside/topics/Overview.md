@@ -2,8 +2,9 @@
 
 Knowledge base for SkellyBot
 
-## [Project Notes](ProjectNotes.md)
-## [Concepts](Concepts)
+
+- Project planning: [ProjectNotes](ProjectNotes.md)
+- Key Concepts: [Concepts](Concepts.md)
 
 ```ad-note
 View in: 

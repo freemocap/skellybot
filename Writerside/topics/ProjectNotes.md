@@ -1,17 +1,17 @@
 # Project Notes
 
 ## Services: 
-###  Discord
+###  [Discord](Discord)
   - /thread command
-    - [X] opens a thread in a Discord channel
+    - [X] opens a [Thread](Thread.md) in a Discord channel
     - [X] Configures a [Chatbot](Chatbot.md) for this thread
     - [ ] Create title card for the chat, with:
-      - information about chat 
+      - information about [Chat](Chat.md) 
       - interface to configure [Chatbot](Chatbot.md)
 
-- Slack
-  - (basically what Discord is doing, but in Slack context)
-  - (interfacing with the `[chatbot](Chatbot.md)` module)
+- [Slack](Slack.md)
+  - (basically what [Discord](Discord.md) is doing, but in Slack context)
+  - (interfacing with the [chatbot](Chatbot.md) module)
   
 - shared/
   - /chatbot-core
@@ -33,12 +33,10 @@
 		      - see: https://www.langchain.com/use-case/agents
 
 
-    - /image
-      - intake text produce image
-      - intake image produce text
-    - /audio
-      - intake audio produce text
-      - intake text produce audio
+- /image
+  - [Images](Images(Images.md)
+- /audio
+  - [Audio](Audio.Md)
 
 # Bot lifetime management
 - how to manage 'long term memory'/'bot storage?'
