@@ -9,27 +9,66 @@
     <toc-element topic="Terminology.md"/>
     <toc-element topic="ProjectNotes.md">
         <toc-element topic="Chatbot.md">
-            <toc-element topic="Agent.md">
-                <toc-element topic="LLMChain.md"/>
-                <toc-element topic="ConversationMemory.md"/>
-                <toc-element topic="LongTermMemory.md">
-                    <toc-element topic="VectorStore.md"/>
+            <toc-element topic="AI.md">
+                <toc-element topic="Images.md"/>
+                <toc-element topic="Agent.md">
+                    <toc-element topic="LLMChain.md">
+                        <toc-element topic="LargeLanguageModel-LLM.md"/>
+                        <toc-element topic="SystemPrompt.md"/>
+                    </toc-element>
+                    <toc-element topic="ConversationMemory.md"/>
+                    <toc-element topic="LongTermMemory.md">
+                        <toc-element topic="VectorStore.md"/>
+                    </toc-element>
+                    <toc-element topic="AgentTools.md"/>
                 </toc-element>
-                <toc-element topic="AgentTools.md"/>
             </toc-element>
             <toc-element topic="FileSystem.md"/>
             <toc-element topic="TimedEvents.md"/>
         </toc-element>
     </toc-element>
     <toc-element topic="Concepts.md">
-        <toc-element topic="ContextRoute.md"/>
+        <toc-element topic="ContextRoute.md">
+            <toc-element topic="User.md">
+                <toc-element topic="Interfaces.md">
+                    <toc-element topic="Discord.md">
+                        <toc-element topic="Server.md">
+                            <toc-element topic="ForumChannel.md">
+                                <toc-element topic="ForumPost.md"/>
+                            </toc-element>
+                            <toc-element topic="Channel.md">
+                                <toc-element topic="Thread.md">
+                                    <toc-element topic="Couplet.md">
+                                        <toc-element topic="AiResponse.md"/>
+                                        <toc-element topic="HumanMessage.md"/>
+                                    </toc-element>
+                                </toc-element>
+                            </toc-element>
+                            <toc-element topic="Category.md">
+                            </toc-element>
+                        </toc-element>
+                    </toc-element>
+                </toc-element>
+            </toc-element>
+        </toc-element>
         <toc-element topic="LangChain.md"/>
-        <toc-element topic="HumanText.md"/>
-        <toc-element topic="User.md"/>
-        <toc-element topic="AiResponse.md"/>
+        <toc-element topic="SkellyBot.md">
+            <toc-element topic="JonBot.md">
+                <toc-element topic="ClassBot.md">
+                    <toc-element topic="GolemGarden.md"/>
+                </toc-element>
+            </toc-element>
+        </toc-element>
         <toc-element topic="Chat.md"/>
-        <toc-element topic="SystemPrompt.md"/>
-        <toc-element topic="HumanMessage.md"/>
-        <toc-element topic="Couplet.md"/>
+    </toc-element>
+    <toc-element topic="RawDataTypes.md">
+        <toc-element topic="ImageData.md">
+            <toc-element topic="AiGeneratedImage.md"/>
+            <toc-element topic="HumanProvidedImage.md"/>
+        </toc-element>
+        <toc-element topic="TextData.md">
+            <toc-element topic="AiText.md"/>
+            <toc-element topic="HumanText.md"/>
+        </toc-element>
     </toc-element>
 </instance-profile>

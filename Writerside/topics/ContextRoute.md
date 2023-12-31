@@ -9,50 +9,31 @@ The "root" of the context tree is the [User](User.md) themselves, and the leaves
 
 This diagram shows the context route tree in the Discord interface. 
 
-A given [Couplet](Couplet.md)'s route for a 'chat' that occurs in a thread would be: 
+A typical chat will happen in a [Thread](Thread.md) in a [Channel](Channel.md) in a [Category](Category.md). 
+In that case, a given [Couplet](Couplet.md)'s route for a [Chat](Chat.md) that occurs in a thread would be: 
 
-- User/
-	- Interfaces/
-		- Discord/
-			- Servers/
-				- server0_id/
-					- Categories/
-						- category0_id/
-							- Channels/
-								- channel0_id/
-									- Threads/
-										- thread0_id/
-											- Couplets/
+(`id` is a a `number` that Discord provide to uniquely identify each element, get it by turning on developer tools in Discord and right-clicking any element in the UI])
+
+- [User](User.md)/
+	- [Interfaces](Interfaces.md)/
+		- [Discord](Discord.md)/
+			- [Servers](Server.md)/
+				- server_[id]/
+					- [Categories](Category.md)/
+						- category_[id]/
+							- [Channels](Channel.md)/
+								- channel_[id]/
+									- [Threads](Thread.md)/
+										- thread_[id]/
+											- [Couplets](Couplet.md)/
 												- couplet0
-													- HumanMessage
-													- AiResponse
+													- [HumanMessage](HumanMessage.md)
+													- [AiResponse](AiResponse.md)
 
-
+tl;dr - 
 ![](https://64.media.tumblr.com/90a3ea02f921c3d2d46013474136d82f/7b36ed59d1b14c9b-ec/s540x810/d14a5468e5240834f1dbcb5531fde7a14667211d.gif
 )
 
-```ad-note
-title: Note on Discord "channels" contexts
-
-Discord has a screwy incestuous ontology - basically, everything (Channels, Threads, Forum Posts, DM's) is a 'Channel' but they act differently based ontheir subtype? 
-
-It makes them annoying to work with (at least the way I've been using them)
-
-Some notes: 
-
-- A `Thread` is a `TextChannel` (i.e. like a standard, parent `TextChannel`)
-- Direct Message (`DMChannel`?) 
-	- DM's with the Bot and the User 
-	- Discord treats this equivalent to a Server channel/thread, but has no Guild, i think?
-	- Can be used to privately communicate with the User (e.g. through [[ChronJobs]]s)
-- Forum Posts (`ForumChannel`)
-	- Forum posts are treated like channels/threads
-	- They can be treated MORE OR LESS interchangable with a standard `Thread`
-		- but there is something strange about them? 
-		- can't remember
-
-
-```
 
 
 
