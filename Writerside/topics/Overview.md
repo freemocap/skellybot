@@ -1,13 +1,14 @@
 # Overview
 
-Knowledge base for SkellyBot
+Knowledge base for [SkellyBot](SkellyBot.md)
 
-## [Project Notes](ProjectNotes.md)
-## [Concepts](Concepts.md)
+
+- Project planning: [ProjectNotes](ProjectNotes.md)
+- Key Concepts: [Concepts](Concepts.md)
 
 ```ad-note
 View in: 
-- Jetbrains Writerside (free route standalone Writerside app or Pycharm (etc) plugin)
+- Jetbrains Writerstorm (free route standalone Writerstorm app or Pycharm (etc) plugin)
 - Obsidian MD
 - VS Code Foam
 ```
