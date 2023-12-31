@@ -3,7 +3,7 @@
         SYSTEM "https://resources.jetbrains.com/writerside/1.0/product-profile.dtd">
 
 <instance-profile id="s"
-                  name="SkellyBotNotes" start-page="Overview.md">
+                  name="SkellyBot" start-page="Overview.md">
 
     <toc-element topic="Overview.md">
         <toc-element topic="SkellyBot.md">
