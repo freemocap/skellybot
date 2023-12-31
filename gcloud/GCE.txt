@@ -1,0 +1,19 @@
+gcloud compute instances create-with-container skelly-bot-testing \
+    --project=mocap-test-project \
+    --zone=us-central1-a \
+    --machine-type=e2-micro \
+    --network-interface=network-tier=PREMIUM,stack-type=IPV4_ONLY,subnet=default \
+    --maintenance-policy=MIGRATE \
+    --provisioning-model=STANDARD \
+    --service-account=nest-bot@mocap-test-project.iam.gserviceaccount.com \
+    --scopes=https://www.googleapis.com/auth/cloud-platform \
+    --image=projects/cos-cloud/global/images/cos-stable-109-17800-66-43 \
+    --boot-disk-size=10GB \
+    --boot-disk-type=pd-standard \
+    --boot-disk-device-name=skelly-bot-testing \
+    --container-image=us-east1-docker.pkg.dev/mocap-test-project/jonbot/nestbot:latest \
+    --container-restart-policy=always \
+    --no-shielded-secure-boot \
+    --shielded-vtpm \
+    --shielded-integrity-monitoring \
+    --labels=goog-ec-src=vm_add-gcloud,container-vm=cos-stable-109-17800-66-43

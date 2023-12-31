@@ -103,8 +103,8 @@ jobs:
       # END - Docker auth and build
       - name: Deploy to GCE
         run: |
-          gcloud compute instances stop the-bots --zone=us-central1-a
-          gcloud compute instances start the-bots --zone=us-central1-a
+          gcloud compute instances stop skelly-bot-testing --zone=us-central1-a
+          gcloud compute instances start skelly-bot-testing --zone=us-central1-a
 
       # If required, use the Cloud Run url output in later steps
       - name: Show Output
