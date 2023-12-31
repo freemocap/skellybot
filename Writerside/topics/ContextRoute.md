@@ -5,7 +5,8 @@
 A context route defines the "location" where a conversation is taking place. 
 
 The "root" of the context tree is the [User](User.md) themselves, and the leaves are the [Couplet](Couplet.md) that that User produced
-<img src="conversation_context_tree_diagram.drawio.png" width="800"/>
+
+<img src="conversation_context_tree_diagram.drawio.png" width="800" height="800"/>
 
 This diagram shows the context route tree in the Discord interface. 
 
@@ -31,8 +32,10 @@ In that case, a given [Couplet](Couplet.md)'s route for a [Chat](Chat.md) that o
 													- [AiResponse](AiResponse.md)
 
 tl;dr - 
+
 ![](https://64.media.tumblr.com/90a3ea02f921c3d2d46013474136d82f/7b36ed59d1b14c9b-ec/s540x810/d14a5468e5240834f1dbcb5531fde7a14667211d.gif
 )
+
 
 
 
