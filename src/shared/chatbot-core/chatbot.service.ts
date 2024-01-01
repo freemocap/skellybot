@@ -11,7 +11,7 @@ class StreamResponseOptions {
 
 @Injectable()
 export class ChatbotService {
-  _chatbots: Map<string, Chatbot> = new Map();
+  private _chatbots: Map<string, Chatbot> = new Map();
   constructor(
     private readonly _logger: Logger,
     private readonly _chainBuilderService: ChainBuilderService,
