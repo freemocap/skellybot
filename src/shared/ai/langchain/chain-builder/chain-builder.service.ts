@@ -1,12 +1,16 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OpenAI } from 'langchain/llms/openai';
 import { OpenAiSecretsService } from '../openAiSecrets.service';
-import { ChatPromptTemplate } from 'langchain/prompts';
+import { ChatPromptTemplate, MessagesPlaceholder } from 'langchain/prompts';
+import { BufferMemory } from 'langchain/memory';
+import { RunnableSequence } from 'langchain/runnables';
 
 @Injectable()
 export class ChainBuilderService {
   private _model: OpenAI<any>;
-  private promptTemplate: ChatPromptTemplate<any, any>;
+  private _promptTemplate: ChatPromptTemplate<any, any>;
+  private _memory: BufferMemory;
+  private _chain: RunnableSequence;
 
   constructor(
     private readonly _openAiSecrets: OpenAiSecretsService,
@@ -14,16 +18,28 @@ export class ChainBuilderService {
   ) {}
 
   async createPrompt() {
-    if (!this.promptTemplate) {
+    if (!this._promptTemplate) {
       this._logger.log('Creating prompt...');
-      this.promptTemplate = ChatPromptTemplate.fromMessages([
+      this._promptTemplate = ChatPromptTemplate.fromMessages([
         ['system', 'You were having a conversation with a human about {topic}'],
+        new MessagesPlaceholder('chatHistory'),
         ['human', '{text}'],
       ]);
     }
 
-    this._logger.log('Returning prompt: ' + this.promptTemplate);
-    return this.promptTemplate;
+    this._logger.log('Returning prompt: ' + this._promptTemplate);
+    return this._promptTemplate;
+  }
+
+  private async createMemory() {
+    this._memory = new BufferMemory({
+      returnMessages: true,
+      inputKey: 'input',
+      outputKey: 'output',
+      memoryKey: 'chat_history',
+    });
+    this._logger.log(`Created memory with key: ${this._memory.memoryKey}`);
+    return this._memory;
   }
 
   async createModel(modelName?: string) {
@@ -34,15 +50,29 @@ export class ChainBuilderService {
         openAIApiKey: await this._openAiSecrets.getOpenAIKey(),
       });
     }
-    this._logger.log('Returning model: ' + this._model.modelName);
+    this._logger.log(`Returning model: ${this._model.modelName}`);
     return this._model;
   }
 
   async createChain(modelName?: string) {
     const model = await this.createModel(modelName);
-    const promptTemplate = await this.createPrompt();
-    const chain = promptTemplate.pipe(model);
-    this._logger.log('Created chain: ' + chain);
-    return chain;
+    const prompt = await this.createPrompt();
+    const memory = await this.createMemory();
+
+    this._chain = RunnableSequence.from([
+      {
+        input: (initialInput) => initialInput.input,
+        memory: () => memory.loadMemoryVariables({}),
+      },
+      {
+        input: (previousOutput) => previousOutput.input,
+        history: (previousOutput) => previousOutput.memory.history,
+      },
+      prompt,
+      model,
+    ]);
+
+    this._logger.log(`Created chain: ${this._chain.toJSON()}`);
+    return this._chain;
   }
 }
