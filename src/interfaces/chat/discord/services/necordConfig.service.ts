@@ -29,7 +29,7 @@ export class NecordConfigService {
 
   private async _createTokenByNodeEnv() {
     if (process.env.NODE_ENV === 'production') {
-      const secretName = this._cfgService.get(this._tokenMap.DISCORD_BOT_TOKEN);
+      const secretName = this._tokenMap.DISCORD_BOT_TOKEN;
       const [secret] = await this.sms.getManager().accessSecretVersion({
         name: secretName,
       });

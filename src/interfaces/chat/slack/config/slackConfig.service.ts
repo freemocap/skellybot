@@ -23,13 +23,14 @@ export class SlackConfigService {
       token: await this._createTokenByNodeEnv('SLACK_BOT_TOKEN'),
       appToken: await this._createTokenByNodeEnv('SLACK_APP_TOKEN'),
       signingSecret: await this._createTokenByNodeEnv('SLACK_SIGNING_SECRET'),
-      socketMode: Boolean(await this._cfgService.get('SLACK_SOCKET_MODE')),
+      socketMode: true,
+      // socketMode: Boolean(await this._cfgService.get('SLACK_SOCKET_MODE')),
     };
   }
 
   private async _createTokenByNodeEnv(tokenString: string) {
     if (process.env.NODE_ENV === 'production') {
-      const secretName = this._cfgService.get(tokenString);
+      const secretName = this._tokenMap[tokenString];
       const [secret] = await this._sms.getManager().accessSecretVersion({
         name: secretName,
       });

@@ -2,7 +2,6 @@ gcloud compute instances create-with-container skelly-bot-testing \
     --project=mocap-test-project \
     --zone=us-central1-a \
     --machine-type=e2-micro \
-    --network-interface=network-tier=PREMIUM,stack-type=IPV4_ONLY,subnet=default \
     --maintenance-policy=MIGRATE \
     --provisioning-model=STANDARD \
     --service-account=nest-bot@mocap-test-project.iam.gserviceaccount.com \
