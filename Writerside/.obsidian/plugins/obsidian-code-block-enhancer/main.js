@@ -18,284 +18,341 @@ PERFORMANCE OF THIS SOFTWARE.
 ***************************************************************************** */
 
 function __awaiter(thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
+  function adopt(value) {
+    return value instanceof P
+      ? value
+      : new P(function (resolve) {
+          resolve(value);
+        });
+  }
+
+  return new (P || (P = Promise))(function (resolve, reject) {
+    function fulfilled(value) {
+      try {
+        step(generator.next(value));
+      } catch (e) {
+        reject(e);
+      }
+    }
+
+    function rejected(value) {
+      try {
+        step(generator['throw'](value));
+      } catch (e) {
+        reject(e);
+      }
+    }
+
+    function step(result) {
+      result.done
+        ? resolve(result.value)
+        : adopt(result.value).then(fulfilled, rejected);
+    }
+
+    step((generator = generator.apply(thisArg, _arguments || [])).next());
+  });
 }
 
 const DEFAULT_LANG_ATTR = 'language-text';
 const DEFAULT_LANG = '';
 const LANG_REG = /^language-/;
 const LINE_SPLIT_MARK = '\n';
-const SVG_COPY = parseToSVG('<?xml version="1.0" encoding="utf-8"?> <svg height="16" width="16" viewBox="0 0 16 16" version="1.1" data-view-component="true" class="copy" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M5.75 1a.75.75 0 00-.75.75v3c0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75v-3a.75.75 0 00-.75-.75h-4.5zm.75 3V2.5h3V4h-3zm-2.874-.467a.75.75 0 00-.752-1.298A1.75 1.75 0 002 3.75v9.5c0 .966.784 1.75 1.75 1.75h8.5A1.75 1.75 0 0014 13.25v-9.5a1.75 1.75 0 00-.874-1.515.75.75 0 10-.752 1.298.25.25 0 01.126.217v9.5a.25.25 0 01-.25.25h-8.5a.25.25 0 01-.25-.25v-9.5a.25.25 0 01.126-.217z"></path></svg>');
-const SVG_SUCCESS = parseToSVG('<?xml version="1.0" encoding="utf-8"?> <svg height="16" width="16" viewBox="0 0 16 16" version="1.1" data-view-component="true" class="copy-success" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z"></path></svg>');
+const SVG_COPY = parseToSVG(
+  '<?xml version="1.0" encoding="utf-8"?> <svg height="16" width="16" viewBox="0 0 16 16" version="1.1" data-view-component="true" class="copy" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M5.75 1a.75.75 0 00-.75.75v3c0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75v-3a.75.75 0 00-.75-.75h-4.5zm.75 3V2.5h3V4h-3zm-2.874-.467a.75.75 0 00-.752-1.298A1.75 1.75 0 002 3.75v9.5c0 .966.784 1.75 1.75 1.75h8.5A1.75 1.75 0 0014 13.25v-9.5a1.75 1.75 0 00-.874-1.515.75.75 0 10-.752 1.298.25.25 0 01.126.217v9.5a.25.25 0 01-.25.25h-8.5a.25.25 0 01-.25-.25v-9.5a.25.25 0 01.126-.217z"></path></svg>',
+);
+const SVG_SUCCESS = parseToSVG(
+  '<?xml version="1.0" encoding="utf-8"?> <svg height="16" width="16" viewBox="0 0 16 16" version="1.1" data-view-component="true" class="copy-success" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z"></path></svg>',
+);
+
 function enhanceCodeBlock(el, ctx, plugin) {
-    const code = el.querySelector('pre > code');
-    // only change pre>code
-    if (!code) {
-        return;
+  const code = el.querySelector('pre > code');
+  // only change pre>code
+  if (!code) {
+    return;
+  }
+  let lang = DEFAULT_LANG;
+  // return when lang is in exclude list
+  if (
+    plugin.settings.excludeLangs.some((eLangName) =>
+      code.classList.contains(`language-${eLangName}`),
+    )
+  ) {
+    return;
+  }
+  code.classList.forEach((value, key, parent) => {
+    if (LANG_REG.test(value)) {
+      lang = value.replace('language-', '');
+      return;
     }
-    let lang = DEFAULT_LANG;
-    // return when lang is in exclude list
-    if (plugin.settings.excludeLangs.some(eLangName => code.classList.contains(`language-${eLangName}`))) {
-        return;
-    }
-    code.classList.forEach((value, key, parent) => {
-        if (LANG_REG.test(value)) {
-            lang = value.replace('language-', '');
-            return;
-        }
-    });
-    const pre = code.parentElement;
-    const div = pre.parentElement;
-    // Add default language style when lang is empty
-    if (!code.classList.toString().contains('language-')) {
-        pre.classList.add(DEFAULT_LANG_ATTR);
-    }
-    // Ignore already has copy button 
-    if (pre.querySelector('div.code-block-copy-button')) {
-        return;
-    }
-    // let div position: relative;
-    div.classList.add('code-block-wrap');
-    /* const { lineStart, lineEnd } = ctx.getSectionInfo(el)
-    const lineSize = lineEnd - lineStart - 1 */
-    const contentList = code.textContent.split(LINE_SPLIT_MARK);
-    const lineSize = contentList.length - 1;
-    const cbMeta = { langName: lang, lineSize, pre, code, div, contentList };
-    const { useContextMenu, showLangName, showLineNumber } = plugin.settings;
-    // create copy button in right
-    addCopyButton(plugin, cbMeta);
-    // create lang name tip in left
-    if (showLangName) {
-        addLangName(plugin, cbMeta);
-    }
-    // add line number
-    if (showLineNumber) {
-        addLineNumber(plugin, cbMeta);
-    }
-    //context menu
-    if (useContextMenu) {
-        enhanceContextMenu(plugin, cbMeta);
-    }
+  });
+  const pre = code.parentElement;
+  const div = pre.parentElement;
+  // Add default language style when lang is empty
+  if (!code.classList.toString().contains('language-')) {
+    pre.classList.add(DEFAULT_LANG_ATTR);
+  }
+  // Ignore already has copy button
+  if (pre.querySelector('div.code-block-copy-button')) {
+    return;
+  }
+  // let div position: relative;
+  div.classList.add('code-block-wrap');
+  /* const { lineStart, lineEnd } = ctx.getSectionInfo(el)
+  const lineSize = lineEnd - lineStart - 1 */
+  const contentList = code.textContent.split(LINE_SPLIT_MARK);
+  const lineSize = contentList.length - 1;
+  const cbMeta = { langName: lang, lineSize, pre, code, div, contentList };
+  const { useContextMenu, showLangName, showLineNumber } = plugin.settings;
+  // create copy button in right
+  addCopyButton(plugin, cbMeta);
+  // create lang name tip in left
+  if (showLangName) {
+    addLangName(plugin, cbMeta);
+  }
+  // add line number
+  if (showLineNumber) {
+    addLineNumber(plugin, cbMeta);
+  }
+  //context menu
+  if (useContextMenu) {
+    enhanceContextMenu(plugin, cbMeta);
+  }
 }
+
 function createElement(tagName, defaultClassName) {
-    const element = document.createElement(tagName);
-    if (defaultClassName) {
-        element.className = defaultClassName;
-    }
-    return element;
+  const element = document.createElement(tagName);
+  if (defaultClassName) {
+    element.className = defaultClassName;
+  }
+  return element;
 }
+
 function enhanceContextMenu(plugin, cbMeta) {
-    const { pre, code, lineSize } = cbMeta;
-    plugin.registerDomEvent(pre, 'contextmenu', (event) => {
-        event.preventDefault();
-        const target = event.target;
-        if (target.tagName !== 'BUTTON') {
-            const contextMenu = new obsidian.Menu(plugin.app);
-            const selection = window.getSelection().toString();
-            const editView = document.querySelector('.markdown-preview-view');
-            const blockHeight = parseFloat(window.getComputedStyle(pre).height);
-            const viewHeight = editView.clientHeight;
-            const { offsetY, pageY } = event;
-            const toBottom = blockHeight - ((viewHeight - pageY) + offsetY);
-            const toTop = offsetY - pageY + 100;
-            const eventScrollTop = editView.scrollTop;
-            let eRowNum = Math.ceil((offsetY - 16) / 24);
-            if (eRowNum < 1) {
-                eRowNum = 1;
-            }
-            else if (eRowNum > lineSize) {
-                eRowNum = lineSize;
-            }
-            if (selection) {
-                contextMenu.addItem((item) => {
-                    item
-                        .setTitle('Copy')
-                        .setIcon('two-blank-pages', 16)
-                        .onClick((e) => {
-                        navigator.clipboard.writeText(selection);
-                    });
-                });
-            }
-            contextMenu.addItem((item) => {
-                item
-                    .setTitle('Copy Block')
-                    .setIcon('two-blank-pages', 16)
-                    .onClick(() => {
-                    navigator.clipboard.writeText(code.textContent);
-                });
+  const { pre, code, lineSize } = cbMeta;
+  plugin.registerDomEvent(pre, 'contextmenu', (event) => {
+    event.preventDefault();
+    const target = event.target;
+    if (target.tagName !== 'BUTTON') {
+      const contextMenu = new obsidian.Menu(plugin.app);
+      const selection = window.getSelection().toString();
+      const editView = document.querySelector('.markdown-preview-view');
+      const blockHeight = parseFloat(window.getComputedStyle(pre).height);
+      const viewHeight = editView.clientHeight;
+      const { offsetY, pageY } = event;
+      const toBottom = blockHeight - (viewHeight - pageY + offsetY);
+      const toTop = offsetY - pageY + 100;
+      const eventScrollTop = editView.scrollTop;
+      let eRowNum = Math.ceil((offsetY - 16) / 24);
+      if (eRowNum < 1) {
+        eRowNum = 1;
+      } else if (eRowNum > lineSize) {
+        eRowNum = lineSize;
+      }
+      if (selection) {
+        contextMenu.addItem((item) => {
+          item
+            .setTitle('Copy')
+            .setIcon('two-blank-pages', 16)
+            .onClick((e) => {
+              navigator.clipboard.writeText(selection);
             });
-            contextMenu.addItem((item) => {
-                item
-                    .setTitle('Copy Row')
-                    .setIcon('two-blank-pages', 16)
-                    .onClick(() => {
-                    navigator.clipboard.writeText(cbMeta.contentList[eRowNum - 1]);
-                });
-            });
-            if (blockHeight > viewHeight) {
-                if (toTop > 0) {
-                    contextMenu.addItem((item) => {
-                        item
-                            .setTitle('To Top')
-                            .onClick((e) => {
-                            editView.scrollTop = eventScrollTop - toTop;
-                        });
-                    });
-                }
-                if (toBottom > 0) {
-                    contextMenu.addItem((item) => {
-                        item
-                            .setTitle('To Bottom')
-                            .onClick((e) => {
-                            editView.scrollTop = eventScrollTop + toBottom;
-                        });
-                    });
-                }
-            }
-            contextMenu.showAtPosition({ x: event.clientX, y: event.clientY });
-        }
-    });
-}
-function addLangName(plugin, cbMeta) {
-    const { langName, pre } = cbMeta;
-    const langNameTip = createElement('span', 'code-block-lang-name');
-    langNameTip.innerText = langName;
-    pre.appendChild(langNameTip);
-}
-function addCopyButton(plugin, cbMeta) {
-    const { code, pre } = cbMeta;
-    const copyButton = createElement('div', 'code-block-copy-button');
-    copyButton.setAttribute('aria-label', 'Copy');
-    replaceFirstChild(copyButton, SVG_COPY());
-    const copyHandler = () => {
-        navigator.clipboard.writeText(code.textContent).then(() => {
-            replaceFirstChild(copyButton, SVG_SUCCESS());
-            setTimeout(() => {
-                replaceFirstChild(copyButton, SVG_COPY());
-            }, 1500);
-        }, () => {
-            copyButton.innerText = 'Error';
         });
-    };
-    plugin.registerDomEvent(copyButton, 'click', copyHandler);
-    pre.appendChild(copyButton);
-    pre.classList.add('code-block-pre__has-copy-button');
-}
-function addLineNumber(plugin, cbMeta) {
-    const { lineSize, pre } = cbMeta;
-    // const { fontSize, lineHeight } = window.getComputedStyle(cbMeta.code)
-    const lineNumber = createElement('span', 'code-block-linenum-wrap');
-    Array.from({ length: lineSize }, (v, k) => k).forEach(i => {
-        const singleLine = createElement('span', 'code-block-linenum');
-        // singleLine.style.fontSize = fontSize
-        // singleLine.style.lineHeight = lineHeight
-        lineNumber.appendChild(singleLine);
-    });
-    pre.appendChild(lineNumber);
-    pre.classList.add('code-block-pre__has-linenum');
-}
-function parseToSVG(svgString) {
-    return function () {
-        return new DOMParser().parseFromString(svgString, 'image/svg+xml').firstChild;
-    };
-}
-function replaceFirstChild(target, child) {
-    if (target.childNodes && target.childNodes.length > 0) {
-        target.removeChild(target.childNodes[0]);
+      }
+      contextMenu.addItem((item) => {
+        item
+          .setTitle('Copy Block')
+          .setIcon('two-blank-pages', 16)
+          .onClick(() => {
+            navigator.clipboard.writeText(code.textContent);
+          });
+      });
+      contextMenu.addItem((item) => {
+        item
+          .setTitle('Copy Row')
+          .setIcon('two-blank-pages', 16)
+          .onClick(() => {
+            navigator.clipboard.writeText(cbMeta.contentList[eRowNum - 1]);
+          });
+      });
+      if (blockHeight > viewHeight) {
+        if (toTop > 0) {
+          contextMenu.addItem((item) => {
+            item.setTitle('To Top').onClick((e) => {
+              editView.scrollTop = eventScrollTop - toTop;
+            });
+          });
+        }
+        if (toBottom > 0) {
+          contextMenu.addItem((item) => {
+            item.setTitle('To Bottom').onClick((e) => {
+              editView.scrollTop = eventScrollTop + toBottom;
+            });
+          });
+        }
+      }
+      contextMenu.showAtPosition({ x: event.clientX, y: event.clientY });
     }
-    target.appendChild(child);
+  });
+}
+
+function addLangName(plugin, cbMeta) {
+  const { langName, pre } = cbMeta;
+  const langNameTip = createElement('span', 'code-block-lang-name');
+  langNameTip.innerText = langName;
+  pre.appendChild(langNameTip);
+}
+
+function addCopyButton(plugin, cbMeta) {
+  const { code, pre } = cbMeta;
+  const copyButton = createElement('div', 'code-block-copy-button');
+  copyButton.setAttribute('aria-label', 'Copy');
+  replaceFirstChild(copyButton, SVG_COPY());
+  const copyHandler = () => {
+    navigator.clipboard.writeText(code.textContent).then(
+      () => {
+        replaceFirstChild(copyButton, SVG_SUCCESS());
+        setTimeout(() => {
+          replaceFirstChild(copyButton, SVG_COPY());
+        }, 1500);
+      },
+      () => {
+        copyButton.innerText = 'Error';
+      },
+    );
+  };
+  plugin.registerDomEvent(copyButton, 'click', copyHandler);
+  pre.appendChild(copyButton);
+  pre.classList.add('code-block-pre__has-copy-button');
+}
+
+function addLineNumber(plugin, cbMeta) {
+  const { lineSize, pre } = cbMeta;
+  // const { fontSize, lineHeight } = window.getComputedStyle(cbMeta.code)
+  const lineNumber = createElement('span', 'code-block-linenum-wrap');
+  Array.from({ length: lineSize }, (v, k) => k).forEach((i) => {
+    const singleLine = createElement('span', 'code-block-linenum');
+    // singleLine.style.fontSize = fontSize
+    // singleLine.style.lineHeight = lineHeight
+    lineNumber.appendChild(singleLine);
+  });
+  pre.appendChild(lineNumber);
+  pre.classList.add('code-block-pre__has-linenum');
+}
+
+function parseToSVG(svgString) {
+  return function () {
+    return new DOMParser().parseFromString(svgString, 'image/svg+xml')
+      .firstChild;
+  };
+}
+
+function replaceFirstChild(target, child) {
+  if (target.childNodes && target.childNodes.length > 0) {
+    target.removeChild(target.childNodes[0]);
+  }
+  target.appendChild(child);
 }
 
 const DEFAULT_SETTINGS = {
-    excludeLangs: ['todoist'],
-    showLangName: true,
-    showLineNumber: true,
-    useContextMenu: true
+  excludeLangs: ['todoist'],
+  showLangName: true,
+  showLineNumber: true,
+  useContextMenu: true,
 };
+
 class CodeBlockEnhancer extends obsidian.Plugin {
-    onload() {
-        return __awaiter(this, void 0, void 0, function* () {
-            yield this.loadSettings();
-            this.addSettingTab(new CbEnhancerSettingsTab(this.app, this));
-            this.registerMarkdownPostProcessor((el, ctx) => {
-                enhanceCodeBlock(el, ctx, this);
-            });
-        });
-    }
-    onunload() {
-        console.log('Unloading Code Block Enhancer Plugin');
-    }
-    loadSettings() {
-        return __awaiter(this, void 0, void 0, function* () {
-            this.settings = Object.assign({}, DEFAULT_SETTINGS, yield this.loadData());
-        });
-    }
-    saveSettings() {
-        return __awaiter(this, void 0, void 0, function* () {
-            yield this.saveData(this.settings);
-        });
-    }
+  onload() {
+    return __awaiter(this, void 0, void 0, function* () {
+      yield this.loadSettings();
+      this.addSettingTab(new CbEnhancerSettingsTab(this.app, this));
+      this.registerMarkdownPostProcessor((el, ctx) => {
+        enhanceCodeBlock(el, ctx, this);
+      });
+    });
+  }
+
+  onunload() {
+    console.log('Unloading Code Block Enhancer Plugin');
+  }
+
+  loadSettings() {
+    return __awaiter(this, void 0, void 0, function* () {
+      this.settings = Object.assign(
+        {},
+        DEFAULT_SETTINGS,
+        yield this.loadData(),
+      );
+    });
+  }
+
+  saveSettings() {
+    return __awaiter(this, void 0, void 0, function* () {
+      yield this.saveData(this.settings);
+    });
+  }
 }
+
 class CbEnhancerSettingsTab extends obsidian.PluginSettingTab {
-    constructor(app, plugin) {
-        super(app, plugin);
-        this.plugin = plugin;
-    }
-    display() {
-        let { containerEl } = this;
-        const pluginSetting = this.plugin.settings;
-        containerEl.empty();
-        containerEl.createEl('h2', { text: `Code Block Enhancer Settings ${this.plugin.manifest.version}` });
-        new obsidian.Setting(containerEl)
-            .setName('Exclude language list')
-            .setDesc("Will not be enhanced in these languages")
-            .addTextArea(text => text
-            .setPlaceholder('Separate by `,` (like `todoist,other,...`)')
-            .setValue(pluginSetting.excludeLangs.join(','))
-            .onChange((value) => __awaiter(this, void 0, void 0, function* () {
-            pluginSetting.excludeLangs = value.split(',');
+  constructor(app, plugin) {
+    super(app, plugin);
+    this.plugin = plugin;
+  }
+
+  display() {
+    let { containerEl } = this;
+    const pluginSetting = this.plugin.settings;
+    containerEl.empty();
+    containerEl.createEl('h2', {
+      text: `Code Block Enhancer Settings ${this.plugin.manifest.version}`,
+    });
+    new obsidian.Setting(containerEl)
+      .setName('Exclude language list')
+      .setDesc('Will not be enhanced in these languages')
+      .addTextArea((text) =>
+        text
+          .setPlaceholder('Separate by `,` (like `todoist,other,...`)')
+          .setValue(pluginSetting.excludeLangs.join(','))
+          .onChange((value) =>
+            __awaiter(this, void 0, void 0, function* () {
+              pluginSetting.excludeLangs = value.split(',');
+              yield this.plugin.saveSettings();
+            }),
+          ),
+      );
+    new obsidian.Setting(containerEl)
+      .setName('Show language name')
+      .setDesc('Enable this options will show language name')
+      .addToggle((cb) => {
+        cb.setValue(pluginSetting.showLangName).onChange((isEnable) =>
+          __awaiter(this, void 0, void 0, function* () {
+            pluginSetting.showLangName = isEnable;
             yield this.plugin.saveSettings();
-        })));
-        new obsidian.Setting(containerEl)
-            .setName('Show language name')
-            .setDesc('Enable this options will show language name')
-            .addToggle(cb => {
-            cb
-                .setValue(pluginSetting.showLangName)
-                .onChange((isEnable) => __awaiter(this, void 0, void 0, function* () {
-                pluginSetting.showLangName = isEnable;
-                yield this.plugin.saveSettings();
-            }));
-        });
-        new obsidian.Setting(containerEl)
-            .setName('Show line number')
-            .setDesc('Enable this options will show line number')
-            .addToggle(cb => {
-            cb
-                .setValue(pluginSetting.showLineNumber)
-                .onChange((isEnable) => __awaiter(this, void 0, void 0, function* () {
-                pluginSetting.showLineNumber = isEnable;
-                yield this.plugin.saveSettings();
-            }));
-        });
-        new obsidian.Setting(containerEl)
-            .setName('Use ContextMenu')
-            .setDesc('Replace default contextmenu when right-click in code block')
-            .addToggle(cb => {
-            cb
-                .setValue(pluginSetting.useContextMenu)
-                .onChange((isEnable) => __awaiter(this, void 0, void 0, function* () {
-                pluginSetting.useContextMenu = isEnable;
-                yield this.plugin.saveSettings();
-            }));
-        });
-    }
+          }),
+        );
+      });
+    new obsidian.Setting(containerEl)
+      .setName('Show line number')
+      .setDesc('Enable this options will show line number')
+      .addToggle((cb) => {
+        cb.setValue(pluginSetting.showLineNumber).onChange((isEnable) =>
+          __awaiter(this, void 0, void 0, function* () {
+            pluginSetting.showLineNumber = isEnable;
+            yield this.plugin.saveSettings();
+          }),
+        );
+      });
+    new obsidian.Setting(containerEl)
+      .setName('Use ContextMenu')
+      .setDesc('Replace default contextmenu when right-click in code block')
+      .addToggle((cb) => {
+        cb.setValue(pluginSetting.useContextMenu).onChange((isEnable) =>
+          __awaiter(this, void 0, void 0, function* () {
+            pluginSetting.useContextMenu = isEnable;
+            yield this.plugin.saveSettings();
+          }),
+        );
+      });
+  }
 }
 
 module.exports = CodeBlockEnhancer;

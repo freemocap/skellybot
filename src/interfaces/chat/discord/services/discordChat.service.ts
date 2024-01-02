@@ -25,12 +25,12 @@ export class DiscordChatService {
     this._logger.log('Deferred reply');
 
     const chain =
-      await this.chainBuilderService.createChain('gpt-4-1106-preview');
+      await this.chainBuilderService.buildChain('gpt-4-1106-preview');
 
     // @ts-ignore
-    const channelDescription = interaction.channel.topic;
+    const contextDescription = interaction.channel.topic;
     const result = await chain.invoke({
-      topic: channelDescription,
+      contextDescription,
       text,
     });
 

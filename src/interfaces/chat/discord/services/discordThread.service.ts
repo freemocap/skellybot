@@ -96,7 +96,7 @@ export class DiscordThreadService implements OnModuleDestroy {
       thread.id,
       inputText,
       {
-        topic: channel.topic,
+        contextDescription: channel.topic,
       },
     );
     thread.sendTyping();

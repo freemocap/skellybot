@@ -1,83 +1,72 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { OpenAI } from 'langchain/llms/openai';
-import { OpenAiSecretsService } from '../openAiSecrets.service';
 import { ChatPromptTemplate, MessagesPlaceholder } from 'langchain/prompts';
 import { BufferMemory } from 'langchain/memory';
 import { RunnableSequence } from 'langchain/runnables';
+import { OpenAI } from 'langchain/llms/openai';
+import { OpenAiSecretsService } from '../openAiSecrets.service';
 
 @Injectable()
 export class ChainBuilderService {
-  private _model: OpenAI<any>;
-  private _promptTemplate: ChatPromptTemplate<any, any>;
-  private _memory: BufferMemory;
-  private _chain: RunnableSequence;
+  private promptTemplate: ChatPromptTemplate<any, any>;
+  private memory: BufferMemory;
+  private model: OpenAI<any>;
+  private chain: RunnableSequence<any, string>;
 
   constructor(
     private readonly _openAiSecrets: OpenAiSecretsService,
     private readonly _logger: Logger,
   ) {}
 
-  async createPrompt() {
-    if (!this._promptTemplate) {
-      this._logger.log('Creating prompt...');
-      this._promptTemplate = ChatPromptTemplate.fromMessages([
-        [
-          'system',
-          'You were having a conversation with a human in a context with this description: \n {topic}',
-        ],
-        new MessagesPlaceholder('history'),
-        ['human', '{text}'],
-      ]);
-    }
-
-    this._logger.log('Returning prompt: ' + this._promptTemplate);
-    return this._promptTemplate;
+  private createPromptTemplate() {
+    this.promptTemplate = ChatPromptTemplate.fromMessages([
+      [
+        'system',
+        'You were having a conversation with a human about {contextDescription}',
+      ],
+      new MessagesPlaceholder('history'),
+      ['human', '{input}'],
+    ]);
+    this._logger.log(`Created prompt template`);
   }
 
-  private async createMemory() {
-    this._memory = new BufferMemory({
+  private createMemory(): void {
+    this.memory = new BufferMemory({
       returnMessages: true,
       inputKey: 'input',
       outputKey: 'output',
       memoryKey: 'history',
     });
-    this._logger.log(`Created memory with key: ${this._memory.memoryKey}`);
-    return this._memory;
+    this._logger.log(`Created memory`);
   }
 
-  async createModel(modelName?: string) {
-    if (!this._model) {
-      this._logger.log('Creating model...');
-      this._model = new OpenAI({
-        modelName: modelName || 'gpt-4-1106-preview',
-        openAIApiKey: await this._openAiSecrets.getOpenAIKey(),
-      });
-    }
-    this._logger.log(`
-    Returning;
-    model: ${this._model.modelName}`);
-    return this._model;
+  async createModel(modelName?: string): Promise<void> {
+    this.model = new OpenAI({
+      modelName: modelName || 'gpt-4-1106-preview',
+      openAIApiKey: await this._openAiSecrets.getOpenAIKey(),
+    });
   }
 
-  async createChain(modelName?: string) {
-    const model = await this.createModel(modelName);
-    const prompt = await this.createPrompt();
-    const memory = await this.createMemory();
-
-    this._chain = RunnableSequence.from([
+  private createChain(): void {
+    this.chain = RunnableSequence.from([
       {
-        input: (initialInput) => initialInput.input,
-        memory: () => memory.loadMemoryVariables({}),
+        input: (initialInput: any) => initialInput.input,
+        memory: () => this.memory.loadMemoryVariables({}),
       },
       {
-        input: (previousOutput) => previousOutput.input,
-        history: (previousOutput) => previousOutput.memory.history,
+        input: (previousOutput: any) => previousOutput.input,
+        history: (previousOutput: any) => previousOutput.memory.history,
       },
-      prompt,
-      model,
+      this.promptTemplate,
+      this.model,
     ]);
+  }
 
-    this._logger.log(`Created chain: ${this._chain.toJSON()}`);
-    return this._chain;
+  async buildChain(modelName: string): Promise<RunnableSequence> {
+    this.createPromptTemplate();
+    this.createMemory();
+    await this.createModel(modelName);
+    this.createChain();
+
+    return this.chain;
   }
 }

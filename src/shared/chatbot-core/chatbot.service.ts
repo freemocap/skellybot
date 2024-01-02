@@ -19,8 +19,9 @@ export class ChatbotService {
   ) {}
 
   public async createChatbot(chatbotId: string | number, modelName?: string) {
-    const chain = await this._chainBuilderService.createChain(modelName);
-
+    const chain = await this._chainBuilderService.buildChain(
+      modelName || 'gpt-4-1106-preview',
+    );
     const chatbot = { chain } as Chatbot;
     this._chatbots.set(String(chatbotId), chatbot);
     return chatbot;
@@ -62,10 +63,8 @@ export class ChatbotService {
     };
     const { splitAt } = normalizedOptions;
     const chatbot = this.getChatbotById(chatbotId);
-    const chatStream = await chatbot.chain.stream({
-      text: humanMessage,
-      ...additionalArgs,
-    });
+    const inputs = { text: humanMessage, ...additionalArgs };
+    const chatStream = await chatbot.chain.stream(inputs);
 
     let streamedResult = '';
     let subStreamResult = '';

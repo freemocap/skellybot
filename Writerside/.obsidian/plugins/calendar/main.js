@@ -2162,7 +2162,7 @@ function create_if_block$1(ctx) {
     then: create_then_block,
     catch: create_catch_block,
     value: 3,
-    blocks: [, ,],
+    blocks: [,],
   };
 
   handle_promise((promise = /*metadata*/ ctx[0]), info);

@@ -4,19 +4,19 @@
     - [ ] Ingestion interface
         - [ ] [FileSystem](FileSystem.md)
 - [ ] Embedding method #Langchain
-  - [ ] #OpenAI
-  - [ ] #HuggingFace
-  - [ ] Local
-    - [ ] Persistence Method
-        - local #Chroma
-        - hosted #MongoDB?
-    - [ ] Retriever Method ?
-    - [ ] Sources
-        - [ ] [ContextRoute](ContextRoute.md)
-            - [ ] By Couplet
-            - [ ] By Thread
-            - [ ] By Channel
-            - [ ] By Category
-            - [ ] By Server
-            - [ ] By Topic/Tag
-            - [ ] By Query (embeddings distance search, #Chroma)
+    - [ ] #OpenAI
+    - [ ] #HuggingFace
+    - [ ] Local
+        - [ ] Persistence Method
+            - local #Chroma
+            - hosted #MongoDB?
+        - [ ] Retriever Method ?
+        - [ ] Sources
+            - [ ] [ContextRoute](ContextRoute.md)
+                - [ ] By Couplet
+                - [ ] By Thread
+                - [ ] By Channel
+                - [ ] By Category
+                - [ ] By Server
+                - [ ] By Topic/Tag
+                - [ ] By Query (embeddings distance search, #Chroma)
