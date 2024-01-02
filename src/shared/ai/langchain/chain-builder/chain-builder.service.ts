@@ -49,6 +49,7 @@ export class ChainBuilderService {
       ['system', 'You were having a conversation with a human about {topic}'],
       ['human', '{text}'],
     ];
+
     // @ts-ignore
     const template = ChatPromptTemplate.fromMessages(promptStructure);
     this._logger.log('Creating prompt...', promptStructure);
