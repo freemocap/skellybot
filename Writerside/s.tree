@@ -9,6 +9,7 @@
         <toc-element topic="ProjectNotes.md">
             <toc-element topic="Chatbot.md">
                 <toc-element topic="AI.md">
+                    <toc-element topic="Tools.md"/>
                     <toc-element topic="LangChain.md">
                         <toc-element topic="OpenAI.md"/>
                     </toc-element>
