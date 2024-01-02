@@ -2,7 +2,7 @@ import { Injectable, Logger, LogLevel as NestLogLevel } from '@nestjs/common';
 import { LogLevel as SlackLogLevel } from '@slack/bolt';
 
 @Injectable()
-export class SlackLoggerProxy extends Logger {
+export class SlackLoggerAdapter extends Logger {
   level: NestLogLevel = 'log';
 
   constructor(name: string) {
