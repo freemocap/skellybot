@@ -2,12 +2,13 @@
   - [ ] Ingestion Method
     - [ ] Ingestion interface
 	    - [ ] [FileSystem](FileSystem.md)
-- [ ] Embedding method #Langchain
-      - [ ] #OpenAI
-      - [ ] #HuggingFace
+- [ ] Embedding method 
+      - [ ] [OpenAI](OpenAI.md)
+      - [ ] HuggingFace
       - [ ] Local
     - [ ] Persistence Method
-      - local #Chroma
+      - local 
+        - [Chroma](Chroma.md)
       - hosted #MongoDB?
     - [ ] Retriever Method ?
   - [ ] Sources
