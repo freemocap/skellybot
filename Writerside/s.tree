@@ -6,6 +6,7 @@
                   name="SkellyBot" start-page="Overview.md">
 
     <toc-element topic="Overview.md">
+        <toc-element topic="Environment-Setup.md"/>
         <toc-element topic="ProjectNotes.md">
             <toc-element topic="Chatbot.md">
                 <toc-element topic="User-Interface.md"/>
