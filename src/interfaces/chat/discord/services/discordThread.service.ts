@@ -1,6 +1,5 @@
 import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { Context, Options, SlashCommand, SlashCommandContext } from 'necord';
-import { DEV_GUILDS } from '../../../../shared/config/constants';
 import { TextDto } from '../dto/textDto';
 import { ChatbotService } from '../../../../shared/chatbot-core/chatbot.service';
 import {
@@ -23,7 +22,6 @@ export class DiscordThreadService implements OnModuleDestroy {
     name: 'skelly',
     description:
       'Opens a thread at this location and sets up a conversation with with the bot.',
-    guilds: DEV_GUILDS,
   })
   public async onThreadCommand(
     @Context() [interaction]: SlashCommandContext,

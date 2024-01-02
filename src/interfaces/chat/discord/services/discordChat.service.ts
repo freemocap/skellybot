@@ -1,6 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Context, Options, SlashCommand, SlashCommandContext } from 'necord';
-import { DEV_GUILDS } from '../../../../shared/config/constants';
 import { TextDto } from '../dto/textDto';
 import { ChainBuilderService } from '../../../../shared/ai/langchain/chain-builder/chain-builder.service';
 
@@ -14,7 +13,6 @@ export class DiscordChatService {
   @SlashCommand({
     name: 'chat',
     description: 'chat service',
-    guilds: DEV_GUILDS,
   })
   public async onChat(
     @Context() [interaction]: SlashCommandContext,

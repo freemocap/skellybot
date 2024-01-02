@@ -2,19 +2,18 @@ import { Injectable } from '@nestjs/common';
 import { NecordModuleOptions } from 'necord';
 import { IntentsBitField } from 'discord.js';
 import { SecretsManagerService } from '../../../../shared/gcp/secretsManager.service';
-import { DISCORD_API_DEV_TOKEN, DISCORD_API_TOKEN } from '../secrets/secrets';
+import { DISCORD_BOT_TOKEN } from '../secrets/secrets';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class NecordConfigService {
-  constructor(private readonly sms: SecretsManagerService) {}
+  constructor(
+    private readonly sms: SecretsManagerService,
+    private readonly _cfgService: ConfigService,
+  ) {}
 
   async createNecordOptions(): Promise<NecordModuleOptions> {
-    const secretName = this._createTokenByNodeEnv();
-
-    const [secret] = await this.sms.getManager().accessSecretVersion({
-      name: secretName,
-    });
-    const token = secret.payload.data.toString();
+    const token = await this._createTokenByNodeEnv();
     return {
       token,
       intents: [
@@ -24,11 +23,16 @@ export class NecordConfigService {
       ],
     };
   }
-  private _createTokenByNodeEnv() {
+
+  private async _createTokenByNodeEnv() {
     if (process.env.NODE_ENV === 'production') {
-      return DISCORD_API_TOKEN;
+      const secretName = this._cfgService.get(DISCORD_BOT_TOKEN);
+      const [secret] = await this.sms.getManager().accessSecretVersion({
+        name: secretName,
+      });
+      return secret.payload.data.toString();
     }
 
-    return DISCORD_API_DEV_TOKEN;
+    return this._cfgService.get('DISCORD_BOT_TOKEN');
   }
 }

@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { Context, SlashCommand, SlashCommandContext } from 'necord';
-import { DEV_GUILDS } from '../../../../shared/config/constants';
 
 @Injectable()
 export class DiscordPingService {
@@ -17,7 +16,6 @@ export class DiscordPingService {
   @SlashCommand({
     name: 'wow',
     description: 'Wow Command',
-    guilds: DEV_GUILDS,
   })
   public async handleWowSlashCommand(
     @Context() [interaction]: SlashCommandContext,

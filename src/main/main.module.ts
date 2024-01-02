@@ -9,7 +9,7 @@ import { MyDiscordModule } from '../interfaces/chat/discord/myDiscord.module';
     MyDiscordModule,
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: ['.env', '.env.slack'],
+      envFilePath: ['.env', '.env.slack', '.env.discord'],
     }),
     SlackInterfaceModule,
   ],
