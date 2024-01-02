@@ -1,10 +1,10 @@
 import { StringOption } from 'necord';
 
-export class TextDto {
+export class HumanTextDto {
   @StringOption({
     name: 'text',
     description: 'Your text',
     required: true,
   })
-  text: string;
+  humanText: string;
 }

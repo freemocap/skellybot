@@ -1,7 +1,7 @@
 import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { Context, Options, SlashCommand, SlashCommandContext } from 'necord';
 import { DEV_GUILDS } from '../../../../shared/config/constants';
-import { TextDto } from '../dto/textDto';
+import { HumanTextDto } from '../dto/humanTextDto';
 import { ChatbotService } from '../../../../shared/chatbot-core/chatbot.service';
 import {
   ChatInputCommandInteraction,
@@ -27,16 +27,16 @@ export class DiscordThreadService implements OnModuleDestroy {
   })
   public async onThreadCommand(
     @Context() [interaction]: SlashCommandContext,
-    @Options() startingText: TextDto,
+    @Options() startingText: HumanTextDto,
   ) {
     await interaction.deferReply();
-    const { text } = startingText;
+    const { humanText } = startingText;
     this._logger.log(
-      `Creating thread with starting text:'${text}' in channel: name= ${interaction.channel.name}, id=${interaction.channel.id} `,
+      `Creating thread with starting text:'${humanText}' in channel: name= ${interaction.channel.name}, id=${interaction.channel.id} `,
     );
     const channel = interaction.channel as TextChannel;
     const thread = await channel.threads.create({
-      name: text || 'new thread',
+      name: humanText || 'new thread',
       autoArchiveDuration: 60,
       reason: 'wow this is a thread',
     });
@@ -44,7 +44,7 @@ export class DiscordThreadService implements OnModuleDestroy {
     await this._chatbotService.createChatbot(thread.id);
 
     this._beginWatchingIncomingMessages(interaction, channel, thread);
-    await this._sendInitialReply(interaction, channel, thread, text);
+    await this._sendInitialReply(interaction, channel, thread, humanText);
   }
 
   /**
