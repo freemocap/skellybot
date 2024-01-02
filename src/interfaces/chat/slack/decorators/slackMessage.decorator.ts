@@ -6,7 +6,7 @@ export interface SlackMessageArgs {
   message: string;
 }
 
-export function SlackMessageCommand(message?: string) {
+export function SlackMessage(message?: string) {
   return SetMetadata(SLACK_MESSAGE_METADATA_KEY, {
     message,
   } as SlackMessageArgs);

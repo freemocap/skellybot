@@ -1,18 +1,13 @@
 import { Module, OnModuleInit } from '@nestjs/common';
 import { GcpModule } from '../../../shared/gcp/gcp.module';
-import { SlackModule } from 'nestjs-slack-bolt';
 import { SlackInterfaceService } from './slackInterface.service';
 import { SlackCommandMethodDiscovery } from './decorators/discovery';
 import { DiscoveryModule } from '@golevelup/nestjs-discovery';
 import { ChatbotCoreModule } from '../../../shared/chatbot-core/chatbotCore.module';
+import { SlackBoltModule } from './bolt/slackBolt.module';
 
 @Module({
-  imports: [
-    DiscoveryModule,
-    ChatbotCoreModule,
-    GcpModule,
-    SlackModule.forRoot(),
-  ],
+  imports: [SlackBoltModule, DiscoveryModule, ChatbotCoreModule, GcpModule],
   providers: [SlackInterfaceService, SlackCommandMethodDiscovery],
 })
 export class SlackInterfaceModule implements OnModuleInit {

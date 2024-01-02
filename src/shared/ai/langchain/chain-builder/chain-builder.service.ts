@@ -16,13 +16,13 @@ export class ChainBuilderService {
   async createPrompt() {
     if (!this.promptTemplate) {
       this._logger.log('Creating prompt...');
-      this.promptTemplate = ChatPromptTemplate.fromMessages([
+      const promptStructure = [
         ['system', 'You were having a conversation with a human about {topic}'],
         ['human', '{text}'],
-      ]);
+      ];
+      // @ts-ignore
+      this.promptTemplate = ChatPromptTemplate.fromMessages(promptStructure);
     }
-
-    this._logger.log('Returning prompt: ' + this.promptTemplate);
     return this.promptTemplate;
   }
 
@@ -42,7 +42,6 @@ export class ChainBuilderService {
     const model = await this.createModel(modelName);
     const promptTemplate = await this.createPrompt();
     const chain = promptTemplate.pipe(model);
-    this._logger.log('Created chain: ' + chain);
     return chain;
   }
 }

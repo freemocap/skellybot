@@ -1,6 +1,5 @@
 import { DiscoveryService } from '@golevelup/nestjs-discovery';
 import { Injectable } from '@nestjs/common';
-import { SlackService } from 'nestjs-slack-bolt/dist/services/slack.service';
 import {
   SLACK_COMMAND_METADATA_KEY,
   SlackCommandArgs,
@@ -9,12 +8,13 @@ import {
   SLACK_MESSAGE_METADATA_KEY,
   SlackMessageArgs,
 } from './slackMessage.decorator';
+import { App } from '@slack/bolt';
 
 @Injectable()
 export class SlackCommandMethodDiscovery {
   constructor(
     private readonly _discoveryService: DiscoveryService,
-    private readonly _client: SlackService,
+    private readonly _client: App,
   ) {}
 
   public async bindSlackCommands() {
@@ -29,7 +29,7 @@ export class SlackCommandMethodDiscovery {
       const handler = result.discoveredMethod.handler;
       const that = result.discoveredMethod.parentClass.instance;
       const boundHandler = handler.bind(that);
-      this._client.app.command(command, boundHandler);
+      this._client.command(command, boundHandler);
     });
   }
 
@@ -45,7 +45,11 @@ export class SlackCommandMethodDiscovery {
       const handler = result.discoveredMethod.handler;
       const that = result.discoveredMethod.parentClass.instance;
       const boundHandler = handler.bind(that);
-      this._client.app.message(message, boundHandler);
+      if (message) {
+        this._client.message(message, boundHandler);
+        return;
+      }
+      this._client.message(boundHandler);
     });
   }
 }

@@ -2,16 +2,48 @@ import { Injectable } from '@nestjs/common';
 import { SlackCommand } from './decorators/slackCommand.decorator';
 import { ChatbotService } from '../../../shared/chatbot-core/chatbot.service';
 import { v4 } from 'uuid';
-import { SlackCommandMiddlewareArgs } from '@slack/bolt';
+import {
+  App,
+  GenericMessageEvent,
+  SlackCommandMiddlewareArgs,
+  SlackEventMiddlewareArgs,
+} from '@slack/bolt';
+import { SlackMessage } from './decorators/slackMessage.decorator';
 
 @Injectable()
 export class SlackInterfaceService {
-  constructor(private readonly _chatbotCore: ChatbotService) {}
+  constructor(
+    private readonly _chatbotCore: ChatbotService,
+    private readonly _app: App,
+  ) {}
 
-  // @SlackMessageCommand()
-  // async message(args: SlackEventMiddlewareArgs) {
-  //   console.log('message received');
-  // }
+  @SlackMessage()
+  async handleBotMessages({
+    say,
+    message,
+  }: SlackEventMiddlewareArgs<'message'>) {
+    if (
+      message.subtype === undefined ||
+      message.subtype === 'bot_message' ||
+      message.subtype === 'file_share' ||
+      message.subtype === 'thread_broadcast'
+    ) {
+      const id = message.ts;
+      const { text } = message as GenericMessageEvent;
+      await this._chatbotCore.createChatbot(id);
+      const stream = this._chatbotCore.streamResponse(id, text, {
+        topic: '',
+      });
+      const response = await say({ text: 'incoming', thread_ts: message.ts });
+      for await (const block of stream) {
+        await this._app.client.chat.update({
+          text: block.data,
+          ts: response.ts,
+          channel: response.channel,
+        });
+      }
+    }
+  }
 
   @SlackCommand('/help') // handle command
   async help({ command, ack, say, respond }: SlackCommandMiddlewareArgs) {
