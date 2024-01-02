@@ -2,10 +2,10 @@
 
 Golem - An artifical creation that behaves on the basis of the words shoved into its head
 
-- see: 
-  - https://en.wikipedia.org/wiki/Golem
-  - https://en.wikipedia.org/wiki/Feet_of_Clay_(novel)
-  - 
+- see:
+    - https://en.wikipedia.org/wiki/Golem
+    - https://en.wikipedia.org/wiki/Feet_of_Clay_(novel)
+    -
 
 Code: https://github.com/jonmatthis/golem_garden
 

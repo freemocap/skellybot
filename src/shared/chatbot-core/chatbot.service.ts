@@ -12,6 +12,7 @@ class StreamResponseOptions {
 @Injectable()
 export class ChatbotService {
   private _chatbots: Map<string, Chatbot> = new Map();
+
   constructor(
     private readonly _logger: Logger,
     private readonly _chainBuilderService: ChainBuilderService,
@@ -48,6 +49,7 @@ export class ChatbotService {
       throw error;
     }
   }
+
   async *streamResponse(
     chatbotId: string | number,
     humanMessage: string,

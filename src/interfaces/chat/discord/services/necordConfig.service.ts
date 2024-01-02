@@ -24,6 +24,7 @@ export class NecordConfigService {
       ],
     };
   }
+
   private _createTokenByNodeEnv() {
     if (process.env.NODE_ENV === 'production') {
       return DISCORD_API_TOKEN;

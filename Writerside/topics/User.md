@@ -1,6 +1,6 @@
 # User
 
-## Description 
+## Description
 
 A human user or group of human users
 
