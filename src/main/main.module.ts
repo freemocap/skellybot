@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { MyDiscordModule } from '../interfaces/chat/discord/myDiscord.module';
-import { SlackInterfaceModule } from '../interfaces/chat/slack/slackInterface.module';
+// import { SlackInterfaceModule } from '../interfaces/chat/slack/slackInterface.module';
 import { MainController } from './main.controller';
 import { ConfigModule } from '@nestjs/config';
 
@@ -11,7 +11,7 @@ import { ConfigModule } from '@nestjs/config';
       isGlobal: true,
       envFilePath: ['.env.slack'],
     }),
-    SlackInterfaceModule,
+    // SlackInterfaceModule,
   ],
   controllers: [MainController],
 })
