@@ -21,8 +21,11 @@ export class ChainBuilderService {
     if (!this._promptTemplate) {
       this._logger.log('Creating prompt...');
       this._promptTemplate = ChatPromptTemplate.fromMessages([
-        ['system', 'You were having a conversation with a human about {topic}'],
-        new MessagesPlaceholder('chatHistory'),
+        [
+          'system',
+          'You were having a conversation with a human in a context with this description: \n {topic}',
+        ],
+        new MessagesPlaceholder('history'),
         ['human', '{text}'],
       ]);
     }
@@ -36,7 +39,7 @@ export class ChainBuilderService {
       returnMessages: true,
       inputKey: 'input',
       outputKey: 'output',
-      memoryKey: 'chat_history',
+      memoryKey: 'history',
     });
     this._logger.log(`Created memory with key: ${this._memory.memoryKey}`);
     return this._memory;
@@ -50,7 +53,9 @@ export class ChainBuilderService {
         openAIApiKey: await this._openAiSecrets.getOpenAIKey(),
       });
     }
-    this._logger.log(`Returning model: ${this._model.modelName}`);
+    this._logger.log(`
+    Returning;
+    model: ${this._model.modelName}`);
     return this._model;
   }
 

@@ -81,7 +81,7 @@ export class DiscordThreadService implements OnModuleDestroy {
     thread: ThreadChannel,
     inputText: string,
   ) {
-    const initialMessage = await thread.send(inputText);
+    const initialMessage = await thread.send(`The Human said: \n ${inputText}`);
     await interaction.editReply('Thread Created!');
     await this._handleStream(channel, thread, inputText, initialMessage);
   }
