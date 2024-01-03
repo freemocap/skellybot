@@ -14,7 +14,9 @@ from langchain_core.runnables import (
     RunnablePassthrough,
 )
 from pymongo import MongoClient
+from dotenv import load_dotenv
 
+load_dotenv()
 # Set DB
 if os.environ.get("MONGO_URI", None) is None:
     raise Exception("Missing `MONGO_URI` environment variable.")

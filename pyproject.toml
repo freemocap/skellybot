@@ -7,7 +7,7 @@ license = "AGPLv3"
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.12"
+python = ">3.9, <3.12"
 langchain-cli = {version = "^0.0.20", extras = ["serve"]}
 python-dotenv = "^1.0.0"
 pypdf = "^3.17.4"
