@@ -1,6 +1,6 @@
 # User Interface
 
-The stuff we want to let the [User](User.md) control about the [ChatBot](ChatBot.md)
+The stuff we want to let the [User](User.md) control about the [ChatBot](Chatbot.md)
 
 ## LLM Config
 - [ ] ModelName (default = "gpt4-1106-preview" for now, "gpt4-turbo" when it becomes available)

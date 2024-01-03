@@ -74,6 +74,7 @@
         <toc-element topic="User-Interface.md"/>
         <toc-element topic="AI.md">
             <toc-element topic="Tools.md">
+                <toc-element topic="Chroma.md"/>
                 <toc-element topic="Foam.md"/>
                 <toc-element topic="ContinueDev.md"/>
                 <toc-element topic="OpenAI.md"/>
