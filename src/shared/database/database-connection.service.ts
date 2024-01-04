@@ -51,12 +51,4 @@ export class DatabaseConnectionService implements OnModuleInit {
     );
     return throwError(error);
   }
-  async testConnection() {
-    try {
-      const state = this.connection.readyState;
-      return state === 1 ? 'connected' : 'Not connected';
-    } catch (error) {
-      throw new Error(`Database not connected ${error}`);
-    }
-  }
 }
