@@ -50,4 +50,16 @@
         <description>Created after removal of "UseCases" from SkellyBot</description>
         <accepts>UseCases.html</accepts>
     </rule>
+    <rule id="6f64506">
+        <description>Created after removal of "AppArchitecture" from SkellyBot</description>
+        <accepts>AppArchitecture.html</accepts>
+    </rule>
+    <rule id="5fb3ff2f">
+        <description>Created after removal of "MainModule" from SkellyBot</description>
+        <accepts>MainModule.html</accepts>
+    </rule>
+    <rule id="396f7b58">
+        <description>Created after removal of "APP" from SkellyBot</description>
+        <accepts>APP.html</accepts>
+    </rule>
 </rules>

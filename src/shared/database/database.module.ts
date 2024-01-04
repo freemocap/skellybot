@@ -12,7 +12,7 @@ import { GcpModule } from '../gcp/gcp.module';
     }),
     GcpModule,
   ],
-  providers: [Logger, DatabaseConnectionService],
+  providers: [Logger, DatabaseConnectionService, MongoConfigService],
   exports: [],
 })
 export class DatabaseModule {}

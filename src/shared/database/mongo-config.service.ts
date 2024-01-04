@@ -20,7 +20,7 @@ export class MongoConfigService {
         .accessSecretVersion({ name: secretName });
       return secret.payload.data.toString();
     }
-    return this._cfgService.get('DISCORD_BOT_TOKEN');
+    return this._cfgService.get('MONGO_URI');
   }
 
   public async createMongooseOptions() {
@@ -33,5 +33,10 @@ export class MongoConfigService {
       autoIndex: false,
       retryWrites: true,
     };
+  }
+
+  public async getMongoUri() {
+    const options = await this.createMongooseOptions();
+    return options.uri;
   }
 }
