@@ -22,4 +22,16 @@ export class MongoConfigService {
     }
     return this._cfgService.get('DISCORD_BOT_TOKEN');
   }
+
+  public async createMongooseOptions() {
+    return {
+      uri: await this._createTokenByNodeEnv(),
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      useCreateIndex: true,
+      useFindAndModify: false,
+      autoIndex: false,
+      retryWrites: true,
+    };
+  }
 }
