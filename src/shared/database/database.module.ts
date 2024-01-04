@@ -1,19 +1,18 @@
-import { MongoSecretsService } from './mongo-secrets.service';
-import { Module } from '@nestjs/common';
+import { MongoConfigService } from './mongo-config.service';
+import { Logger, Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
+import { DatabaseConnectionService } from './database-connection.service';
+import { GcpModule } from '../gcp/gcp.module';
 
 @Module({
   imports: [
     MongooseModule.forRootAsync({
-      imports: [MongoSecretsService],
-      useFactory: async (mongoSecretsService: MongoSecretsService) => ({
-        uri: await mongoSecretsService.getMongoUri(),
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-        useFindAndModify: false,
-      }),
+      imports: [GcpModule],
+      useClass: MongoConfigService,
     }),
+    GcpModule,
   ],
-  providers: [],
+  providers: [Logger, DatabaseConnectionService],
+  exports: [],
 })
 export class DatabaseModule {}

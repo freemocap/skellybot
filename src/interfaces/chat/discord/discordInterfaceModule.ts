@@ -23,4 +23,4 @@ import { ChatbotCoreModule } from '../../../shared/chatbot-core/chatbotCore.modu
     Logger,
   ],
 })
-export class MyDiscordModule {}
+export class DiscordInterfaceModule {}
