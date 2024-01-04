@@ -12,7 +12,7 @@ async def redirect_root_to_docs():
 
 
 
-add_routes(app, rag_mongo_chain, path="\rag-mongo")
+add_routes(app, rag_mongo_chain, path="/rag-mongo")
 
 
 if __name__ == "__main__":

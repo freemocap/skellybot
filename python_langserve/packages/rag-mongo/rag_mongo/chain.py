@@ -16,17 +16,17 @@ from langchain_core.runnables import (
 )
 from pymongo import MongoClient
 
-from rag_mongo_test_app.app.secrets.secrets_manager import SecretsManagerService
+from python_langserve.secrets.secrets_manager import SecretsManagerService
 
-load_dotenv()
-# Set DB
-if os.environ.get("MONGO_URI", None) is None:
+sms = SecretsManagerService()
+
+MONGO_URI = sms.get_secret("MONGO_URI")
+if not MONGO_URI:
     raise Exception("Missing `MONGO_URI` environment variable.")
-MONGO_URI = os.environ["MONGO_URI"]
 
-MONGO_DATABASE_NAME = SecretsManagerService().get_secret('MONGO_DATABASE_NAME')
-MONGO_COLLECTION_NAME = SecretsManagerService().get_secret('MONGO_COLLECTION_NAME')
-ATLAS_VECTOR_SEARCH_INDEX_NAME = SecretsManagerService().get_secret('ATLAS_VECTOR_SEARCH_INDEX_NAME')
+MONGO_DATABASE_NAME = sms.get_secret('MONGO_DATABASE_NAME')
+MONGO_COLLECTION_NAME = sms.get_secret('MONGO_COLLECTION_NAME')
+ATLAS_VECTOR_SEARCH_INDEX_NAME = sms.get_secret('ATLAS_VECTOR_SEARCH_INDEX_NAME')
 
 client = MongoClient(MONGO_URI)
 db = client[MONGO_DATABASE_NAME]
@@ -36,7 +36,8 @@ MONGODB_COLLECTION = db[MONGO_COLLECTION_NAME]
 vectorstore = MongoDBAtlasVectorSearch.from_connection_string(
     MONGO_URI,
     MONGO_DATABASE_NAME + "." + MONGO_COLLECTION_NAME,
-    OpenAIEmbeddings(disallowed_special=()),
+    OpenAIEmbeddings(disallowed_special=(),
+                     openai_api_key = sms.get_secret("OPENAI_API_KEY")),
     index_name=ATLAS_VECTOR_SEARCH_INDEX_NAME,
 )
 retriever = vectorstore.as_retriever()
@@ -49,7 +50,7 @@ Question: {question}
 prompt = ChatPromptTemplate.from_template(template)
 
 # RAG
-model = ChatOpenAI()
+model = ChatOpenAI(openai_api_key = sms.get_secret("OPENAI_API_KEY"))
 chain = (
         RunnableParallel({"context": retriever, "question": RunnablePassthrough()})
         | prompt

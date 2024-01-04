@@ -4,7 +4,7 @@ from langchain_community.embeddings import OpenAIEmbeddings
 from langchain_community.vectorstores import MongoDBAtlasVectorSearch
 from pymongo import MongoClient
 
-from rag_mongo_test_app.app.secrets.secrets_manager import SecretsManagerService
+from python_langserve.secrets.secrets_manager import SecretsManagerService
 
 sms = SecretsManagerService()
 MONGO_URI = sms.get_secret('MONGO_URI')
