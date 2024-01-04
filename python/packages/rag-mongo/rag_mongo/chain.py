@@ -1,5 +1,6 @@
 import os
 
+from dotenv import load_dotenv
 from langchain.prompts import ChatPromptTemplate
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.chat_models import ChatOpenAI
@@ -14,7 +15,8 @@ from langchain_core.runnables import (
     RunnablePassthrough,
 )
 from pymongo import MongoClient
-from dotenv import load_dotenv
+
+from rag_mongo_test_app.app.secrets.secrets_manager import SecretsManagerService
 
 load_dotenv()
 # Set DB
@@ -22,18 +24,18 @@ if os.environ.get("MONGO_URI", None) is None:
     raise Exception("Missing `MONGO_URI` environment variable.")
 MONGO_URI = os.environ["MONGO_URI"]
 
-DB_NAME = "langchain-test-2"
-COLLECTION_NAME = "test"
-ATLAS_VECTOR_SEARCH_INDEX_NAME = "default"
+MONGO_DATABASE_NAME = SecretsManagerService().get_secret('MONGO_DATABASE_NAME')
+MONGO_COLLECTION_NAME = SecretsManagerService().get_secret('MONGO_COLLECTION_NAME')
+ATLAS_VECTOR_SEARCH_INDEX_NAME = SecretsManagerService().get_secret('ATLAS_VECTOR_SEARCH_INDEX_NAME')
 
 client = MongoClient(MONGO_URI)
-db = client[DB_NAME]
-MONGODB_COLLECTION = db[COLLECTION_NAME]
+db = client[MONGO_DATABASE_NAME]
+MONGODB_COLLECTION = db[MONGO_COLLECTION_NAME]
 
 # Read from MongoDB Atlas Vector Search
 vectorstore = MongoDBAtlasVectorSearch.from_connection_string(
     MONGO_URI,
-    DB_NAME + "." + COLLECTION_NAME,
+    MONGO_DATABASE_NAME + "." + MONGO_COLLECTION_NAME,
     OpenAIEmbeddings(disallowed_special=()),
     index_name=ATLAS_VECTOR_SEARCH_INDEX_NAME,
 )
@@ -49,10 +51,10 @@ prompt = ChatPromptTemplate.from_template(template)
 # RAG
 model = ChatOpenAI()
 chain = (
-    RunnableParallel({"context": retriever, "question": RunnablePassthrough()})
-    | prompt
-    | model
-    | StrOutputParser()
+        RunnableParallel({"context": retriever, "question": RunnablePassthrough()})
+        | prompt
+        | model
+        | StrOutputParser()
 )
 
 

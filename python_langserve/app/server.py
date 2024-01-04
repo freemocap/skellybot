@@ -5,7 +5,6 @@ from rag_mongo import chain as rag_mongo_chain
 
 app = FastAPI()
 
-add_routes(app, rag_mongo_chain, path="/rag-mongo")
 
 @app.get("/")
 async def redirect_root_to_docs():
@@ -13,9 +12,10 @@ async def redirect_root_to_docs():
 
 
 
+add_routes(app, rag_mongo_chain, path="\rag-mongo")
+
+
 if __name__ == "__main__":
-
-
     import uvicorn
 
     uvicorn.run(app, host="localhost", port=8000)

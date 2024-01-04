@@ -1,24 +1,21 @@
-import os
-
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_community.embeddings import OpenAIEmbeddings
 from langchain_community.vectorstores import MongoDBAtlasVectorSearch
 from pymongo import MongoClient
 
-from dotenv import load_dotenv
+from rag_mongo_test_app.app.secrets.secrets_manager import SecretsManagerService
 
-load_dotenv()
-MONGO_URI = os.environ["MONGO_URI"]
+sms = SecretsManagerService()
+MONGO_URI = sms.get_secret('MONGO_URI')
+MONGO_DATABASE_NAME = sms.get_secret('MONGO_DATABASE_NAME')
+MONGO_COLLECTION_NAME = sms.get_secret('MONGO_COLLECTION_NAME')
+ATLAS_VECTOR_SEARCH_INDEX_NAME = sms.get_secret('ATLAS_VECTOR_SEARCH_INDEX_NAME')
+MONGO_EMBEDDING_FIELD_NAME = sms.get_secret('MONGO_EMBEDDING_FIELD_NAME')
 
-# Note that if you change this, you also need to change it in `rag_mongo/chain.py`
-DB_NAME = "langchain-test-2"
-COLLECTION_NAME = "test"
-ATLAS_VECTOR_SEARCH_INDEX_NAME = "default"
-EMBEDDING_FIELD_NAME = "embedding"
 client = MongoClient(MONGO_URI)
-db = client[DB_NAME]
-MONGODB_COLLECTION = db[COLLECTION_NAME]
+db = client[MONGO_DATABASE_NAME]
+MONGODB_COLLECTION = db[MONGO_COLLECTION_NAME]
 
 if __name__ == "__main__":
     print("Starting the document ingestion process...")
@@ -39,10 +36,12 @@ if __name__ == "__main__":
     print("Inserting documents into MongoDB Atlas Vector Search...")
     _ = MongoDBAtlasVectorSearch.from_documents(
         documents=docs,
-        embedding=OpenAIEmbeddings(disallowed_special=()),
+        embedding=OpenAIEmbeddings(disallowed_special=(),
+                                   openai_api_key=sms.get_secret("OPENAI_API_KEY")
+                                   ),
         collection=MONGODB_COLLECTION,
         index_name=ATLAS_VECTOR_SEARCH_INDEX_NAME,
     )
-    print("Documents inserted successfully.")
+    print("Documents ingested successfully.")
 
     print("Done!")
