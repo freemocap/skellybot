@@ -3,7 +3,7 @@ import { SlackInterfaceModule } from '../interfaces/chat/slack/slackInterface.mo
 import { MainController } from './main.controller';
 import { ConfigModule } from '@nestjs/config';
 import { DiscordInterfaceModule } from '../interfaces/chat/discord/discordInterfaceModule';
-import { DatabaseModule } from '../shared/database/database.module';
+import { MongoDatabaseModule } from '../shared/database/mongoDatabaseModule';
 
 @Module({
   imports: [
@@ -13,7 +13,7 @@ import { DatabaseModule } from '../shared/database/database.module';
       envFilePath: ['.env', '.env.slack', '.env.discord', '.env.mongo'],
     }),
     SlackInterfaceModule,
-    DatabaseModule,
+    MongoDatabaseModule,
   ],
   controllers: [MainController],
 })
