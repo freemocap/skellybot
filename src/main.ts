@@ -1,12 +1,12 @@
-import { NestFactory } from "@nestjs/core";
-import { MainModule } from "./main/main.module";
-import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
+import { NestFactory } from '@nestjs/core';
+import { MainModule } from './main/main.module';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(MainModule);
 
   const options = new DocumentBuilder()
-    .setTitle('SkellyBot 💀🤖')
+    .setTitle('SkellyBot 💀🤖✨')
     .setDescription(
       'The NestJS Swagger API docs for SkellyBot: https://github.com/freemocap/skellybot',
     )

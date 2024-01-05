@@ -1,8 +1,8 @@
 import { Controller, Get } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
-@ApiTags('skelly')
-@Controller('skelly')
+@ApiTags('skellybot')
+@Controller('skellybot')
 export class MainController {
   @Get()
   sendHello() {

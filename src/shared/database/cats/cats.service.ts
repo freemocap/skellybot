@@ -8,33 +8,27 @@ import { CreateCatDto } from './create-cat.dto';
 export class CatsService {
   constructor(@InjectModel(Cat.name) private readonly catModel: Model<Cat>) {}
 
-  async create(createCatDto: CreateCatDto): Promise<Cat> {
-    return await this.catModel.create(createCatDto);
-  }
-
   async findAll(): Promise<Cat[]> {
     return this.catModel.find().exec();
   }
 
   async findOne(id: string): Promise<Cat> {
-    return this.catModel.findOne({ _id: id }).exec();
+    return this.catModel.findOne({ name: id }).exec();
   }
 
-  async update(id: string, updateCatDto: CreateCatDto): Promise<Cat> {
+  async upsert(filter: object, createCatDto: CreateCatDto): Promise<Cat> {
     return this.catModel
-      .findByIdAndUpdate(id, updateCatDto, { new: true })
+      .findOneAndUpdate(
+        filter,
+        { $set: createCatDto },
+        { new: true, upsert: true },
+      )
       .exec();
   }
 
-  async upsert(filter: object, updateCatDto: CreateCatDto): Promise<Cat> {
-    return this.catModel
-      .findOneAndUpdate(filter, updateCatDto, { new: true, upsert: true })
-      .exec();
-  }
-
-  async delete(id: string) {
+  async delete(name: string) {
     const deletedCat = await this.catModel
-      .findByIdAndDelete({ _id: id })
+      .findOneAndDelete({ name: name })
       .exec();
     return deletedCat;
   }
