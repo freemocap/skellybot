@@ -1,22 +1,20 @@
+import { MongoChatHistoryService } from './mongo-chat-history/mongo-chat-history.service';
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
 import { ObjectId } from 'mongodb';
-import { Memory } from './memory.schema';
+import { BufferMemory } from 'langchain/memory';
 
 @Injectable()
-export class MemoryService {
-  constructor(@InjectModel('Memory') private memoryModel: Model<Memory>) {}
+export class MemoryService{
+    constructor(
+      private readonly _mongoChatHistoryService: MongoChatHistoryService,
+    ) {}
 
-  async createSession() {
+  async createMemory() {
     const sessionId = new ObjectId().toString();
-    const newMemory = new this.memoryModel({
-      sessionId,
-    });
-    return await newMemory.save();
-  }
 
-  async getChatHistory(sessionId: string) {
-    return await this.memoryModel.findOne({ sessionId });
+    const memory = new BufferMemory({
+      chatHistory: this._mongoChatHistoryService.createChatHistory(sessionId),
+    });
   }
-}
+  }
+  )
