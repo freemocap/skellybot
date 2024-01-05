@@ -1,12 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Context, Options, SlashCommand, SlashCommandContext } from 'necord';
 import { TextDto } from '../dto/textDto';
-import { ChainBuilderService } from '../../../../shared/ai/langchain/chain-builder/chain-builder.service';
+import { LangchainService } from '../../../../shared/ai/langchain/chain-builder/langchain.service';
 
 @Injectable()
 export class DiscordChatService {
   constructor(
-    private readonly chainBuilderService: ChainBuilderService,
+    private readonly chainBuilderService: LangchainService,
     private readonly _logger: Logger,
   ) {}
 

@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ChainBuilderService } from '../ai/langchain/chain-builder/chain-builder.service';
+import { LangchainService } from '../ai/langchain/chain-builder/langchain.service';
 import { Chatbot } from './chatbot.dto';
 
 class StreamResponseOptions {
@@ -14,7 +14,7 @@ export class ChatbotService {
   private _chatbots: Map<string, Chatbot> = new Map();
   constructor(
     private readonly _logger: Logger,
-    private readonly _chainBuilderService: ChainBuilderService,
+    private readonly _chainBuilderService: LangchainService,
   ) {}
 
   public async createChatbot(chatbotId: string | number, modelName?: string) {

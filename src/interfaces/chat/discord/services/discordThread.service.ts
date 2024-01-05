@@ -1,7 +1,7 @@
 import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { Context, Options, SlashCommand, SlashCommandContext } from 'necord';
 import { TextDto } from '../dto/textDto';
-import { ChatbotService } from '../../../../shared/chatbot-core/chatbot.service';
+import { ChatbotService } from '../../../../shared/chatbot/chatbot.service';
 import {
   ChatInputCommandInteraction,
   Client,

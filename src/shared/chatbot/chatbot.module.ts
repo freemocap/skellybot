@@ -7,4 +7,4 @@ import { ChatbotService } from './chatbot.service';
   providers: [ChatbotService, Logger],
   exports: [ChatbotService],
 })
-export class ChatbotCoreModule {}
+export class ChatbotModule {}

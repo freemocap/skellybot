@@ -3,14 +3,15 @@ import { OpenAI } from 'langchain/llms/openai';
 import { OpenAiSecretsService } from '../openAiSecrets.service';
 import { ChatPromptTemplate } from 'langchain/prompts';
 import { ConversationChain } from 'langchain/chains';
-import { MongoDBChatMessageHistoryService } from '../../../database/memory/mongo-chat-history.service';
+import { BufferMemory } from 'langchain/memory';
+import { MongoDBChatMessageHistory } from '@langchain/community/dist/stores/message/mongodb';
 
 @Injectable()
-export class ChainBuilderService {
+export class LangchainService {
   private _model: OpenAI<any>;
+  private _chat_history_collection_name: string = 'chat-history';
 
   constructor(
-    private readonly _memoryService: MongoDBChatMessageHistoryService,
     private readonly _openAiSecrets: OpenAiSecretsService,
     private readonly _logger: Logger,
   ) {}
@@ -20,10 +21,10 @@ export class ChainBuilderService {
    * Based on example from here: https://js.langchain.com/docs/integrations/chat_memory/mongodb#usage
    * @param modelName
    */
-  async createMongoMemoryChatChain(modelName?: string) {
+  async createMongoMemoryChatChain(chatId: string, modelName?: string) {
     const model = await this._createModel(modelName);
     const prompt = await this._createPrompt();
-    const memory = await this._createMemory();
+    const memory = await this._createMemory(chatId);
     return new ConversationChain({
       llm: model,
       prompt: prompt,
@@ -74,9 +75,14 @@ export class ChainBuilderService {
     return template;
   }
 
-  private async _createMemory() {
-    this._logger.log('Creating memory...', memory);
-
+  private async _createMemory(chatId) {
+    this._logger.log(`Creating memory for chatId ${chatId}`);
+    const memory = new BufferMemory({
+      chatHistory: new MongoDBChatMessageHistory({
+        collection: this._chat_history_collection_name,
+        sessionId: chatId,
+      }),
+    });
     return memory;
   }
 }
