@@ -15,4 +15,4 @@ import { GcpModule } from '../gcp/gcp.module';
   providers: [Logger, DatabaseConnectionService, MongoConfigService],
   exports: [],
 })
-export class MongoDatabaseModule {}
+export class DatabaseMongooseModule {}
