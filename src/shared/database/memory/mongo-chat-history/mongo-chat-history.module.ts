@@ -15,7 +15,14 @@ import { MongoChatHistoryService } from './mongo-chat-history.service';
       },
     ]),
   ],
-  providers: [MongoChatHistoryService],
+  providers: [
+    {
+      provide: 'COLLECTION_NAME',
+      useValue: 'chat-history',
+    },
+
+    MongoChatHistoryService,
+  ],
   exports: [MongoChatHistoryService],
 })
 export class MongoChatHistoryModule {}

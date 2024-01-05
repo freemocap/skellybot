@@ -4,17 +4,12 @@ import { ObjectId } from 'mongodb';
 import { BufferMemory } from 'langchain/memory';
 
 @Injectable()
-export class MemoryService{
-    constructor(
-      private readonly _mongoChatHistoryService: MongoChatHistoryService,
-    ) {}
+export class MemoryService {
+  private readonly _collectionName = 'chat-history';
 
   async createMemory() {
-    const sessionId = new ObjectId().toString();
-
     const memory = new BufferMemory({
-      chatHistory: this._mongoChatHistoryService.createChatHistory(sessionId),
+      chatHistory: new this._mongoChatHistoryService(),
     });
   }
-  }
-  )
+}
