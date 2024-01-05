@@ -29,6 +29,7 @@
     "@nestjs/mapped-types": "*",
     "@nestjs/mongoose": "^10.0.2",
     "@nestjs/platform-express": "^10.0.0",
+    "@nestjs/swagger": "^7.1.17",
     "@slack/bolt": "^3.17.0",
     "bufferutil": "^4.0.8",
     "discord.js": "^14.14.1",
