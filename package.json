@@ -36,6 +36,7 @@
     "bufferutil": "^4.0.8",
     "discord.js": "^14.14.1",
     "langchain": "^0.0.209",
+    "mongodb": "^5.9.2",
     "mongoose": "^8.0.3",
     "necord": "^6.4.2",
     "reflect-metadata": "^0.1.13",
