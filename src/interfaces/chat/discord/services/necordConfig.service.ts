@@ -36,6 +36,6 @@ export class NecordConfigService {
       return secret.payload.data.toString();
     }
 
-    return this._cfgService.get('DISCORD_BOT_TOKEN');
+    return this._cfgService.getOrThrow('DISCORD_BOT_TOKEN');
   }
 }
