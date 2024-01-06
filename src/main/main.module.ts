@@ -1,9 +1,7 @@
 import { Module } from '@nestjs/common';
-import { SlackInterfaceModule } from '../interfaces/chat/slack/slackInterface.module';
+import { SlackModule } from '../interfaces/slack/slack.module';
 import { MainController } from './main.controller';
 import { ConfigModule } from '@nestjs/config';
-import { DiscordInterfaceModule } from '../interfaces/chat/discord/discord-interface.module';
-import { DatabaseModule } from '../shared/database/database.module';
 
 @Module({
   imports: [
@@ -11,9 +9,7 @@ import { DatabaseModule } from '../shared/database/database.module';
       isGlobal: true,
       envFilePath: ['.env', '.env.slack', '.env.discord', '.env.mongo'],
     }),
-    DiscordInterfaceModule,
-    SlackInterfaceModule,
-    DatabaseModule,
+    SlackModule,
   ],
   controllers: [MainController],
 })

@@ -3,7 +3,9 @@ import { MainModule } from './main/main.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
-  const app = await NestFactory.create(MainModule);
+  const app = await NestFactory.create(MainModule, {
+    logger: ['error', 'warn', 'debug', 'log', 'verbose'],
+  });
 
   const options = new DocumentBuilder()
     .setTitle('SkellyBot 💀🤖✨')
