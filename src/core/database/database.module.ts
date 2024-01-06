@@ -11,7 +11,7 @@ import { DatabaseConnectionService } from './services/database-connection.servic
     // CatsModule,
     UsersModule,
   ],
-  providers: [DatabaseConnectionService],
-  exports: [DatabaseConnectionService],
+  providers: [],
+  exports: [UsersModule],
 })
 export class DatabaseModule {}
