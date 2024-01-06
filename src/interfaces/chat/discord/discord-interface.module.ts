@@ -5,7 +5,7 @@ import { GcpModule } from '../../../shared/gcp/gcp.module';
 import { NecordConfigService } from './services/necordConfig.service';
 import { DiscordReadyLoggingService } from './services/discordReadyLogging.service';
 import { DiscordThreadService } from './services/discordThread.service';
-import { ChatbotCoreModule } from '../../../shared/chatbot-core/chatbotCore.module';
+import { ChatbotModule } from '../../../shared/chatbot/chatbot.module';
 
 @Module({
   imports: [
@@ -14,7 +14,7 @@ import { ChatbotCoreModule } from '../../../shared/chatbot-core/chatbotCore.modu
       useClass: NecordConfigService,
     }),
     GcpModule,
-    ChatbotCoreModule,
+    ChatbotModule,
   ],
   providers: [
     DiscordPingService,
@@ -23,4 +23,4 @@ import { ChatbotCoreModule } from '../../../shared/chatbot-core/chatbotCore.modu
     Logger,
   ],
 })
-export class MyDiscordModule {}
+export class DiscordInterfaceModule {}

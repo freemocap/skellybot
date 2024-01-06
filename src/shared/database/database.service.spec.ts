@@ -1,16 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { MemoryService } from './memory.service';
 
-import { ChainBuilderService } from './chain-builder.service';
-
-describe('ChainBuilderService', () => {
-  let service: ChainBuilderService;
+describe('DatabaseService', () => {
+  let service: MemoryService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [ChainBuilderService],
+      providers: [MemoryService],
     }).compile();
 
-    service = module.get<ChainBuilderService>(ChainBuilderService);
+    service = module.get<MemoryService>(MemoryService);
   });
 
   it('should be defined', () => {

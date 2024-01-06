@@ -3,11 +3,11 @@ import { GcpModule } from '../../../shared/gcp/gcp.module';
 import { SlackInterfaceService } from './slackInterface.service';
 import { SlackCommandMethodDiscovery } from './decorators/discovery';
 import { DiscoveryModule } from '@golevelup/nestjs-discovery';
-import { ChatbotCoreModule } from '../../../shared/chatbot-core/chatbotCore.module';
+import { ChatbotModule } from '../../../shared/chatbot/chatbot.module';
 import { SlackBoltModule } from './bolt/slackBolt.module';
 
 @Module({
-  imports: [SlackBoltModule, DiscoveryModule, ChatbotCoreModule, GcpModule],
+  imports: [SlackBoltModule, DiscoveryModule, ChatbotModule, GcpModule],
   providers: [SlackInterfaceService, SlackCommandMethodDiscovery],
 })
 export class SlackInterfaceModule implements OnModuleInit {

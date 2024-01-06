@@ -2,7 +2,7 @@ import { SecretsManagerService } from '../../gcp/secretsManager.service';
 import { Injectable } from '@nestjs/common';
 
 @Injectable()
-export class OpenAiSecretsService {
+export class OpenaiSecretsService {
   constructor(private readonly _sms: SecretsManagerService) {}
   async getOpenAIKey() {
     const [secret] = await this._sms.getManager().accessSecretVersion({

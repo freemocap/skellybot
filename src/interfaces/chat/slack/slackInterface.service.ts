@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { SlackCommand } from './decorators/slackCommand.decorator';
-import { ChatbotService } from '../../../shared/chatbot-core/chatbot.service';
+import { ChatbotService } from '../../../shared/chatbot/chatbot.service';
 import { v4 } from 'uuid';
 import {
   App,
