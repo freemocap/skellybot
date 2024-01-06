@@ -1,9 +1,4 @@
-import {
-  HttpException,
-  HttpStatus,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User } from './user.schema';
@@ -31,9 +26,6 @@ export class UsersService {
       user = await this.userModel.findOne({ slackID: userDto.slackID }).exec();
     }
 
-    if (!user) {
-      throw new NotFoundException(`User not found`);
-    }
     return user;
   }
 

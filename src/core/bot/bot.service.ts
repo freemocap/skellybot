@@ -1,7 +1,6 @@
-import { Chatbot } from './chatbot.dto';
+import { Chatbot } from './bot.dto';
 import { LangchainService } from '../ai/langchain/langchain.service';
 import { Injectable, Logger } from '@nestjs/common';
-import { LangchainChainService } from '../ai/langchain/langchain-chain.service';
 
 class StreamResponseOptions {
   /**
@@ -11,37 +10,20 @@ class StreamResponseOptions {
 }
 
 @Injectable()
-export class ChatbotService {
+export class BotService {
   private _chatbots: Map<string, Chatbot> = new Map();
   constructor(
     private readonly _logger: Logger,
-    private readonly _langchainChainService: LangchainChainService,
     private readonly _langchainService: LangchainService,
   ) {}
 
-  public async createChatbotOld(chatbotId: string, modelName?: string) {
-    this._logger.log(
-      `Creating chatbot with id: ${chatbotId} and model: ${modelName}`,
-    );
-    const chain =
-      await this._langchainService.createMongoMemoryChatChain(modelName);
-
-    // @ts-ignore
-    const chatbot = { chain } as Chatbot;
-    this._chatbots.set(chatbotId, chatbot);
-    this._logger.log(`Chatbot with id: ${chatbotId} created successfully`);
-
-    return chatbot;
-  }
-
-  public async createChatbot(chatbotId: string, modelName?: string) {
+  public async createBot(chatbotId: string, modelName?: string) {
     this._logger.log(
       `Creating chatbot with id: ${chatbotId} and language model (llm): ${modelName}`,
     );
     const { chain, memory } =
-      await this._langchainChainService.createBufferMemoryChain(modelName);
+      await this._langchainService.createBufferMemoryChain(modelName);
 
-    // @ts-ignore
     const chatbot = { chain, memory } as Chatbot;
     this._chatbots.set(chatbotId, chatbot);
     this._logger.log(`Chatbot with id: ${chatbotId} created successfully`);

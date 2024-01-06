@@ -8,12 +8,12 @@ import {
   SlackEventMiddlewareArgs,
 } from '@slack/bolt';
 import { SlackMessage } from './decorators/slack-message.decorator';
-import { ChatbotService } from '../../core/chatbot/chatbot.service';
+import { BotService } from '../../core/bot/bot.service';
 
 @Injectable()
 export class SlackService {
   constructor(
-    private readonly _chatbotCore: ChatbotService,
+    private readonly _botService: BotService,
     private readonly _app: App,
   ) {}
 
@@ -30,8 +30,8 @@ export class SlackService {
     ) {
       const id = message.ts;
       const { text } = message as GenericMessageEvent;
-      await this._chatbotCore.createChatbot(id);
-      const stream = this._chatbotCore.streamResponse(id, text, {
+      await this._botService.createBot(id);
+      const stream = this._botService.streamResponse(id, text, {
         topic: '',
       });
       const response = await say({ text: 'incoming', thread_ts: message.ts });
@@ -61,9 +61,9 @@ export class SlackService {
       response_type: 'in_channel',
     });
     const id = v4();
-    await this._chatbotCore.createChatbot(id);
+    await this._botService.createBot(id);
 
-    const response = await this._chatbotCore.generateAiResponse(
+    const response = await this._botService.generateAiResponse(
       id,
       command.text,
       { topic: '' },

@@ -6,9 +6,8 @@ import { DiscordConfigService } from './services/discord-config.service';
 import { DiscordReadyService } from './services/discord-ready.service';
 import { DiscordThreadService } from './services/discord-thread.service';
 import { GcpModule } from '../../core/gcp/gcp.module';
-import { ChatbotModule } from '../../core/chatbot/chatbot.module';
-import { DatabaseModule } from '../../core/database/database.module';
 import { UsersModule } from '../../core/database/schema/users/users.module';
+import { BotModule } from '../../core/bot/bot.module';
 
 @Module({
   imports: [
@@ -18,7 +17,7 @@ import { UsersModule } from '../../core/database/schema/users/users.module';
     }),
     GcpModule,
     UsersModule,
-    ChatbotModule,
+    BotModule,
   ],
   providers: [
     DiscordPingService,

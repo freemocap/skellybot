@@ -1,10 +1,10 @@
 import { Logger, Module } from '@nestjs/common';
 import { LangchainModule } from '../ai/langchain/langchain.module';
-import { ChatbotService } from './chatbot.service';
+import { BotService } from './bot.service';
 
 @Module({
   imports: [LangchainModule],
-  providers: [ChatbotService, Logger],
-  exports: [ChatbotService],
+  providers: [BotService, Logger],
+  exports: [BotService],
 })
-export class ChatbotModule {}
+export class BotModule {}
