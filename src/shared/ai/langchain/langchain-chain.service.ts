@@ -57,9 +57,9 @@ export class LangchainChainService {
       model,
     ]);
 
-    // await this.demo(chain, memory);
+    await this.demo(chain, memory);
 
-    return chain;
+    return { chain, memory };
   }
 
   private async demo(chain: RunnableSequence, memory?: BufferMemory) {
@@ -106,5 +106,6 @@ export class LangchainChainService {
         )}`,
       );
     }
+    memory.clear();
   }
 }

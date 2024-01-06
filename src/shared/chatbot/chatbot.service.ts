@@ -19,30 +19,30 @@ export class ChatbotService {
     private readonly _langchainService: LangchainService,
   ) {}
 
-  public async createChatbot(chatbotId: string, modelName?: string) {
-    this._logger.log(
-      `Creating chatbot with id: ${chatbotId} and model: ${modelName}`,
-    );
-    const chain =
-      await this._langchainService.createMongoMemoryChatChain(modelName);
-
-    // @ts-ignore
-    const chatbot = { chain } as Chatbot;
-    this._chatbots.set(chatbotId, chatbot);
-    this._logger.log(`Chatbot with id: ${chatbotId} created successfully`);
-
-    return chatbot;
-  }
+  // public async createChatbot(chatbotId: string, modelName?: string) {
+  //   this._logger.log(
+  //     `Creating chatbot with id: ${chatbotId} and model: ${modelName}`,
+  //   );
+  //   const chain =
+  //     await this._langchainService.createMongoMemoryChatChain(modelName);
+  //
+  //   // @ts-ignore
+  //   const chatbot = { chain } as Chatbot;
+  //   this._chatbots.set(chatbotId, chatbot);
+  //   this._logger.log(`Chatbot with id: ${chatbotId} created successfully`);
+  //
+  //   return chatbot;
+  // }
 
   public async createChatbot2(chatbotId: string, modelName?: string) {
     this._logger.log(
       `Creating chatbot with id: ${chatbotId} and model: ${modelName}`,
     );
-    const chain =
+    const { chain, memory } =
       await this._langchainChainService.createBufferMemoryChain(modelName);
 
     // @ts-ignore
-    const chatbot = { chain } as Chatbot;
+    const chatbot = { chain, memory } as Chatbot;
     this._chatbots.set(chatbotId, chatbot);
     this._logger.log(`Chatbot with id: ${chatbotId} created successfully`);
 
