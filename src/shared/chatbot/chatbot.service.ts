@@ -1,6 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { LangchainService } from '../ai/langchain/chain-builder/langchain.service';
 import { Chatbot } from './chatbot.dto';
+import { LangchainService } from '../ai/langchain/langchain.service';
+import { Injectable, Logger } from '@nestjs/common';
 
 class StreamResponseOptions {
   /**
@@ -14,14 +14,21 @@ export class ChatbotService {
   private _chatbots: Map<string, Chatbot> = new Map();
   constructor(
     private readonly _logger: Logger,
-    private readonly _chainBuilderService: LangchainService,
+    private readonly _langchainService: LangchainService,
   ) {}
 
-  public async createChatbot(chatbotId: string | number, modelName?: string) {
-    const chain = await this._chainBuilderService.createChain(modelName);
+  public async createChatbot(chatbotId: string, modelName?: string) {
+    this._logger.log(
+      `Creating chatbot with id: ${chatbotId} and model: ${modelName}`,
+    );
+    const chain =
+      await this._langchainService.createMongoMemoryChatChain(modelName);
 
+    // @ts-ignore
     const chatbot = { chain } as Chatbot;
-    this._chatbots.set(String(chatbotId), chatbot);
+    this._chatbots.set(chatbotId, chatbot);
+    this._logger.log(`Chatbot with id: ${chatbotId} created successfully`);
+
     return chatbot;
   }
 
@@ -31,7 +38,7 @@ export class ChatbotService {
     additionalArgs: object,
   ) {
     this._logger.log(
-      `Responding to message ${humanMessage} with chatbotId: ${chatbotId}`,
+      `Responding to message '${humanMessage}' with chatbotId: ${chatbotId}`,
     );
     const chatbot = this.getChatbotById(chatbotId);
     return await chatbot.chain.invoke({
@@ -42,18 +49,22 @@ export class ChatbotService {
 
   getChatbotById(chatbotId: string | number) {
     try {
+      this._logger.log(`Fetching chatbot with id: ${chatbotId}`);
       return this._chatbots.get(String(chatbotId));
     } catch (error) {
       this._logger.error(`Could not find chatbot for chatbotId: ${chatbotId}`);
       throw error;
     }
   }
+
   async *streamResponse(
     chatbotId: string | number,
     humanMessage: string,
     additionalArgs: any,
     options: StreamResponseOptions = new StreamResponseOptions(),
   ) {
+    this._logger.log(`Streaming response with chatbotId: ${chatbotId}`);
+
     const normalizedOptions = {
       ...new StreamResponseOptions(),
       ...options,
@@ -83,6 +94,7 @@ export class ChatbotService {
       }
 
       if (tokens === 30) {
+        this._logger.log(`Streaming chunk of data: ${subStreamResult}`);
         yield {
           data: streamedResult,
           theChunk: subStreamResult,
@@ -92,7 +104,7 @@ export class ChatbotService {
         didResetOccur = false;
       }
     }
-
+    this._logger.log('Stream complete');
     yield {
       data: streamedResult,
       theChunk: subStreamResult,

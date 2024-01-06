@@ -1,11 +1,13 @@
 import { Logger, Module } from '@nestjs/common';
-import { LangchainService } from './chain-builder/langchain.service';
+
 import { GcpModule } from '../../gcp/gcp.module';
-import { OpenAiSecretsService } from './openAiSecrets.service';
+import { LangchainService } from './langchain.service';
+import { OpenaiModule } from '../openai/openai.module';
+import { DatabaseModule } from '../../database/database.module';
 
 @Module({
-  imports: [GcpModule],
-  providers: [LangchainService, OpenAiSecretsService, Logger],
+  imports: [GcpModule, OpenaiModule, DatabaseModule],
+  providers: [LangchainService, Logger],
   exports: [LangchainService],
 })
 export class LangchainModule {}

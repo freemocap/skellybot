@@ -1,18 +1,24 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { OpenAI } from 'langchain/llms/openai';
-import { OpenAiSecretsService } from '../openAiSecrets.service';
 import { ChatPromptTemplate } from 'langchain/prompts';
 import { ConversationChain } from 'langchain/chains';
 import { BufferMemory } from 'langchain/memory';
-import { MongoDBChatMessageHistory } from '@langchain/community/dist/stores/message/mongodb';
+import { OpenaiSecretsService } from '../openai/openai-secrets.service';
+import { Connection } from 'mongoose';
+import { getConnectionToken } from '@nestjs/mongoose';
+import { DatabaseConnectionService } from '../../database/database-connection.service';
+import { MongoDBChatMessageHistory } from '@langchain/community/stores/message/mongodb';
+import * as mongoose from 'mongoose';
 
 @Injectable()
 export class LangchainService {
   private _model: OpenAI<any>;
-  private _chat_history_collection_name: string = 'chat-history';
+  private readonly _chatHistoryCollectionName = 'chat-history';
 
   constructor(
-    private readonly _openAiSecrets: OpenAiSecretsService,
+    @Inject(getConnectionToken()) private connection: Connection,
+    private readonly _openAiSecrets: OpenaiSecretsService,
+    private readonly _databaseConnectionService: DatabaseConnectionService,
     private readonly _logger: Logger,
   ) {}
 
@@ -21,15 +27,16 @@ export class LangchainService {
    * Based on example from here: https://js.langchain.com/docs/integrations/chat_memory/mongodb#usage
    * @param modelName
    */
-  async createMongoMemoryChatChain(chatId: string, modelName?: string) {
+  async createMongoMemoryChatChain(modelName?: string) {
     const model = await this._createModel(modelName);
     const prompt = await this._createPrompt();
-    const memory = await this._createMemory(chatId);
+    const memory = await this._createMemory();
     return new ConversationChain({
       llm: model,
       prompt: prompt,
       memory: memory,
     });
+    this._logger.log(`Returning chain with model ${this._model.modelName}`);
   }
 
   /**
@@ -75,14 +82,22 @@ export class LangchainService {
     return template;
   }
 
-  private async _createMemory(chatId) {
-    this._logger.log(`Creating memory for chatId ${chatId}`);
+  private async _createMemory() {
+    this._logger.log(`Creating MongoDB connected chat-history for chatbot...`);
+
+    const sessionId = new mongoose.Types.ObjectId().toString();
+    const connection = await this._databaseConnectionService.getConnection();
+    const collection = connection.db.collection(
+      this._chatHistoryCollectionName,
+    );
     const memory = new BufferMemory({
       chatHistory: new MongoDBChatMessageHistory({
-        collection: this._chat_history_collection_name,
-        sessionId: chatId,
+        // @ts-ignore
+        collection: collection,
+        sessionId: sessionId,
       }),
     });
+    this._logger.log(`Chat-history created!`);
     return memory;
   }
 }
