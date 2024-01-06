@@ -6,7 +6,7 @@ import { ApiTags } from '@nestjs/swagger';
 export class MainController {
   @Get()
   sendHello() {
-    return 'hello';
+    return 'hello wow';
   }
 
   @Get('/health')

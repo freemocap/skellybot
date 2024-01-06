@@ -37,6 +37,7 @@ export class LangchainService {
       prompt: prompt,
       memory: memory,
     });
+  }
 
   /**
    * Creates a chain that may be invoked later.
