@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { SlackModule } from '../interfaces/slack/slack.module';
 import { MainController } from './main.controller';
 import { ConfigModule } from '@nestjs/config';
+import { DiscordModule } from '../interfaces/discord/discord.module';
 
 @Module({
   imports: [
@@ -10,6 +11,7 @@ import { ConfigModule } from '@nestjs/config';
       envFilePath: ['.env', '.env.slack', '.env.discord', '.env.mongo'],
     }),
     SlackModule,
+    DiscordModule,
   ],
   controllers: [MainController],
 })

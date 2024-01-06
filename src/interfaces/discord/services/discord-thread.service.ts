@@ -9,10 +9,14 @@ import {
   ThreadChannel,
 } from 'discord.js';
 import { ChatbotService } from '../../../core/chatbot/chatbot.service';
+import { InjectModel } from '@nestjs/mongoose';
+import { User } from '../../../core/database/schema/users/user.schema';
+import { UsersService } from '../../../core/database/schema/users/users.service';
 
 @Injectable()
 export class DiscordThreadService implements OnModuleDestroy {
   constructor(
+    private readonly _usersService: UsersService,
     private readonly _logger: Logger,
     private readonly _chatbotService: ChatbotService,
     private readonly _client: Client,
@@ -42,6 +46,10 @@ export class DiscordThreadService implements OnModuleDestroy {
       name: threadName,
       autoArchiveDuration: 60,
       reason: 'wow this is a thread',
+    });
+
+    await this._usersService.getOrCreate({
+      discordId: interaction.user.id,
     });
 
     // await this._chatbotService.createChatbot(thread.id);

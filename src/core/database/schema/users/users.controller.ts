@@ -17,28 +17,18 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { UserCreateDto } from './dto/user-create.dto';
+import { UserDto } from './dto/user.dto';
 import { UserUpdateDto } from './dto/user-update.dto';
 
 function skellyTestUser() {
   return {
-    type: 'skelly',
     name: 'Skelly FreeMoCap',
-    id: '1234',
     discordId: '1186697433674166293',
     metadata: {
+      type: 'skelly',
       email: 'info@freemocap.org',
       things: ['thing1', 'thing2'],
       stuff: { stuff1: 'stuff1', stuff2: 'stuff2' },
-    },
-  };
-}
-
-function skellyTestUserUpdate() {
-  return {
-    id: '1234',
-    metadata: {
-      wow: true,
     },
   };
 }
@@ -52,7 +42,7 @@ export class UsersController {
   @Post('create')
   @ApiOperation({ summary: 'Create a user' })
   @ApiBody({
-    type: UserCreateDto,
+    type: UserDto,
     schema: {
       example: skellyTestUser(),
     },
@@ -62,7 +52,7 @@ export class UsersController {
     description: 'The created record',
     type: User,
   })
-  async create(@Body() createUserDto: UserCreateDto): Promise<User> {
+  async create(@Body() createUserDto: UserDto): Promise<User> {
     return this.usersService.create(createUserDto);
   }
 

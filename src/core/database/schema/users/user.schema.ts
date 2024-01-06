@@ -1,35 +1,35 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument } from 'mongoose';
-import { ApiProperty } from '@nestjs/swagger';
-
-export type UserDocument = HydratedDocument<User>;
 
 @Schema({ timestamps: true })
 export class User {
-  @ApiProperty()
-  @Prop({})
-  type: string;
-
-  @ApiProperty()
   @Prop({ required: true, unique: true })
   uuid: string;
 
-  @ApiProperty()
-  @Prop({ required: true, unique: true })
-  id: string;
+  @Prop({ required: true })
+  favoriteColor: string;
 
-  @ApiProperty()
   @Prop({ unique: true })
   discordId: string;
 
-  // TODO - Implement Slack Id
-  // @ApiProperty()
-  // @Prop()
-  // slackId: string;
+  @Prop({ unique: true })
+  slackId: string;
 
-  @ApiProperty()
   @Prop({ type: Object })
   metadata: Record<string, unknown>;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
+
+function validateFavoriteColor(color: string) {
+  const regex = /^([A-Fa-f0-9]{6})$/;
+  return regex.test(`${color}`);
+}
+
+UserSchema.pre<User>('save', function (next) {
+  if (!validateFavoriteColor(this.favoriteColor)) {
+    throw new Error(
+      'User.favoriteColor should be a valid 6 digit hex color code (e.g. FF00FF)',
+    );
+  }
+  next();
+});

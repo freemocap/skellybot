@@ -7,8 +7,7 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User } from './user.schema';
-import { UserCreateDto } from './dto/user-create.dto';
-import { UserUpdateDto } from './dto/user-update.dto';
+import { UserDto } from './user.dto';
 import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
@@ -22,35 +21,62 @@ export class UsersService {
     return this.userModel.find().exec();
   }
 
-  async findOne(id: string): Promise<User> {
-    const user = await this.userModel.findOne({ name: id }).exec();
+  async findOne(userDto: UserDto): Promise<User> {
+    let user: User;
+    if (userDto.discordId) {
+      user = await this.userModel
+        .findOne({ discordId: userDto.discordId })
+        .exec();
+    } else if (userDto.slackID) {
+      user = await this.userModel.findOne({ slackID: userDto.slackID }).exec();
+    }
+
     if (!user) {
-      throw new NotFoundException(`User with ID ${id} not found`);
+      throw new NotFoundException(`User not found`);
     }
     return user;
   }
 
-  async create(createUserDto: UserCreateDto): Promise<User> {
-    const existingUser = await this.findOne(createUserDto.id);
+  async getOrCreate(userDto: UserDto): Promise<User> {
+    const existingUser = await this.findOne(userDto);
 
     if (existingUser) {
+      return existingUser;
+    }
+
+    return this.create(userDto);
+  }
+
+  _generateHexColorId() {
+    const letters = '0123456789ABCDEF';
+    let color = '';
+    const digits = 6;
+    for (let i = 0; i < digits; i++) {
+      color += letters[Math.floor(Math.random() * 16)];
+    }
+    return color;
+  }
+
+  async create(userDto: UserDto): Promise<User> {
+    if (await this.findOne(userDto)) {
       throw new HttpException('User ID already exists', HttpStatus.CONFLICT);
     }
 
     const createdUser = new this.userModel({
-      ...createUserDto,
+      ...userDto,
       uuid: uuidv4(),
+      favoriteColor: this._generateHexColorId() || userDto.favoriteColor,
     });
     return createdUser.save();
   }
 
-  async update(id: string, updateUserDto: UserUpdateDto) {
+  async update(id: string, userDto: UserDto) {
     const existingUser = await this.userModel.findOne({ id: id }).exec();
     if (!existingUser) {
       throw new Error(`User with id ${id} not found`);
     }
     return this.userModel
-      .findOneAndUpdate({ id: id }, updateUserDto, { new: true })
+      .findOneAndUpdate({ id: id }, userDto, { new: true })
       .exec();
   }
 
