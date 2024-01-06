@@ -31,13 +31,12 @@ export class LangchainService {
     const model = await this._createModel(modelName);
     const prompt = await this._createPrompt();
     const memory = await this._createMemory();
+    this._logger.log(`Returning chain with model ${this._model.modelName}`);
     return new ConversationChain({
       llm: model,
       prompt: prompt,
       memory: memory,
     });
-    this._logger.log(`Returning chain with model ${this._model.modelName}`);
-  }
 
   /**
    * Creates a chain that may be invoked later.
