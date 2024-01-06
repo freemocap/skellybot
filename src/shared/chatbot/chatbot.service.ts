@@ -39,7 +39,7 @@ export class ChatbotService {
       `Creating chatbot with id: ${chatbotId} and model: ${modelName}`,
     );
     const chain =
-      await this._langchainChainService.createBufferChain(modelName);
+      await this._langchainChainService.createBufferMemoryChain(modelName);
 
     // @ts-ignore
     const chatbot = { chain } as Chatbot;
