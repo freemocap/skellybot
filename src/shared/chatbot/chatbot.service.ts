@@ -1,6 +1,7 @@
 import { Chatbot } from './chatbot.dto';
 import { LangchainService } from '../ai/langchain/langchain.service';
 import { Injectable, Logger } from '@nestjs/common';
+import { LangchainChainService } from '../ai/langchain/langchain-chain.service';
 
 class StreamResponseOptions {
   /**
@@ -14,6 +15,7 @@ export class ChatbotService {
   private _chatbots: Map<string, Chatbot> = new Map();
   constructor(
     private readonly _logger: Logger,
+    private readonly _langchainChainService: LangchainChainService,
     private readonly _langchainService: LangchainService,
   ) {}
 
@@ -32,6 +34,20 @@ export class ChatbotService {
     return chatbot;
   }
 
+  public async createChatbot2(chatbotId: string, modelName?: string) {
+    this._logger.log(
+      `Creating chatbot with id: ${chatbotId} and model: ${modelName}`,
+    );
+    const chain =
+      await this._langchainChainService.createBufferChain(modelName);
+
+    // @ts-ignore
+    const chatbot = { chain } as Chatbot;
+    this._chatbots.set(chatbotId, chatbot);
+    this._logger.log(`Chatbot with id: ${chatbotId} created successfully`);
+
+    return chatbot;
+  }
   public async generateAiResponse(
     chatbotId: string | number,
     humanMessage: string,

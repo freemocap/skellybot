@@ -39,7 +39,8 @@ export class DiscordThreadService implements OnModuleDestroy {
       reason: 'wow this is a thread',
     });
 
-    await this._chatbotService.createChatbot(thread.id);
+    // await this._chatbotService.createChatbot(thread.id);
+    await this._chatbotService.createChatbot2(thread.id);
 
     this._beginWatchingIncomingMessages(interaction, channel, thread);
     await this._sendInitialReply(interaction, channel, thread, text);
