@@ -19,20 +19,20 @@ export class ChatbotService {
     private readonly _langchainService: LangchainService,
   ) {}
 
-  // public async createChatbot(chatbotId: string, modelName?: string) {
-  //   this._logger.log(
-  //     `Creating chatbot with id: ${chatbotId} and model: ${modelName}`,
-  //   );
-  //   const chain =
-  //     await this._langchainService.createMongoMemoryChatChain(modelName);
-  //
-  //   // @ts-ignore
-  //   const chatbot = { chain } as Chatbot;
-  //   this._chatbots.set(chatbotId, chatbot);
-  //   this._logger.log(`Chatbot with id: ${chatbotId} created successfully`);
-  //
-  //   return chatbot;
-  // }
+  public async createChatbot(chatbotId: string, modelName?: string) {
+    this._logger.log(
+      `Creating chatbot with id: ${chatbotId} and model: ${modelName}`,
+    );
+    const chain =
+      await this._langchainService.createMongoMemoryChatChain(modelName);
+
+    // @ts-ignore
+    const chatbot = { chain } as Chatbot;
+    this._chatbots.set(chatbotId, chatbot);
+    this._logger.log(`Chatbot with id: ${chatbotId} created successfully`);
+
+    return chatbot;
+  }
 
   public async createChatbot2(chatbotId: string, modelName?: string) {
     this._logger.log(
@@ -79,7 +79,9 @@ export class ChatbotService {
     additionalArgs: any,
     options: StreamResponseOptions = new StreamResponseOptions(),
   ) {
-    this._logger.log(`Streaming response with chatbotId: ${chatbotId}`);
+    this._logger.log(
+      `Streaming response to humanMessage: \n\n"${humanMessage}"\n\n with chatbotId: ${chatbotId}`,
+    );
 
     const normalizedOptions = {
       ...new StreamResponseOptions(),
@@ -88,7 +90,7 @@ export class ChatbotService {
     const { splitAt } = normalizedOptions;
     const chatbot = this.getChatbotById(chatbotId);
     const chatStream = await chatbot.chain.stream({
-      text: humanMessage,
+      input: humanMessage,
       ...additionalArgs,
     });
 
@@ -125,5 +127,10 @@ export class ChatbotService {
       data: streamedResult,
       theChunk: subStreamResult,
     };
+
+    chatbot.memory.saveContext(
+      { input: humanMessage },
+      { output: streamedResult },
+    );
   }
 }

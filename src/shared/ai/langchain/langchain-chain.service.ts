@@ -57,7 +57,7 @@ export class LangchainChainService {
       model,
     ]);
 
-    await this.demo(chain, memory);
+    // await this.demo(chain, memory);
 
     return { chain, memory };
   }
