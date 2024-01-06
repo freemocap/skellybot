@@ -30,6 +30,9 @@ export class CatsService {
     const deletedCat = await this.catModel
       .findOneAndDelete({ name: name })
       .exec();
+    if (!deletedCat) {
+      throw new Error(`Cat with name ${name} not found`);
+    }
     return deletedCat;
   }
 }
