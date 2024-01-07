@@ -7,7 +7,7 @@ import { DiscordReadyService } from './services/discord-ready.service';
 import { DiscordThreadService } from './services/discord-thread.service';
 import { GcpModule } from '../../core/gcp/gcp.module';
 import { UsersModule } from '../../core/database/schema/users/users.module';
-import { BotsModule } from '../../core/database/schema/bots/bots.module';
+import { BotModule } from '../../core/bot/bot.module';
 
 @Module({
   imports: [
@@ -17,7 +17,7 @@ import { BotsModule } from '../../core/database/schema/bots/bots.module';
     }),
     GcpModule,
     UsersModule,
-    BotsModule,
+    BotModule,
   ],
   providers: [
     DiscordPingService,

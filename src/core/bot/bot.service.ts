@@ -1,9 +1,6 @@
-import { Bot } from './bot.schema';
+import { Chatbot } from './bot.dto';
+import { LangchainService } from '../ai/langchain/langchain.service';
 import { Injectable, Logger } from '@nestjs/common';
-import { LangchainService } from '../../../ai/langchain/langchain.service';
-import { Model } from 'mongoose';
-import { InjectModel } from '@nestjs/mongoose';
-import { BotDto } from './bot.dto';
 
 class StreamResponseOptions {
   /**
@@ -13,70 +10,59 @@ class StreamResponseOptions {
 }
 
 @Injectable()
-export class BotsService {
-  private _bots: Map<string, Bot> = new Map();
+export class BotService {
+  private _chatbots: Map<string, Chatbot> = new Map();
   constructor(
-    @InjectModel(Bot.name) private readonly _botModel: Model<Bot>,
-
     private readonly _logger: Logger,
     private readonly _langchainService: LangchainService,
   ) {}
 
-  async findAll(): Promise<Bot[]> {
-    return this._botModel.find().exec();
-  }
-
-  async findById(id: string): Promise<Bot> {
-    return await this._botModel.findOne({ botId: id }).exec();
-  }
-
-  public async createBot(botDto: BotDto, modelName?: string) {
-    this._logger.log(`Creating bot with language model (llm): ${modelName}`);
+  public async createBot(chatbotId: string, modelName?: string) {
+    this._logger.log(
+      `Creating chatbot with id: ${chatbotId} and language model (llm): ${modelName}`,
+    );
     const { chain, memory } =
       await this._langchainService.createBufferMemoryChain(modelName);
 
-    const createdBot = new this._botModel({ ...botDto, chain, memory });
+    const chatbot = { chain, memory } as Chatbot;
+    this._chatbots.set(chatbotId, chatbot);
+    this._logger.log(`Chatbot with id: ${chatbotId} created successfully`);
 
-    await createdBot.save();
-    // const createdBot = { chain, memory } as Bot;
-    this._bots.set(botDto.botId, createdBot);
-    this._logger.log(`Chatbot with id: ${botDto.botId} created successfully`);
-
-    return createdBot;
+    return chatbot;
   }
   public async generateAiResponse(
-    botId: string | number,
+    chatbotId: string | number,
     humanMessage: string,
     additionalArgs: object,
   ) {
     this._logger.log(
-      `Responding to message '${humanMessage}' with botId: ${botId}`,
+      `Responding to message '${humanMessage}' with chatbotId: ${chatbotId}`,
     );
-    const bot = this.getChatbotById(botId);
-    return await bot.chain.invoke({
+    const chatbot = this.getChatbotById(chatbotId);
+    return await chatbot.chain.invoke({
       text: humanMessage,
       ...additionalArgs,
     });
   }
 
-  getChatbotById(botId: string | number) {
+  getChatbotById(chatbotId: string | number) {
     try {
-      this._logger.log(`Fetching bot with id: ${botId}`);
-      return this._bots.get(String(botId));
+      this._logger.log(`Fetching chatbot with id: ${chatbotId}`);
+      return this._chatbots.get(String(chatbotId));
     } catch (error) {
-      this._logger.error(`Could not find bot for botId: ${botId}`);
+      this._logger.error(`Could not find chatbot for chatbotId: ${chatbotId}`);
       throw error;
     }
   }
 
   async *streamResponse(
-    botId: string | number,
+    chatbotId: string | number,
     humanMessage: string,
     additionalArgs: any,
     options: StreamResponseOptions = new StreamResponseOptions(),
   ) {
     this._logger.log(
-      `Streaming response to humanMessage: \n\n"${humanMessage}"\n\n with botId: ${botId}`,
+      `Streaming response to humanMessage: \n\n"${humanMessage}"\n\n with chatbotId: ${chatbotId}`,
     );
 
     const normalizedOptions = {
@@ -84,8 +70,8 @@ export class BotsService {
       ...options,
     };
     const { splitAt } = normalizedOptions;
-    const bot = this.getChatbotById(botId);
-    const chatStream = await bot.chain.stream({
+    const chatbot = this.getChatbotById(chatbotId);
+    const chatStream = await chatbot.chain.stream({
       input: humanMessage,
       ...additionalArgs,
     });
@@ -124,6 +110,9 @@ export class BotsService {
       theChunk: subStreamResult,
     };
 
-    bot.memory.saveContext({ input: humanMessage }, { output: streamedResult });
+    chatbot.memory.saveContext(
+      { input: humanMessage },
+      { output: streamedResult },
+    );
   }
 }

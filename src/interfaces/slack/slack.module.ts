@@ -4,11 +4,10 @@ import { SlackCommandMethodDiscovery } from './decorators/discovery';
 import { DiscoveryModule } from '@golevelup/nestjs-discovery';
 import { SlackBoltModule } from './bolt/slack-bolt.module';
 import { GcpModule } from '../../core/gcp/gcp.module';
-import { BotsService } from '../../core/database/schema/bots/bots.service';
-import { BotsModule } from '../../core/database/schema/bots/bots.module';
+import { BotModule } from '../../core/bot/bot.module';
 
 @Module({
-  imports: [SlackBoltModule, DiscoveryModule, BotsModule, GcpModule],
+  imports: [SlackBoltModule, DiscoveryModule, BotModule, GcpModule],
   providers: [SlackService, SlackCommandMethodDiscovery],
 })
 export class SlackModule implements OnModuleInit {

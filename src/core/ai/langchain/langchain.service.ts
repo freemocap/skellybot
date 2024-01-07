@@ -1,5 +1,7 @@
 import { OpenAI } from 'langchain/llms/openai';
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
+import { getConnectionToken } from '@nestjs/mongoose';
+import { Connection } from 'mongoose';
 import { OpenaiSecretsService } from '../openai/openai-secrets.service';
 import { ChatPromptTemplate, MessagesPlaceholder } from 'langchain/prompts';
 import { BufferMemory } from 'langchain/memory';
@@ -10,6 +12,7 @@ export class LangchainService {
   private _model: OpenAI<any>;
 
   constructor(
+    @Inject(getConnectionToken()) private connection: Connection,
     private readonly _openAiSecrets: OpenaiSecretsService,
     private readonly _logger: Logger,
   ) {}
@@ -29,7 +32,7 @@ export class LangchainService {
     const model = await this._createModel(modelName);
     const prompt = ChatPromptTemplate.fromMessages([
       // TODO: Feed in a context prompt key
-      ['system', 'You are a helpful chatbot - BE BRIEF'],
+      ['system', 'You are a helpful chatbot'],
       new MessagesPlaceholder('history'),
       ['human', '{input}'],
     ]);
