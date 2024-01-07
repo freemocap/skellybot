@@ -2,12 +2,16 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { GcpModule } from '../gcp/gcp.module';
 import { UsersModule } from './schema/users/users.module';
-import { DatabaseConnectionService } from './services/database-connection.service';
+import { DatabaseConfigService } from './services/database-config.service';
 
 @Module({
   imports: [
     GcpModule,
-    MongooseModule.forRoot('mongodb://localhost:27017/test'),
+
+    MongooseModule.forRootAsync({
+      imports: [GcpModule],
+      useClass: DatabaseConfigService,
+    }),
     // CatsModule,
     UsersModule,
   ],
