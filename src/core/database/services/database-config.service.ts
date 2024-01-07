@@ -19,7 +19,7 @@ export class DatabaseConfigService {
   }
 
   private async _getUriByNodeEnv() {
-    if (process.env.NODE_ENV === 'production' || true) {
+    if (process.env.NODE_ENV === 'production') {
       const secretName = this._tokenMap.MONGODB_URI;
       const [secret] = await this.sms.getSecretsManager().accessSecretVersion({
         name: secretName,
