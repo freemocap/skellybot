@@ -3,7 +3,9 @@ import { MainModule } from './main/main.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
-  const app = await NestFactory.create(MainModule);
+  const app = await NestFactory.create(MainModule, {
+    logger: ['error', 'warn', 'debug', 'log', 'verbose'],
+  });
 
   const options = new DocumentBuilder()
     .setTitle('SkellyBot 💀🤖✨')
@@ -15,7 +17,7 @@ async function bootstrap() {
     .addBearerAuth()
     .build();
   const document = SwaggerModule.createDocument(app, options);
-  SwaggerModule.setup('docs', app, document);
+  SwaggerModule.setup('api', app, document);
 
   await app.listen(3000);
   console.log(`Application is running on: ${await app.getUrl()}`);
