@@ -9,21 +9,21 @@ import { v4 as uuidv4 } from 'uuid';
 export class UsersService {
   constructor(
     @InjectModel(User.name)
-    private readonly userModel: Model<User>,
+    private readonly _userModel: Model<User>,
   ) {}
 
   async findAll(): Promise<User[]> {
-    return this.userModel.find().exec();
+    return this._userModel.find().exec();
   }
 
   async findOne(userDto: UserDto): Promise<User> {
     let user: User;
     if (userDto.discordId) {
-      user = await this.userModel
+      user = await this._userModel
         .findOne({ discordId: userDto.discordId })
         .exec();
-    } else if (userDto.slackID) {
-      user = await this.userModel.findOne({ slackID: userDto.slackID }).exec();
+    } else if (userDto.slackId) {
+      user = await this._userModel.findOne({ slackID: userDto.slackId }).exec();
     }
 
     return user;
@@ -54,7 +54,7 @@ export class UsersService {
       throw new HttpException('User ID already exists', HttpStatus.CONFLICT);
     }
 
-    const createdUser = new this.userModel({
+    const createdUser = new this._userModel({
       ...userDto,
       uuid: uuidv4(),
       favoriteColor: this._generateHexColorId() || userDto.favoriteColor,
@@ -63,17 +63,17 @@ export class UsersService {
   }
 
   async update(id: string, userDto: UserDto) {
-    const existingUser = await this.userModel.findOne({ id: id }).exec();
+    const existingUser = await this._userModel.findOne({ id: id }).exec();
     if (!existingUser) {
       throw new Error(`User with id ${id} not found`);
     }
-    return this.userModel
+    return this._userModel
       .findOneAndUpdate({ id: id }, userDto, { new: true })
       .exec();
   }
 
   async delete(id: string) {
-    const deletedUser = await this.userModel
+    const deletedUser = await this._userModel
       .findOneAndDelete({ id: id })
       .exec();
     if (!deletedUser) {

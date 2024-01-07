@@ -8,15 +8,16 @@ import {
   TextChannel,
   ThreadChannel,
 } from 'discord.js';
-import { BotService } from '../../../core/bot/bot.service';
 import { UsersService } from '../../../core/database/schema/users/users.service';
+import { BotsService } from '../../../core/database/schema/bots/bots.service';
+import { BotDto } from '../../../core/database/schema/bots/bot.dto';
 
 @Injectable()
 export class DiscordThreadService implements OnModuleDestroy {
   constructor(
     private readonly _usersService: UsersService,
     private readonly _logger: Logger,
-    private readonly _botService: BotService,
+    private readonly _botsService: BotsService,
     private readonly _client: Client,
   ) {}
 
@@ -46,12 +47,23 @@ export class DiscordThreadService implements OnModuleDestroy {
       reason: 'wow this is a thread',
     });
 
-    await this._usersService.getOrCreate({
+    const user = await this._usersService.getOrCreate({
       discordId: interaction.user.id,
     });
+    const contextRoute = {
+      interface: 'discord',
+      serverId: channel.guild.id || null,
+      categoryId: channel.parentId || null,
+      channelId: channel.id,
+      threadId: thread.id || null,
+    };
+    const botDto: BotDto = {
+      botId: thread.id,
+      ownerId: user.discordId,
+      contextRoute: contextRoute,
+    };
 
-    // await this._botService.createChatbot(thread.id);
-    await this._botService.createBot(thread.id);
+    await this._botsService.createBot(botDto);
 
     this._beginWatchingIncomingMessages(interaction, channel, thread);
     await this._sendInitialReply(interaction, channel, thread, text);
@@ -69,7 +81,6 @@ export class DiscordThreadService implements OnModuleDestroy {
     channel: TextChannel,
     thread: ThreadChannel,
   ) {
-    const t = { ...thread };
     const handleMessageCreation = async (message: Message) => {
       if (message.author.bot) {
         return;
@@ -102,7 +113,7 @@ export class DiscordThreadService implements OnModuleDestroy {
     inputText: string,
     message: Message<boolean>,
   ) {
-    const tokenStream = this._botService.streamResponse(thread.id, inputText, {
+    const tokenStream = this._botsService.streamResponse(thread.id, inputText, {
       topic: channel.topic,
     });
     thread.sendTyping();

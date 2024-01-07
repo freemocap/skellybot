@@ -1,6 +1,6 @@
 export class UserDto {
   readonly favoriteColor?: string;
-  readonly slackID?: string;
+  readonly slackId?: string;
   readonly discordId?: string;
   readonly metadata?: object;
 }

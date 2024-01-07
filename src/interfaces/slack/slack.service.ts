@@ -8,12 +8,15 @@ import {
   SlackEventMiddlewareArgs,
 } from '@slack/bolt';
 import { SlackMessage } from './decorators/slack-message.decorator';
-import { BotService } from '../../core/bot/bot.service';
+import { BotsService } from '../../core/database/schema/bots/bots.service';
+import { BotDto } from '../../core/database/schema/bots/bot.dto';
+import { UsersService } from '../../core/database/schema/users/users.service';
 
 @Injectable()
 export class SlackService {
   constructor(
-    private readonly _botService: BotService,
+    private readonly _usersService: UsersService,
+    private readonly _botsService: BotsService,
     private readonly _app: App,
   ) {}
 
@@ -28,10 +31,26 @@ export class SlackService {
       message.subtype === 'file_share' ||
       message.subtype === 'thread_broadcast'
     ) {
-      const id = message.ts;
+      // const id = message.ts;
       const { text } = message as GenericMessageEvent;
-      await this._botService.createBot(id);
-      const stream = this._botService.streamResponse(id, text, {
+
+      const user = await this._usersService.getOrCreate({ slackId: say.name });
+      const contextRoute = {
+        interface: 'slack',
+        serverId: null,
+        categoryId: null,
+        channelId: message.channel,
+        threadId: null,
+      };
+      const botDto: BotDto = {
+        botId: message.channel,
+        ownerId: user.slackId,
+        contextRoute: contextRoute,
+      };
+
+      await this._botsService.createBot(botDto);
+
+      const stream = this._botsService.streamResponse(botDto.botId, text, {
         topic: '',
       });
       const response = await say({ text: 'incoming', thread_ts: message.ts });
@@ -61,9 +80,9 @@ export class SlackService {
       response_type: 'in_channel',
     });
     const id = v4();
-    await this._botService.createBot(id);
+    // await this._botsService.createBot(id); // Disable for now, TODO - extract the botDto stuff from above so i can do this whosit right
 
-    const response = await this._botService.generateAiResponse(
+    const response = await this._botsService.generateAiResponse(
       id,
       command.text,
       { topic: '' },
