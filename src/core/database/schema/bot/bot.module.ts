@@ -1,6 +1,7 @@
 import { Logger, Module } from '@nestjs/common';
-import { LangchainModule } from '../ai/langchain/langchain.module';
+
 import { BotService } from './bot.service';
+import { LangchainModule } from '../../../ai/langchain/langchain.module';
 
 @Module({
   imports: [LangchainModule],

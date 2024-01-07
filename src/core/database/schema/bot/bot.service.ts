@@ -1,6 +1,6 @@
 import { Bot } from './bot.dto';
-import { LangchainService } from '../ai/langchain/langchain.service';
 import { Injectable, Logger } from '@nestjs/common';
+import { LangchainService } from '../../../ai/langchain/langchain.service';
 
 class StreamResponseOptions {
   /**

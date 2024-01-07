@@ -8,8 +8,9 @@ import {
   TextChannel,
   ThreadChannel,
 } from 'discord.js';
-import { BotService } from '../../../core/bot/bot.service';
+
 import { UsersService } from '../../../core/database/schema/users/users.service';
+import { BotService } from '../../../core/database/schema/bot/bot.service';
 
 @Injectable()
 export class DiscordThreadService implements OnModuleDestroy {

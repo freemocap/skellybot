@@ -7,7 +7,7 @@ import { DiscordReadyService } from './services/discord-ready.service';
 import { DiscordThreadService } from './services/discord-thread.service';
 import { GcpModule } from '../../core/gcp/gcp.module';
 import { UsersModule } from '../../core/database/schema/users/users.module';
-import { BotModule } from '../../core/bot/bot.module';
+import { BotModule } from '../../core/database/schema/bot/bot.module';
 
 @Module({
   imports: [

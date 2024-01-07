@@ -8,7 +8,7 @@ import {
   SlackEventMiddlewareArgs,
 } from '@slack/bolt';
 import { SlackMessage } from './decorators/slack-message.decorator';
-import { BotService } from '../../core/bot/bot.service';
+import { BotService } from '../../core/database/schema/bot/bot.service';
 
 @Injectable()
 export class SlackService {
