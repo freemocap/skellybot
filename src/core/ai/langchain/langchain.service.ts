@@ -29,13 +29,16 @@ export class LangchainService {
     return this._model;
   }
 
-  public async createBufferMemoryChain(modelName?: string) {
+  public async createBufferMemoryChain(
+    modelName?: string,
+    contextInstructions?: string,
+  ) {
     const model = await this._createModel(modelName);
+    const contextInstructionsOrNone = contextInstructions || ' ';
     const prompt = ChatPromptTemplate.fromMessages([
-      // TODO: Feed in a context prompt key
       [
         'system',
-        'I am a helpful chatbot. I keep my answers short (1-2 sentences) unless there is a reason to say more.',
+        `${contextInstructionsOrNone} I keep my answers short (1-2 sentences) unless there is a reason to say more.`,
       ],
       new MessagesPlaceholder('history'),
       ['human', '{input}'],
@@ -100,7 +103,9 @@ export class LangchainService {
 
     console.log(`HumanInput:\n\n ${inputs.input}`);
 
-    const response = await chain.invoke(inputs);
+    const response = await chain.invoke({
+      input: 'Hello botto - say an emoji',
+    });
 
     console.log(`AI Response:\n\n ${response}`);
 
