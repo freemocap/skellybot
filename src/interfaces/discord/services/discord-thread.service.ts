@@ -102,10 +102,11 @@ export class DiscordThreadService implements OnModuleDestroy {
     inputText: string,
     message: Message<boolean>,
   ) {
+    thread.sendTyping();
+
     const tokenStream = this._botService.streamResponse(thread.id, inputText, {
       topic: channel.topic,
     });
-    thread.sendTyping();
 
     let initialReply: Message<boolean> = undefined;
     let final = '';

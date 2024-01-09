@@ -4,8 +4,9 @@ import { getConnectionToken } from '@nestjs/mongoose';
 import { Connection } from 'mongoose';
 import { OpenaiSecretsService } from '../openai/openai-secrets.service';
 import { ChatPromptTemplate, MessagesPlaceholder } from 'langchain/prompts';
-import { BufferMemory } from 'langchain/memory';
+import { BufferMemory, ConversationTokenBufferMemory } from 'langchain/memory';
 import { RunnableSequence } from 'langchain/runnables';
+import { BaseLLM } from '@langchain/core/dist/language_models/llms';
 
 @Injectable()
 export class LangchainService {
@@ -36,13 +37,7 @@ export class LangchainService {
       new MessagesPlaceholder('history'),
       ['human', '{input}'],
     ]);
-
-    const memory = new BufferMemory({
-      returnMessages: true,
-      inputKey: 'input',
-      outputKey: 'output',
-      memoryKey: 'history',
-    });
+    const memory = this._createTokenBufferMemory(model);
 
     const chain = RunnableSequence.from([
       {
@@ -60,6 +55,31 @@ export class LangchainService {
     // await this.demo(chain, memory);
 
     return { chain, memory };
+  }
+
+  private _createBufferMemory() {
+    const memory = new BufferMemory({
+      returnMessages: true,
+      inputKey: 'input',
+      outputKey: 'output',
+      memoryKey: 'history',
+    });
+    return memory;
+  }
+
+  private _createTokenBufferMemory(
+    model: BaseLLM,
+    maxTokenLimit: number = 1000,
+  ) {
+    const memory = new ConversationTokenBufferMemory({
+      returnMessages: true,
+      inputKey: 'input',
+      outputKey: 'output',
+      memoryKey: 'history',
+      llm: model,
+      maxTokenLimit: maxTokenLimit,
+    });
+    return memory;
   }
 
   public async demo(chain: RunnableSequence, memory?: BufferMemory) {
