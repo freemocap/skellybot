@@ -38,7 +38,11 @@ export class LangchainService {
     const prompt = ChatPromptTemplate.fromMessages([
       [
         'system',
-        `${contextInstructionsOrNone} I keep my answers short (1-2 sentences) unless there is a reason to say more.`,
+        // TODO - set the `contextInstructions` to be a PromptVariable thing that is set each time the chain is called (like human text input)
+        // https://js.langchain.com/docs/expression_language/cookbook/adding_memory
+        // https://js.langchain.com/docs/expression_language/how_to/message_history
+
+        `${contextInstructionsOrNone} \n\nI keep my answers short (1-2 sentences) unless there is a reason to say more.`,
       ],
       new MessagesPlaceholder('history'),
       ['human', '{input}'],
@@ -103,6 +107,7 @@ export class LangchainService {
 
     console.log(`HumanInput:\n\n ${inputs.input}`);
 
+    // TODO - Figure out how to add additional arguments to the chain (i.e. like the topic/ {contextInstructions} thing)
     const response = await chain.invoke({
       input: 'Hello botto - say an emoji',
     });
