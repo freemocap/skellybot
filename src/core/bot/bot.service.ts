@@ -17,12 +17,19 @@ export class BotService {
     private readonly _langchainService: LangchainService,
   ) {}
 
-  public async createBot(chatbotId: string, modelName?: string) {
+  public async createBot(
+    chatbotId: string,
+    modelName?: string,
+    contextInstructions?: string,
+  ) {
     this._logger.log(
       `Creating chatbot with id: ${chatbotId} and language model (llm): ${modelName}`,
     );
     const { chain, memory } =
-      await this._langchainService.createBufferMemoryChain(modelName);
+      await this._langchainService.createBufferMemoryChain(
+        modelName,
+        contextInstructions,
+      );
 
     const chatbot = { chain, memory } as Chatbot;
     this._chatbots.set(chatbotId, chatbot);

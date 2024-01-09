@@ -51,7 +51,11 @@ export class DiscordThreadService implements OnModuleDestroy {
     });
 
     // await this._botService.createChatbot(thread.id);
-    await this._botService.createBot(thread.id);
+    await this._botService.createBot(
+      thread.id,
+      'gpt-4-1106-preview',
+      channel.topic || '',
+    );
 
     this._beginWatchingIncomingMessages(interaction, channel, thread);
     await this._sendInitialReply(interaction, channel, thread, text);
