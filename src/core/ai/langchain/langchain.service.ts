@@ -33,7 +33,11 @@ export class LangchainService {
     const model = await this._createModel(modelName);
     const prompt = ChatPromptTemplate.fromMessages([
       // TODO: Feed in a context prompt key
-      ['system', 'You are a helpful chatbot'],
+      [
+        'system',
+        'I am a helpful chatbot.' +
+          ' I keep my answers short (1-2 sentences) unless there is a reason to say more (and then I only say a paragraphy until there is reason to say more than that) .',
+      ],
       new MessagesPlaceholder('history'),
       ['human', '{input}'],
     ]);
