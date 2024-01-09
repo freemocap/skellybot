@@ -46,8 +46,8 @@ export class DiscordThreadService implements OnModuleDestroy {
       reason: 'wow this is a thread',
     });
 
-    await this._usersService.getOrCreate({
-      discordId: interaction.user.id,
+    await this._usersService.getOrCreateUser({
+      identifiers: { discordId: interaction.user.id },
     });
 
     // await this._botService.createChatbot(thread.id);
@@ -69,7 +69,6 @@ export class DiscordThreadService implements OnModuleDestroy {
     channel: TextChannel,
     thread: ThreadChannel,
   ) {
-    const t = { ...thread };
     const handleMessageCreation = async (message: Message) => {
       if (message.author.bot) {
         return;
