@@ -80,6 +80,7 @@ export class BotService {
     let subStreamResult = '';
     let didResetOccur = false;
     let tokens = 0;
+    const chunkSize = 10;
     for await (const chunk of chatStream) {
       // the full message
       streamedResult += chunk;
@@ -93,7 +94,7 @@ export class BotService {
         didResetOccur = true;
       }
 
-      if (tokens === 30) {
+      if (tokens === chunkSize) {
         this._logger.log(`Streaming chunk of data: ${subStreamResult}`);
         yield {
           data: streamedResult,

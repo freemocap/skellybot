@@ -18,46 +18,40 @@ export class UsersService {
 
   async findOne(userDto: UserDto): Promise<User> {
     let user: User;
-    if (userDto.discordId) {
+    if (userDto.identifiers && 'discordId' in userDto.identifiers) {
       user = await this.userModel
-        .findOne({ discordId: userDto.discordId })
+        .findOne({ identifiers: { discordId: userDto.identifiers.discordId } })
         .exec();
-    } else if (userDto.slackID) {
-      user = await this.userModel.findOne({ slackID: userDto.slackID }).exec();
+    }
+
+    if (userDto.identifiers && 'slackId' in userDto.identifiers) {
+      user = await this.userModel
+        .findOne({ identifiers: { slackId: userDto.identifiers.slackId } })
+        .exec();
     }
 
     return user;
   }
 
-  async getOrCreate(userDto: UserDto): Promise<User> {
+  async getOrCreateUser(userDto: UserDto): Promise<User> {
     const existingUser = await this.findOne(userDto);
 
     if (existingUser) {
       return existingUser;
     }
 
-    return this.create(userDto);
+    return this.createUser(userDto);
   }
 
-  _generateHexColorId() {
-    const letters = '0123456789ABCDEF';
-    let color = '';
-    const digits = 6;
-    for (let i = 0; i < digits; i++) {
-      color += letters[Math.floor(Math.random() * 16)];
-    }
-    return color;
-  }
-
-  async create(userDto: UserDto): Promise<User> {
+  async createUser(userDto: UserDto): Promise<User> {
     if (await this.findOne(userDto)) {
       throw new HttpException('User ID already exists', HttpStatus.CONFLICT);
     }
 
     const createdUser = new this.userModel({
-      ...userDto,
+      identifiers: userDto.identifiers,
+      metadata: userDto.metadata || {},
       uuid: uuidv4(),
-      favoriteColor: this._generateHexColorId() || userDto.favoriteColor,
     });
     return createdUser.save();
   }
