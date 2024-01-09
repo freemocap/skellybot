@@ -35,8 +35,7 @@ export class LangchainService {
       // TODO: Feed in a context prompt key
       [
         'system',
-        'I am a helpful chatbot.' +
-          ' I keep my answers short (1-2 sentences) unless there is a reason to say more (and then I only say a paragraphy until there is reason to say more than that) .',
+        'I am a helpful chatbot. I keep my answers short (1-2 sentences) unless there is a reason to say more.',
       ],
       new MessagesPlaceholder('history'),
       ['human', '{input}'],
