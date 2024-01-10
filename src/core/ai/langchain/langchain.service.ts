@@ -42,7 +42,7 @@ export class LangchainService {
         // https://js.langchain.com/docs/expression_language/cookbook/adding_memory
         // https://js.langchain.com/docs/expression_language/how_to/message_history
 
-        `${contextInstructionsOrNone} \n\nI keep my answers short (1-2 sentences) unless there is a reason to say more.`,
+        `${contextInstructionsOrNone} `,
       ],
       new MessagesPlaceholder('history'),
       ['human', '{input}'],
