@@ -34,7 +34,9 @@ export class LangchainService {
     contextInstructions?: string,
   ) {
     const model = await this._createModel(modelName);
-    const contextInstructionsOrNone = contextInstructions || ' ';
+    const contextInstructionsOrAtLeastBeChill =
+      contextInstructions ||
+      'I keep my answers short (1-2 sentences) unless there is a reason to say more.';
     const prompt = ChatPromptTemplate.fromMessages([
       [
         'system',
@@ -42,7 +44,7 @@ export class LangchainService {
         // https://js.langchain.com/docs/expression_language/cookbook/adding_memory
         // https://js.langchain.com/docs/expression_language/how_to/message_history
 
-        `${contextInstructionsOrNone} `,
+        `${contextInstructionsOrAtLeastBeChill} `,
       ],
       new MessagesPlaceholder('history'),
       ['human', '{input}'],
