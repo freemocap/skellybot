@@ -18,15 +18,14 @@ export class UsersService {
 
   async findOne(userDto: UserDto): Promise<User> {
     let user: User;
-    if (userDto.identifiers && 'discordId' in userDto.identifiers) {
+    if ('discordID' in userDto.identifiers && userDto.identifiers.discordID) {
       user = await this.userModel
-        .findOne({ identifiers: { discordId: userDto.identifiers.discordId } })
+        .findOne({ discordID: userDto.identifiers.discordID })
         .exec();
     }
-
-    if (userDto.identifiers && 'slackId' in userDto.identifiers) {
+    if ('slackID' in userDto.identifiers && userDto.identifiers.slackID) {
       user = await this.userModel
-        .findOne({ identifiers: { slackId: userDto.identifiers.slackId } })
+        .findOne({ slackID: userDto.identifiers.slackID })
         .exec();
     }
 

@@ -47,8 +47,18 @@ export class DiscordThreadService implements OnModuleDestroy {
     });
 
     await this._usersService.getOrCreateUser({
-      identifiers: { discordId: interaction.user.id },
+      identifiers: {
+        discord: {
+          id: interaction.user.id,
+          username: interaction.user.username,
+        },
+      },
     });
+
+    const contextInstructions = channel.topic || '';
+    this._logger.log(
+      `Creating bot with contextInstructions: \n ''' \n ${contextInstructions}\n '''`,
+    );
 
     // await this._botService.createChatbot(thread.id);
     await this._botService.createBot(

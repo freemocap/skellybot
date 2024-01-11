@@ -6,7 +6,12 @@ export class User {
   uuid: string;
 
   @Prop({ type: Object })
-  identifiers: Record<string, string>;
+  identifiers?: {
+    discordId?: string;
+    discordUsername?: string;
+    slackId?: string;
+    slackUsername?: string;
+  };
 
   @Prop({ type: Object })
   metadata: Record<string, unknown>;
