@@ -46,12 +46,26 @@ export class DiscordThreadService implements OnModuleDestroy {
       reason: 'wow this is a thread',
     });
 
-    await this._usersService.getOrCreate({
-      discordId: interaction.user.id,
+    await this._usersService.getOrCreateUser({
+      identifiers: {
+        discord: {
+          id: interaction.user.id,
+          username: interaction.user.username,
+        },
+      },
     });
 
+    const contextInstructions = channel.topic || '';
+    this._logger.log(
+      `Creating bot with contextInstructions: \n ''' \n ${contextInstructions}\n '''`,
+    );
+
     // await this._botService.createChatbot(thread.id);
-    await this._botService.createBot(thread.id);
+    await this._botService.createBot(
+      thread.id,
+      'gpt-4-1106-preview',
+      channel.topic || '',
+    );
 
     this._beginWatchingIncomingMessages(interaction, channel, thread);
     await this._sendInitialReply(interaction, channel, thread, text);
@@ -69,7 +83,6 @@ export class DiscordThreadService implements OnModuleDestroy {
     channel: TextChannel,
     thread: ThreadChannel,
   ) {
-    const t = { ...thread };
     const handleMessageCreation = async (message: Message) => {
       if (message.author.bot) {
         return;
@@ -102,10 +115,11 @@ export class DiscordThreadService implements OnModuleDestroy {
     inputText: string,
     message: Message<boolean>,
   ) {
+    thread.sendTyping();
+
     const tokenStream = this._botService.streamResponse(thread.id, inputText, {
       topic: channel.topic,
     });
-    thread.sendTyping();
 
     let initialReply: Message<boolean> = undefined;
     let final = '';

@@ -4,8 +4,9 @@ import { getConnectionToken } from '@nestjs/mongoose';
 import { Connection } from 'mongoose';
 import { OpenaiSecretsService } from '../openai/openai-secrets.service';
 import { ChatPromptTemplate, MessagesPlaceholder } from 'langchain/prompts';
-import { BufferMemory } from 'langchain/memory';
+import { BufferMemory, ConversationTokenBufferMemory } from 'langchain/memory';
 import { RunnableSequence } from 'langchain/runnables';
+import { BaseLLM } from '@langchain/core/dist/language_models/llms';
 
 @Injectable()
 export class LangchainService {
@@ -28,21 +29,27 @@ export class LangchainService {
     return this._model;
   }
 
-  public async createBufferMemoryChain(modelName?: string) {
+  public async createBufferMemoryChain(
+    modelName?: string,
+    contextInstructions?: string,
+  ) {
     const model = await this._createModel(modelName);
+    const contextInstructionsOrAtLeastBeChill =
+      contextInstructions ||
+      'I keep my answers short (1-2 sentences) unless there is a reason to say more.';
     const prompt = ChatPromptTemplate.fromMessages([
-      // TODO: Feed in a context prompt key
-      ['system', 'You are a helpful chatbot'],
+      [
+        'system',
+        // TODO - set the `contextInstructions` to be a PromptVariable thing that is set each time the chain is called (like human text input)
+        // https://js.langchain.com/docs/expression_language/cookbook/adding_memory
+        // https://js.langchain.com/docs/expression_language/how_to/message_history
+
+        `${contextInstructionsOrAtLeastBeChill} `,
+      ],
       new MessagesPlaceholder('history'),
       ['human', '{input}'],
     ]);
-
-    const memory = new BufferMemory({
-      returnMessages: true,
-      inputKey: 'input',
-      outputKey: 'output',
-      memoryKey: 'history',
-    });
+    const memory = this._createTokenBufferMemory(model);
 
     const chain = RunnableSequence.from([
       {
@@ -62,6 +69,31 @@ export class LangchainService {
     return { chain, memory };
   }
 
+  private _createBufferMemory() {
+    const memory = new BufferMemory({
+      returnMessages: true,
+      inputKey: 'input',
+      outputKey: 'output',
+      memoryKey: 'history',
+    });
+    return memory;
+  }
+
+  private _createTokenBufferMemory(
+    model: BaseLLM,
+    maxTokenLimit: number = 1000,
+  ) {
+    const memory = new ConversationTokenBufferMemory({
+      returnMessages: true,
+      inputKey: 'input',
+      outputKey: 'output',
+      memoryKey: 'history',
+      llm: model,
+      maxTokenLimit: maxTokenLimit,
+    });
+    return memory;
+  }
+
   public async demo(chain: RunnableSequence, memory?: BufferMemory) {
     if (memory) {
       console.log(
@@ -77,7 +109,10 @@ export class LangchainService {
 
     console.log(`HumanInput:\n\n ${inputs.input}`);
 
-    const response = await chain.invoke(inputs);
+    // TODO - Figure out how to add additional arguments to the chain (i.e. like the topic/ {contextInstructions} thing)
+    const response = await chain.invoke({
+      input: 'Hello botto - say an emoji',
+    });
 
     console.log(`AI Response:\n\n ${response}`);
 

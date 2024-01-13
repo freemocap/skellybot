@@ -17,12 +17,19 @@ export class BotService {
     private readonly _langchainService: LangchainService,
   ) {}
 
-  public async createBot(chatbotId: string, modelName?: string) {
+  public async createBot(
+    chatbotId: string,
+    modelName?: string,
+    contextInstructions?: string,
+  ) {
     this._logger.log(
       `Creating chatbot with id: ${chatbotId} and language model (llm): ${modelName}`,
     );
     const { chain, memory } =
-      await this._langchainService.createBufferMemoryChain(modelName);
+      await this._langchainService.createBufferMemoryChain(
+        modelName,
+        contextInstructions,
+      );
 
     const chatbot = { chain, memory } as Chatbot;
     this._chatbots.set(chatbotId, chatbot);
@@ -80,6 +87,7 @@ export class BotService {
     let subStreamResult = '';
     let didResetOccur = false;
     let tokens = 0;
+    const chunkSize = 10;
     for await (const chunk of chatStream) {
       // the full message
       streamedResult += chunk;
@@ -93,7 +101,7 @@ export class BotService {
         didResetOccur = true;
       }
 
-      if (tokens === 30) {
+      if (tokens === chunkSize) {
         this._logger.log(`Streaming chunk of data: ${subStreamResult}`);
         yield {
           data: streamedResult,

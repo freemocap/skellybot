@@ -8,7 +8,13 @@ import { DiscordModule } from '../interfaces/discord/discord.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: ['.env', '.env.slack', '.env.discord', '.env.mongo'],
+      envFilePath: [
+        '.env',
+        '.env.slack',
+        '.env.discord',
+        '.env.mongo',
+        '.env.openai',
+      ],
     }),
     SlackModule,
     DiscordModule,
