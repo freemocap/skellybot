@@ -6,7 +6,7 @@ import { ConfigService } from '@nestjs/config';
 export class OpenaiSecretsService {
   private _tokenMap = {
     OPENAI_API_KEY:
-      'projects/588063171007/secrets/DISCORD_BOT_TOKEN/versions/latest',
+      'projects/588063171007/secrets/OPENAI_API_KEY/versions/latest',
   };
 
   constructor(
