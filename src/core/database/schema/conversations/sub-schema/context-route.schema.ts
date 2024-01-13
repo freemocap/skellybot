@@ -39,7 +39,7 @@ export class ContextRoute {
       message: () => 'Invalid parent-child relationship in route',
     },
   })
-  contextIdentifierRoute: ContextIdentifier[];
+  identifiers: ContextIdentifier[];
 }
 
 export const ContextRouteSchema = SchemaFactory.createForClass(ContextRoute);

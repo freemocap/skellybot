@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { IsUUID } from 'class-validator';
 import { Identifiers, IdentifiersSchema } from './identifiersSchema';
+export type UserDocument = User & Document;
 
 @Schema({ timestamps: true })
 export class User {
