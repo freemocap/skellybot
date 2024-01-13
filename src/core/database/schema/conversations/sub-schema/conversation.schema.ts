@@ -1,14 +1,15 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Couplet, CoupletSchema } from './couplet.schema';
+import { Identifier } from '../../users/sub-schema/identifiersSchema';
+import { ContextRoute } from './context-route.schema';
 
 @Schema()
 export class Conversation {
-  @Prop({ type: String, required: true })
-  owner: {
-    id: string;
-    username: string;
-    identifier: string;
-  };
+  @Prop({ type: Identifier, required: true })
+  owner: Identifier;
+
+  @Prop({ type: ContextRoute, required: true })
+  contextRoute: ContextRoute;
 
   @Prop({ type: [CoupletSchema], required: true })
   couplets: Couplet[];

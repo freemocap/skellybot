@@ -7,7 +7,10 @@ export class Identifier {
   id?: string;
 
   @Prop({ type: String, required: false })
-  username?: string;
+  name?: string;
+
+  @Prop({ type: Object })
+  metadata: Record<string, unknown>;
 }
 
 @Schema()

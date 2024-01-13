@@ -6,8 +6,8 @@ import { Identifiers, IdentifiersSchema } from './sub-schema/identifiersSchema';
 //
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
     MongooseModule.forFeature([
+      { name: User.name, schema: UserSchema },
       { name: Identifiers.name, schema: IdentifiersSchema },
     ]),
   ],
