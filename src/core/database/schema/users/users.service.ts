@@ -18,31 +18,31 @@ export class UsersService {
 
   async findOne(userDto: UserDto): Promise<User> {
     let user: User;
-    if ('discordID' in userDto.identifiers && userDto.identifiers.discordID) {
+    if ('discord' in userDto.identifiers && userDto.identifiers.discord.id) {
       user = await this.userModel
-        .findOne({ discordID: userDto.identifiers.discordID })
+        .findOne({ 'identifiers.discord.id': userDto.identifiers.discord.id })
         .exec();
     }
-    if ('slackID' in userDto.identifiers && userDto.identifiers.slackID) {
+    if ('slack' in userDto.identifiers && userDto.identifiers.slack.id) {
       user = await this.userModel
-        .findOne({ slackID: userDto.identifiers.slackID })
+        .findOne({ 'identifiers.slack.id': userDto.identifiers.slack.id })
         .exec();
     }
 
     return user;
   }
 
-  async getOrCreateUser(userDto: UserDto): Promise<User> {
+  public async getOrCreateUser(userDto: UserDto): Promise<User> {
     const existingUser = await this.findOne(userDto);
 
     if (existingUser) {
       return existingUser;
     }
 
-    return this.createUser(userDto);
+    return this._createUser(userDto);
   }
 
-  async createUser(userDto: UserDto): Promise<User> {
+  async _createUser(userDto: UserDto): Promise<User> {
     if (await this.findOne(userDto)) {
       throw new HttpException('User ID already exists', HttpStatus.CONFLICT);
     }
