@@ -3,6 +3,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { GcpModule } from '../gcp/gcp.module';
 import { UsersModule } from './schema/users/users.module';
 import { DatabaseConfigService } from './services/database-config.service';
+import { ConversationsModule } from './schema/conversations/conversations.module';
 
 @Module({
   imports: [
@@ -14,8 +15,9 @@ import { DatabaseConfigService } from './services/database-config.service';
     }),
     // CatsModule,
     UsersModule,
+    ConversationsModule,
   ],
   providers: [],
-  exports: [UsersModule],
+  exports: [UsersModule, ConversationsModule],
 })
 export class DatabaseModule {}

@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { IsUUID } from 'class-validator';
+import { Identifiers, IdentifiersSchema } from './identifiersSchema';
 
 @Schema({ timestamps: true })
 export class User {
@@ -7,17 +8,8 @@ export class User {
   @IsUUID()
   uuid: string;
 
-  @Prop({ type: Object })
-  identifiers?: {
-    discord?: {
-      id: string;
-      username: string;
-    };
-    slack?: {
-      id: string;
-      username: string;
-    };
-  };
+  @Prop({ type: IdentifiersSchema })
+  identifiers: Identifiers;
 
   @Prop({ type: Object })
   metadata: Record<string, unknown>;
