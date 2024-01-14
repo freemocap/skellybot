@@ -38338,8 +38338,8 @@ var require_Client2 = __commonJS({
         this._options = _options;
       }
       /**
-       * The `chat` endpoint allows users to have conversations with a Large Language Model (LLM) from Cohere. Users can send messages as part of a persisted conversation using the `conversation_id` parameter, or they can pass in their own conversation history using the `chat_history` parameter.
-       * The endpoint features additional parameters such as [connectors](https://docs.cohere.com/docs/connectors) and `documents` that enable conversations enriched by external knowledge. We call this "Retrieval Augmented Generation", or "RAG".
+       * The `chat` endpoint allows users to have ai-chats with a Large Language Model (LLM) from Cohere. Users can send messages as part of a persisted conversation using the `conversation_id` parameter, or they can pass in their own conversation history using the `chat_history` parameter.
+       * The endpoint features additional parameters such as [connectors](https://docs.cohere.com/docs/connectors) and `documents` that enable ai-chats enriched by external knowledge. We call this "Retrieval Augmented Generation", or "RAG".
        *
        */
       chatStream(request2, requestOptions) {
@@ -38397,8 +38397,8 @@ var require_Client2 = __commonJS({
         });
       }
       /**
-       * The `chat` endpoint allows users to have conversations with a Large Language Model (LLM) from Cohere. Users can send messages as part of a persisted conversation using the `conversation_id` parameter, or they can pass in their own conversation history using the `chat_history` parameter.
-       * The endpoint features additional parameters such as [connectors](https://docs.cohere.com/docs/connectors) and `documents` that enable conversations enriched by external knowledge. We call this "Retrieval Augmented Generation", or "RAG".
+       * The `chat` endpoint allows users to have ai-chats with a Large Language Model (LLM) from Cohere. Users can send messages as part of a persisted conversation using the `conversation_id` parameter, or they can pass in their own conversation history using the `chat_history` parameter.
+       * The endpoint features additional parameters such as [connectors](https://docs.cohere.com/docs/connectors) and `documents` that enable ai-chats enriched by external knowledge. We call this "Retrieval Augmented Generation", or "RAG".
        *
        */
       chat(request2, requestOptions) {
@@ -72823,7 +72823,7 @@ var DEFAULT_SETTINGS = {
   ttlDays: 30,
   stream: true,
   embeddingProvider: OPENAI,
-  defaultSaveFolder: "copilot-conversations",
+  defaultSaveFolder: "copilot-ai-chats",
   debug: false
 };
 
@@ -86568,8 +86568,8 @@ var CopilotSettingTab = class extends import_obsidian10.PluginSettingTab {
         await this.plugin.saveSettings();
       });
     });
-    new import_obsidian10.Setting(containerEl).setName("Default Conversation Folder Name").setDesc("The default folder name where chat conversations will be saved. Default is 'copilot-conversations'").addText(
-      (text4) => text4.setPlaceholder("copilot-conversations").setValue(this.plugin.settings.defaultSaveFolder).onChange(async (value) => {
+    new import_obsidian10.Setting(containerEl).setName("Default Conversation Folder Name").setDesc("The default folder name where chat ai-chats will be saved. Default is 'copilot-ai-chats'").addText(
+      (text4) => text4.setPlaceholder("copilot-ai-chats").setValue(this.plugin.settings.defaultSaveFolder).onChange(async (value) => {
         this.plugin.settings.defaultSaveFolder = value;
         await this.plugin.saveSettings();
       })

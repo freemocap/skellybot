@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { IsUUID } from 'class-validator';
-import { UserIdentifiers } from './identifiers.utility';
+import { UserIdentifiers } from './user-identifiers';
 
 export type UserDocument = User & Document;
 

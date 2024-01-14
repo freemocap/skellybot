@@ -8,7 +8,9 @@ import { DiscordThreadService } from './services/discord-thread.service';
 import { GcpModule } from '../../core/gcp/gcp.module';
 import { UsersModule } from '../../core/database/collections/users/users.module';
 import { BotModule } from '../../core/bot/bot.module';
-import { ConversationsModule } from '../../core/database/collections/conversations/conversations.module';
+import { AiChatsModule } from '../../core/database/collections/ai-chats/ai-chats.module';
+import { CoupletsModule } from '../../core/database/collections/couplets/couplets.module';
+import { MessagesModule } from '../../core/database/collections/messages/messages.module';
 
 @Module({
   imports: [
@@ -19,7 +21,9 @@ import { ConversationsModule } from '../../core/database/collections/conversatio
     GcpModule,
     UsersModule,
     BotModule,
-    ConversationsModule,
+    AiChatsModule,
+    CoupletsModule,
+    MessagesModule,
   ],
   providers: [
     DiscordPingService,
