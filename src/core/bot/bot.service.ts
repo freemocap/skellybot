@@ -45,14 +45,14 @@ export class BotService {
     this._logger.log(
       `Responding to message '${humanMessage}' with chatbotId: ${chatbotId}`,
     );
-    const chatbot = this.getChatbotById(chatbotId);
+    const chatbot = this.getBotById(chatbotId);
     return await chatbot.chain.invoke({
       text: humanMessage,
       ...additionalArgs,
     });
   }
 
-  getChatbotById(chatbotId: string | number) {
+  getBotById(chatbotId: string | number) {
     try {
       this._logger.log(`Fetching chatbot with id: ${chatbotId}`);
       return this._chatbots.get(String(chatbotId));
@@ -77,7 +77,7 @@ export class BotService {
       ...options,
     };
     const { splitAt } = normalizedOptions;
-    const chatbot = this.getChatbotById(chatbotId);
+    const chatbot = this.getBotById(chatbotId);
     const chatStream = await chatbot.chain.stream({
       input: humanMessage,
       ...additionalArgs,

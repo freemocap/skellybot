@@ -1,4 +1,4 @@
-import { IS_UUID, IsOptional, IsString, IsUUID } from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
 
 class DiscordIdentifierDto {
   @IsString()

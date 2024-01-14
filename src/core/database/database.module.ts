@@ -1,8 +1,11 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { GcpModule } from '../gcp/gcp.module';
-import { UsersModule } from './schema/users/users.module';
-import { DatabaseConfigService } from './services/database-config.service';
+import { DatabaseConfigService } from './database-config.service';
+import { AiChatsModule } from './collections/ai-chats/ai-chats.module';
+import { UsersModule } from './collections/users/users.module';
+import { CoupletsModule } from './collections/couplets/couplets.module';
+import { MessagesModule } from './collections/messages/messages.module';
 
 @Module({
   imports: [
@@ -12,10 +15,12 @@ import { DatabaseConfigService } from './services/database-config.service';
       imports: [GcpModule],
       useClass: DatabaseConfigService,
     }),
-    // CatsModule,
     UsersModule,
+    AiChatsModule,
+    CoupletsModule,
+    MessagesModule,
   ],
   providers: [],
-  exports: [UsersModule],
+  exports: [UsersModule, AiChatsModule, CoupletsModule, MessagesModule],
 })
 export class DatabaseModule {}

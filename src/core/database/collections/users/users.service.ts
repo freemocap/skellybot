@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { User } from './user.schema';
+import { User, UserDocument } from './user.schema';
 import { UserDto } from './user.dto';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -9,15 +9,15 @@ import { v4 as uuidv4 } from 'uuid';
 export class UsersService {
   constructor(
     @InjectModel(User.name)
-    private readonly userModel: Model<User>,
+    private readonly userModel: Model<UserDocument>,
   ) {}
 
-  async findAll(): Promise<User[]> {
+  async findAll(): Promise<UserDocument[]> {
     return this.userModel.find().exec();
   }
 
-  async findOne(userDto: UserDto): Promise<User> {
-    let user: User;
+  async findOne(userDto: UserDto): Promise<UserDocument> {
+    let user: UserDocument;
     if ('discord' in userDto.identifiers && userDto.identifiers.discord.id) {
       user = await this.userModel
         .findOne({ 'identifiers.discord.id': userDto.identifiers.discord.id })
@@ -32,7 +32,7 @@ export class UsersService {
     return user;
   }
 
-  public async getOrCreateUser(userDto: UserDto): Promise<User> {
+  public async getOrCreateUser(userDto: UserDto): Promise<UserDocument> {
     const existingUser = await this.findOne(userDto);
 
     if (existingUser) {
@@ -42,7 +42,7 @@ export class UsersService {
     return this._createUser(userDto);
   }
 
-  async _createUser(userDto: UserDto): Promise<User> {
+  async _createUser(userDto: UserDto): Promise<UserDocument> {
     if (await this.findOne(userDto)) {
       throw new HttpException('User ID already exists', HttpStatus.CONFLICT);
     }
