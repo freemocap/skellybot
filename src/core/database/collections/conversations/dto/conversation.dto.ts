@@ -1,7 +1,7 @@
 import { IsNotEmpty, IsString, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
-import { ContextRoute } from '../context-route.provider';
-import { Identifier } from '../../users/sub-schema/identifiers.schema';
+import { ContextRoute } from '../schema/context-route.provider';
+import { UserIdentifier } from '../../users/schema/identifiers.utility';
 
 class MessageDto {
   @IsString()
@@ -38,8 +38,8 @@ export class ConversationDto {
   conversationId: string;
 
   @ValidateNested()
-  @Type(() => Identifier)
-  ownerUser: Identifier;
+  @Type(() => UserIdentifier)
+  ownerUser: UserIdentifier;
 
   @ValidateNested()
   @Type(() => ContextRoute)

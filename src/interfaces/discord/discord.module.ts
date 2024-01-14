@@ -6,9 +6,9 @@ import { DiscordConfigService } from './services/discord-config.service';
 import { DiscordReadyService } from './services/discord-ready.service';
 import { DiscordThreadService } from './services/discord-thread.service';
 import { GcpModule } from '../../core/gcp/gcp.module';
-import { UsersModule } from '../../core/database/schema/users/users.module';
+import { UsersModule } from '../../core/database/collections/users/users.module';
 import { BotModule } from '../../core/bot/bot.module';
-import { ConversationsModule } from '../../core/database/schema/conversations/conversations.module';
+import { ConversationsModule } from '../../core/database/collections/conversations/conversations.module';
 
 @Module({
   imports: [

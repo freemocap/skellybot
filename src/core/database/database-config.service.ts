@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { GcpSecretsService } from '../../gcp/gcp-secrets.service';
+import { GcpSecretsService } from '../gcp/gcp-secrets.service';
 import { MongooseModuleOptions } from '@nestjs/mongoose';
 
 @Injectable()

@@ -9,9 +9,9 @@ import {
   ThreadChannel,
 } from 'discord.js';
 import { BotService } from '../../../core/bot/bot.service';
-import { UsersService } from '../../../core/database/schema/users/users.service';
-import { DiscordContextRouteFactory } from '../../../core/database/schema/conversations/context-route.provider';
-import { ConversationsService } from '../../../core/database/schema/conversations/conversations.service';
+import { UsersService } from '../../../core/database/collections/users/users.service';
+import { DiscordContextRouteFactory } from '../../../core/database/collections/conversations/schema/context-route.provider';
+import { ConversationsService } from '../../../core/database/collections/conversations/conversations.service';
 
 @Injectable()
 export class DiscordThreadService implements OnModuleDestroy {
@@ -90,23 +90,23 @@ export class DiscordThreadService implements OnModuleDestroy {
       false,
       {
         type: 'channel',
-        id: channel.id,
-        name: channel.name,
+        contextId: channel.id,
+        contextName: channel.name,
       },
       {
         type: 'server',
-        id: channel.guild.id,
-        name: channel.guild.name,
+        contextId: channel.guild.id,
+        contextName: channel.guild.name,
       },
       {
         type: 'category',
-        id: channel.parentId,
-        name: channel.parent?.name,
+        contextId: channel.parentId,
+        contextName: channel.parent?.name,
       },
       {
         type: 'thread',
-        id: thread.id,
-        name: thread.name,
+        contextId: thread.id,
+        contextName: thread.name,
       },
     );
   }

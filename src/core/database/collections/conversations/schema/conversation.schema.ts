@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 import { ContextRoute } from './context-route.provider';
-import { User } from '../users/sub-schema/user.schema';
+import { User } from '../../users/schema/user.schema';
 
 export type ConversationDocument = Conversation & Document;
 
@@ -65,7 +65,7 @@ ConversationSchema.post(
   function (doc: ConversationDocument, next: (err?: Error) => void) {
     const lastIdentifier =
       doc.contextRoute.identifiers[doc.contextRoute.identifiers.length - 1];
-    if (doc.conversationId !== lastIdentifier.id) {
+    if (doc.conversationId !== lastIdentifier.contextId) {
       next(
         new Error(
           'conversationId should match the bottom-most identifier in the context route',

@@ -1,21 +1,24 @@
 import { Injectable, Scope } from '@nestjs/common';
-import { Identifier } from '../users/sub-schema/identifiers.schema';
 
-export class ContextIdentifier extends Identifier {
+export class ContextIdentifier {
   type: 'server' | 'category' | 'channel' | 'thread' | 'direct-message';
-  contextInstructions?: string;
+  contextId: string;
+  contextName: string;
 }
 
 export class ContextRoute {
   sourceInterface: 'discord' | 'slack';
   identifiers: ContextIdentifier[];
+  isDirectMessage: boolean;
 
   constructor(
     sourceInterface: 'discord' | 'slack',
     identifiers: ContextIdentifier[],
+    isDirectMessage: boolean,
   ) {
     this.sourceInterface = sourceInterface;
     this.identifiers = identifiers;
+    this.isDirectMessage = isDirectMessage;
 
     // if (!this.validateIdentifiers()) {
     //   throw new Error('Invalid parent-child relationship in route');
@@ -54,6 +57,6 @@ export class DiscordContextRouteFactory {
       thread,
     ].filter(Boolean) as ContextIdentifier[];
     const sourceInterface = 'discord';
-    return new ContextRoute(sourceInterface, identifiers);
+    return new ContextRoute(sourceInterface, identifiers, isDirectMessage);
   }
 }

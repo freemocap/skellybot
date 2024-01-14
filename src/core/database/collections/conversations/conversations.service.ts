@@ -4,7 +4,10 @@ import { Model } from 'mongoose';
 
 import { ConversationDto, UpdateConversationDto } from './dto/conversation.dto';
 import { v4 as uuidv4 } from 'uuid';
-import { Conversation, ConversationDocument } from './conversation.schema';
+import {
+  Conversation,
+  ConversationDocument,
+} from './schema/conversation.schema';
 
 @Injectable()
 export class ConversationsService {
