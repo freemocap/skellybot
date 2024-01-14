@@ -8,6 +8,7 @@ import { DiscordThreadService } from './services/discord-thread.service';
 import { GcpModule } from '../../core/gcp/gcp.module';
 import { UsersModule } from '../../core/database/schema/users/users.module';
 import { BotModule } from '../../core/bot/bot.module';
+import { ConversationsModule } from '../../core/database/schema/conversations/conversations.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { BotModule } from '../../core/bot/bot.module';
     GcpModule,
     UsersModule,
     BotModule,
+    ConversationsModule,
   ],
   providers: [
     DiscordPingService,

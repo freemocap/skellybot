@@ -1,22 +1,15 @@
 import { Module } from '@nestjs/common';
 import { ConversationsService } from './conversations.service';
 import { MongooseModule } from '@nestjs/mongoose';
-import {
-  Conversation,
-  ConversationSchema,
-} from './sub-schema/conversation.schema';
-import {
-  ContextRoute,
-  ContextRouteSchema,
-} from './sub-schema/context-route.schema';
+import { Conversation, ConversationSchema } from './conversation.schema';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: Conversation.name, schema: ConversationSchema },
-      { name: ContextRoute.name, schema: ContextRouteSchema },
     ]),
   ],
   providers: [ConversationsService],
+  exports: [ConversationsService],
 })
 export class ConversationsModule {}

@@ -10,10 +10,13 @@ import {
 } from 'discord.js';
 import { BotService } from '../../../core/bot/bot.service';
 import { UsersService } from '../../../core/database/schema/users/users.service';
+import { DiscordContextRouteFactory } from '../../../core/database/schema/conversations/context-route.provider';
+import { ConversationsService } from '../../../core/database/schema/conversations/conversations.service';
 
 @Injectable()
 export class DiscordThreadService implements OnModuleDestroy {
   constructor(
+    private readonly _conversationsService: ConversationsService,
     private readonly _usersService: UsersService,
     private readonly _logger: Logger,
     private readonly _botService: BotService,
@@ -46,7 +49,7 @@ export class DiscordThreadService implements OnModuleDestroy {
       reason: 'wow this is a thread',
     });
 
-    await this._usersService.getOrCreateUser({
+    const user = await this._usersService.getOrCreateUser({
       identifiers: {
         discord: {
           id: interaction.user.id,
@@ -54,6 +57,30 @@ export class DiscordThreadService implements OnModuleDestroy {
         },
       },
     });
+
+    const contextRoute = DiscordContextRouteFactory.create(
+      false,
+      {
+        type: 'channel',
+        id: channel.id,
+        name: channel.name,
+      },
+      {
+        type: 'server',
+        id: channel.guild.id,
+        name: channel.guild.name,
+      },
+      {
+        type: 'category',
+        id: channel.parentId,
+        name: channel.parent?.name,
+      },
+      {
+        type: 'thread',
+        id: thread.id,
+        name: thread.name,
+      },
+    );
 
     const contextInstructions = channel.topic || '';
     this._logger.log(
@@ -67,6 +94,12 @@ export class DiscordThreadService implements OnModuleDestroy {
       channel.topic || '',
     );
 
+    await this._conversationsService.create({
+      owner: user,
+      contextRoute,
+      conversationId: thread.id,
+      couplets: [],
+    });
     this._beginWatchingIncomingMessages(interaction, channel, thread);
     await this._sendInitialReply(interaction, channel, thread, text);
   }

@@ -10,7 +10,7 @@ export class Identifier {
   name?: string;
 
   @Prop({ type: Object })
-  metadata: Record<string, unknown>;
+  metadata?: Record<string, unknown>;
 }
 
 @Schema()

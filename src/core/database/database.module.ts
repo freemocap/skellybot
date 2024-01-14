@@ -4,7 +4,6 @@ import { GcpModule } from '../gcp/gcp.module';
 import { UsersModule } from './schema/users/users.module';
 import { DatabaseConfigService } from './services/database-config.service';
 import { ConversationsModule } from './schema/conversations/conversations.module';
-import { ContextRoute } from './schema/conversations/sub-schema/context-route.schema';
 
 @Module({
   imports: [
@@ -17,9 +16,8 @@ import { ContextRoute } from './schema/conversations/sub-schema/context-route.sc
     // CatsModule,
     UsersModule,
     ConversationsModule,
-    ContextRoute,
   ],
   providers: [],
-  exports: [UsersModule, ConversationsModule, ContextRoute],
+  exports: [UsersModule, ConversationsModule],
 })
 export class DatabaseModule {}
