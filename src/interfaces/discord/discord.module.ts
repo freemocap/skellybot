@@ -11,6 +11,7 @@ import { BotModule } from '../../core/bot/bot.module';
 import { AiChatsModule } from '../../core/database/collections/ai-chats/ai-chats.module';
 import { CoupletsModule } from '../../core/database/collections/couplets/couplets.module';
 import { MessagesModule } from '../../core/database/collections/messages/messages.module';
+import { DiscordContextService } from './services/discord-context.service';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { MessagesModule } from '../../core/database/collections/messages/message
     DiscordPingService,
     DiscordThreadService,
     DiscordReadyService,
+    DiscordContextService,
     Logger,
   ],
 })
