@@ -14,6 +14,7 @@ import { DiscordContextRouteFactory } from '../../../core/database/collections/a
 import { AiChatsService } from '../../../core/database/collections/ai-chats/ai-chats.service';
 import { CoupletsService } from '../../../core/database/collections/couplets/couplets.service';
 import { MessagesService } from '../../../core/database/collections/messages/messages.service';
+import { DiscordContextService } from './discord-context.service';
 
 @Injectable()
 export class DiscordThreadService implements OnModuleDestroy {
@@ -22,6 +23,7 @@ export class DiscordThreadService implements OnModuleDestroy {
     private readonly _usersService: UsersService,
     private readonly _coupletService: CoupletsService,
     private readonly _messageService: MessagesService,
+    private readonly _contextService: DiscordContextService,
     private readonly _logger: Logger,
     private readonly _botService: BotService,
     private readonly _client: Client,
@@ -53,8 +55,9 @@ export class DiscordThreadService implements OnModuleDestroy {
       reason: 'wow this is a thread',
     });
 
-    const contextRoute = this._getContextRoute(channel, thread);
-    const contextInstructions = this._getContextInstructions(channel);
+    const contextRoute = this._contextService.getContextRoute(channel, thread);
+    const contextInstructions =
+      await this._contextService.getContextInstructions(channel);
     this._logger.log(
       `Creating bot with contextInstructions: \n ''' \n ${contextInstructions}\n '''`,
     );
