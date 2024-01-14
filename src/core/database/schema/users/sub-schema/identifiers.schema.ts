@@ -1,7 +1,6 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Prop, SchemaFactory } from '@nestjs/mongoose';
 import { Validate } from 'class-validator';
 
-@Schema()
 export class Identifier {
   @Prop({ type: String, required: false })
   id?: string;
@@ -13,19 +12,16 @@ export class Identifier {
   metadata?: Record<string, unknown>;
 }
 
-@Schema()
 export class DiscordIdentifier extends Identifier {}
 
 export const DiscordIdentifierSchema =
   SchemaFactory.createForClass(DiscordIdentifier);
 
-@Schema()
 export class SlackIdentifier extends Identifier {}
 
 export const SlackIdentifierSchema =
   SchemaFactory.createForClass(SlackIdentifier);
 
-@Schema()
 export class Identifiers {
   @Prop({ type: DiscordIdentifierSchema, required: false })
   discord?: DiscordIdentifier;

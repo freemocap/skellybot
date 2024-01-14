@@ -49,6 +49,20 @@ export class DiscordThreadService implements OnModuleDestroy {
       reason: 'wow this is a thread',
     });
 
+    const contextRoute = this._getContextRoute(channel, thread);
+    const contextInstructions = this._getContextInstructions(channel);
+    this._logger.log(
+      `Creating bot with contextInstructions: \n ''' \n ${contextInstructions}\n '''`,
+    );
+
+    // await this._botService.createChatbot(thread.id);
+
+    await this._botService.createBot(
+      thread.id,
+      'gpt-4-1106-preview',
+      contextInstructions || '',
+    );
+
     const user = await this._usersService.getOrCreateUser({
       identifiers: {
         discord: {
@@ -58,7 +72,21 @@ export class DiscordThreadService implements OnModuleDestroy {
       },
     });
 
-    const contextRoute = DiscordContextRouteFactory.create(
+    await this._conversationsService.createConversation({
+      ownerUser: user,
+      contextRoute,
+      conversationId: thread.id,
+      couplets: [],
+    });
+    this._beginWatchingIncomingMessages(interaction, channel, thread);
+    await this._sendInitialReply(interaction, channel, thread, text);
+  }
+
+  private _getContextRoute(
+    channel: TextChannel,
+    thread: ThreadChannel<boolean>,
+  ) {
+    return DiscordContextRouteFactory.create(
       false,
       {
         type: 'channel',
@@ -81,39 +109,15 @@ export class DiscordThreadService implements OnModuleDestroy {
         name: thread.name,
       },
     );
-    const contextInstructions = this._getContextInstructions(channel);
-
-    this._logger.log(
-      `Creating bot with contextInstructions: \n ''' \n ${contextInstructions}\n '''`,
-    );
-
-    // await this._botService.createChatbot(thread.id);
-    await this._botService.createBot(
-      thread.id,
-      'gpt-4-1106-preview',
-      channel.topic || '',
-    );
-
-    await this._conversationsService.create({
-      owner: user,
-      contextRoute,
-      conversationId: thread.id,
-      couplets: [],
-    });
-    this._beginWatchingIncomingMessages(interaction, channel, thread);
-    await this._sendInitialReply(interaction, channel, thread, text);
   }
 
   private _getContextInstructions(channel: TextChannel) {
     const channelInstructions = channel.topic || '';
     const categoryInstructions = ''; // TODO: get category instructions from category-level `bot-config`  channel
     const serverInstructions = ''; // TODO: get server instructions from server-level `bot-config` channel
-    const contextInstructions = [
-      serverInstructions,
-      categoryInstructions,
-      channelInstructions,
-    ].join('\n');
-    return contextInstructions;
+    return [serverInstructions, categoryInstructions, channelInstructions].join(
+      '\n',
+    );
   }
 
   /**

@@ -13,15 +13,29 @@ export class ConversationsService {
     private readonly conversationModel: Model<ConversationDocument>,
   ) {}
 
-  async findAll(): Promise<ConversationDocument[]> {
-    return this.conversationModel.find().exec();
+  async findAll(populateData?: boolean): Promise<ConversationDocument[]> {
+    if (populateData) {
+      return this.conversationModel.find().populate('owner').exec();
+    } else {
+      return this.conversationModel.find().exec();
+    }
   }
 
-  async findOne(id: string): Promise<ConversationDocument> {
-    return this.conversationModel.findOne({ id: id }).exec();
+  async findOne(
+    conversationId: string,
+    populateData?: boolean,
+  ): Promise<ConversationDocument> {
+    if (populateData) {
+      return this.conversationModel
+        .findOne({ conversationId: conversationId })
+        .populate('owner')
+        .exec();
+    } else {
+      return this.conversationModel.findOne({ id: conversationId }).exec();
+    }
   }
 
-  async create(
+  public async createConversation(
     createConversationDto: ConversationDto,
   ): Promise<ConversationDocument> {
     const createdConversation = new this.conversationModel({
@@ -31,21 +45,21 @@ export class ConversationsService {
     return createdConversation.save();
   }
 
-  async update(
-    id: string,
+  public async updateConversation(
+    conversationId: string,
     updateConversationDto: UpdateConversationDto,
   ): Promise<ConversationDocument> {
     const existingConversation = await this.conversationModel
-      .findOne({ id: id })
+      .findOne({ id: conversationId })
       .exec();
     if (!existingConversation) {
-      throw new Error(`Conversation with id ${id} not found`);
+      throw new Error(`Conversation with id ${conversationId} not found`);
     }
 
     // Push the new couplet(s) to the couplet list in the conversation
     return await this.conversationModel
       .findOneAndUpdate(
-        { id: id },
+        { id: conversationId },
         { $push: { couplets: { $each: updateConversationDto.couplets } } },
         { new: true },
       )

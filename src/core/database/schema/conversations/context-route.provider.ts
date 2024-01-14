@@ -1,5 +1,5 @@
 import { Injectable, Scope } from '@nestjs/common';
-import { Identifier } from '../users/sub-schema/identifiersSchema';
+import { Identifier } from '../users/sub-schema/identifiers.schema';
 
 export class ContextIdentifier extends Identifier {
   type: 'server' | 'category' | 'channel' | 'thread' | 'direct-message';

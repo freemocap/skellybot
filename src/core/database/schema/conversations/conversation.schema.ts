@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
-import { Identifier } from '../users/sub-schema/identifiersSchema';
+import { Document, Types } from 'mongoose';
 import { ContextRoute } from './context-route.provider';
+import { User } from '../users/sub-schema/user.schema';
 
 export type ConversationDocument = Conversation & Document;
 
@@ -48,8 +48,8 @@ export class Conversation {
   @Prop({ required: true, unique: true })
   conversationId: string;
 
-  @Prop({ type: Identifier, required: true })
-  owner: Identifier;
+  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+  ownerUser: User;
 
   @Prop({ type: ContextRoute, required: true })
   contextRoute: ContextRoute;
