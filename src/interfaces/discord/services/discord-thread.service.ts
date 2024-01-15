@@ -10,27 +10,24 @@ import {
 } from 'discord.js';
 import { BotService } from '../../../core/bot/bot.service';
 import { UsersService } from '../../../core/database/collections/users/users.service';
-import { DiscordContextRouteFactory } from '../../../core/database/collections/ai-chats/context-route.provider';
 import { AiChatsService } from '../../../core/database/collections/ai-chats/ai-chats.service';
-import { CoupletsService } from '../../../core/database/collections/couplets/couplets.service';
-import { MessagesService } from '../../../core/database/collections/messages/messages.service';
 import { DiscordContextService } from './discord-context.service';
+import { DiscordPersistenceService } from './discord-persistence.service';
 
 @Injectable()
 export class DiscordThreadService implements OnModuleDestroy {
   constructor(
     private readonly _aiChatsService: AiChatsService,
     private readonly _usersService: UsersService,
-    private readonly _coupletService: CoupletsService,
-    private readonly _messageService: MessagesService,
     private readonly _contextService: DiscordContextService,
     private readonly _logger: Logger,
     private readonly _botService: BotService,
     private readonly _client: Client,
+    private readonly _persistenceService: DiscordPersistenceService,
   ) {}
 
   @SlashCommand({
-    name: 'skelly',
+    name: 'chat',
     description:
       'Opens a thread at this location and sets up a aiChat with with the bot.',
   })
@@ -87,44 +84,6 @@ export class DiscordThreadService implements OnModuleDestroy {
     });
     this._beginWatchingIncomingMessages(interaction, channel, thread);
     await this._sendInitialReply(interaction, channel, thread, text);
-  }
-
-  private _getContextRoute(
-    channel: TextChannel,
-    thread: ThreadChannel<boolean>,
-  ) {
-    return DiscordContextRouteFactory.create(
-      false,
-      {
-        type: 'channel',
-        contextId: channel.id,
-        contextName: channel.name,
-      },
-      {
-        type: 'server',
-        contextId: channel.guild.id,
-        contextName: channel.guild.name,
-      },
-      {
-        type: 'category',
-        contextId: channel.parentId,
-        contextName: channel.parent?.name,
-      },
-      {
-        type: 'thread',
-        contextId: thread.id,
-        contextName: thread.name,
-      },
-    );
-  }
-
-  private _getContextInstructions(channel: TextChannel) {
-    const channelInstructions = channel.topic || '';
-    const categoryInstructions = ''; // TODO: get category instructions from category-level `bot-config`  channel
-    const serverInstructions = ''; // TODO: get server instructions from server-level `bot-config` channel
-    return [serverInstructions, categoryInstructions, channelInstructions].join(
-      '\n',
-    );
   }
 
   /**
@@ -200,40 +159,13 @@ export class DiscordThreadService implements OnModuleDestroy {
       await replyMessage.edit(theChunk);
       final = current.data;
     }
-    const contextRoute = this._getContextRoute(channel, thread);
+    const contextRoute = this._contextService.getContextRoute(channel, thread);
     this._logger.debug(`Final thingy`, final);
-    const humanMessageForDb = await this._messageService.createMessage({
+    this._persistenceService.persistInteraction(
+      thread.id,
       contextRoute,
-      messageId: discordMessage.id,
-      speakerType: 'human',
-      interfaceSource: 'discord',
-      content: discordMessage.content,
-      messageSentTimestamp: discordMessage.createdAt,
-      metadata: {
-        jump_url: discordMessage.url,
-        ...JSON.parse(JSON.stringify(discordMessage)),
-      },
-    });
-
-    const aiMessageForDb = await this._messageService.createMessage({
-      contextRoute,
-      messageId: replyMessage.id,
-      speakerType: 'ai',
-      interfaceSource: 'discord',
-      content: replyMessage.content,
-      messageSentTimestamp: replyMessage.createdAt,
-      metadata: {
-        jump_url: replyMessage.url,
-        ...JSON.parse(JSON.stringify(replyMessage)),
-      },
-    });
-
-    const couplet = await this._coupletService.createCouplet({
-      contextRoute,
-      humanMessage: humanMessageForDb,
-      aiResponse: aiMessageForDb,
-    });
-
-    await this._aiChatsService.addCouplets(thread.id, [couplet]);
+      discordMessage,
+      replyMessage,
+    );
   }
 }
