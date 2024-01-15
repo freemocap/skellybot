@@ -1,18 +1,12 @@
 import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { Context, Options, SlashCommand, SlashCommandContext } from 'necord';
 import { DiscordTextDto } from '../dto/discord-text.dto';
-import {
-  ChatInputCommandInteraction,
-  Client,
-  Message,
-  TextChannel,
-  ThreadChannel,
-} from 'discord.js';
+import { Client, TextChannel } from 'discord.js';
 import { BotService } from '../../../core/bot/bot.service';
 import { UsersService } from '../../../core/database/collections/users/users.service';
 import { AiChatsService } from '../../../core/database/collections/ai-chats/ai-chats.service';
 import { DiscordContextService } from './discord-context.service';
-import { DiscordPersistenceService } from './discord-persistence.service';
+import { DiscordMessageService } from './discord-message.service';
 
 @Injectable()
 export class DiscordThreadService implements OnModuleDestroy {
@@ -23,7 +17,7 @@ export class DiscordThreadService implements OnModuleDestroy {
     private readonly _logger: Logger,
     private readonly _botService: BotService,
     private readonly _client: Client,
-    private readonly _persistenceService: DiscordPersistenceService,
+    private readonly _messageService: DiscordMessageService,
   ) {}
 
   @SlashCommand({
@@ -82,8 +76,17 @@ export class DiscordThreadService implements OnModuleDestroy {
       aiChatId: thread.id,
       couplets: [],
     });
-    this._beginWatchingIncomingMessages(interaction, channel, thread);
-    await this._sendInitialReply(interaction, channel, thread, text);
+    this._messageService.beginWatchingIncomingMessages(
+      interaction,
+      channel,
+      thread,
+    );
+    await this._messageService.sendInitialReply(
+      interaction,
+      channel,
+      thread,
+      text,
+    );
   }
 
   /**
@@ -91,81 +94,5 @@ export class DiscordThreadService implements OnModuleDestroy {
    */
   onModuleDestroy() {
     this._client.removeAllListeners();
-  }
-
-  private _beginWatchingIncomingMessages(
-    interaction: ChatInputCommandInteraction,
-    channel: TextChannel,
-    thread: ThreadChannel,
-  ) {
-    const handleMessageCreation = async (discordMessage: Message) => {
-      if (discordMessage.author.bot) {
-        return;
-      }
-      if (discordMessage.channelId !== thread.id) {
-        return;
-      }
-
-      this._logger.log(`Received message ${discordMessage.content}`);
-      await this._handleStream(
-        channel,
-        thread,
-        discordMessage.content,
-        discordMessage,
-      );
-    };
-
-    interaction.client.on('messageCreate', handleMessageCreation);
-  }
-
-  private async _sendInitialReply(
-    interaction: ChatInputCommandInteraction,
-    channel: TextChannel,
-    thread: ThreadChannel,
-    inputText: string,
-  ) {
-    const initialMessage = await thread.send(inputText);
-    await interaction.editReply('Thread Created!');
-    await this._handleStream(channel, thread, inputText, initialMessage);
-  }
-
-  private async _handleStream(
-    channel: TextChannel,
-    thread: ThreadChannel,
-    inputText: string,
-    discordMessage: Message<boolean>,
-  ) {
-    thread.sendTyping();
-
-    const tokenStream = this._botService.streamResponse(thread.id, inputText, {
-      topic: channel.topic,
-    });
-
-    let replyMessage: Message<boolean> = undefined;
-    let final = '';
-    for await (const current of tokenStream) {
-      const { theChunk, didResetOccur } = current;
-
-      if (!replyMessage) {
-        replyMessage = await discordMessage.reply(theChunk);
-        continue;
-      }
-
-      if (didResetOccur) {
-        replyMessage = await discordMessage.reply(theChunk);
-        continue;
-      }
-
-      await replyMessage.edit(theChunk);
-      final = current.data;
-    }
-    const contextRoute = this._contextService.getContextRoute(channel, thread);
-    this._logger.debug(`Final thingy`, final);
-    this._persistenceService.persistInteraction(
-      thread.id,
-      contextRoute,
-      discordMessage,
-      replyMessage,
-    );
   }
 }

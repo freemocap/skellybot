@@ -10,7 +10,6 @@ export class DiscordPersistenceService {
   constructor(
     private readonly _coupletService: CoupletsService,
     private readonly _aiChatsService: AiChatsService,
-
     private readonly _messageService: MessagesService,
   ) {}
 

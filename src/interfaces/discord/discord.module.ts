@@ -13,6 +13,7 @@ import { CoupletsModule } from '../../core/database/collections/couplets/couplet
 import { MessagesModule } from '../../core/database/collections/messages/messages.module';
 import { DiscordContextService } from './services/discord-context.service';
 import { DiscordPersistenceService } from './services/discord-persistence.service';
+import { DiscordMessageService } from './services/discord-message.service';
 
 @Module({
   imports: [
@@ -28,9 +29,10 @@ import { DiscordPersistenceService } from './services/discord-persistence.servic
     MessagesModule,
   ],
   providers: [
+    DiscordReadyService,
     DiscordPingService,
     DiscordThreadService,
-    DiscordReadyService,
+    DiscordMessageService,
     DiscordContextService,
     DiscordPersistenceService,
     Logger,
