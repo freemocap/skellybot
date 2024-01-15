@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import {
+  AttachmentBuilder,
   ChatInputCommandInteraction,
   Message,
   TextChannel,
@@ -66,30 +67,103 @@ export class DiscordMessageService {
     });
 
     let replyMessage: Message<boolean> = undefined;
-    let final = '';
+    let replyWasSplitAcrossMessages = false;
+    let continuingFromString = '';
+    let replyChunk = '';
+    let fullAiResponse = '';
     for await (const current of tokenStream) {
-      const { theChunk, didResetOccur } = current;
-
+      const { didResetOccur, theChunk } = current;
       if (!replyMessage) {
         replyMessage = await discordMessage.reply(theChunk);
         continue;
       }
 
       if (didResetOccur) {
-        replyMessage = await discordMessage.reply(theChunk);
-        continue;
+        replyWasSplitAcrossMessages = true;
+        continuingFromString =
+          await this._handleMessageLengthOverflow(replyChunk);
+        replyMessage = await replyMessage.reply(
+          continuingFromString + theChunk,
+        );
       }
 
-      await replyMessage.edit(theChunk);
-      final = current.data;
+      if (replyWasSplitAcrossMessages) {
+        await replyMessage.edit(continuingFromString + theChunk);
+      } else {
+        await replyMessage.edit(theChunk);
+      }
+
+      replyChunk = theChunk;
+      fullAiResponse = current.data;
+    }
+    this._logger.debug(`Full Ai response`, fullAiResponse);
+
+    if (replyWasSplitAcrossMessages) {
+      await this._sendFullResponseAsAttachment(
+        fullAiResponse,
+        discordMessage,
+        replyMessage,
+      );
     }
     const contextRoute = this._contextService.getContextRoute(channel, thread);
-    this._logger.debug(`Final thingy`, final);
-    this._persistenceService.persistInteraction(
+    await this._persistenceService.persistInteraction(
       thread.id,
       contextRoute,
       discordMessage,
       replyMessage,
     );
+  }
+
+  private async _handleMessageLengthOverflow(
+    previousChunk: string,
+    continuingFromStringLength: number = 50,
+  ) {
+    this._logger.debug(
+      'Message too long for initial Discord message, creating new Discord message',
+    );
+
+    const words = previousChunk.split(/\s+/);
+
+    const lastWords = [];
+    let charCount = 0;
+
+    // Iterate backwards through the words array and collect words until character count exceeds 20
+    for (let i = words.length - 1; i >= 0; i--) {
+      const word = words[i];
+      const wordLength = word.length + (lastWords.length > 0 ? 1 : 0); // Add 1 for a space if not the first word
+      if (charCount + wordLength > 20) break; // Stop if adding the next word would exceed 20 chars
+      charCount += wordLength; // Increment the character count
+      lastWords.unshift(word); // Add the word to the start of the array
+    }
+
+    // Handle the edge case of very long words
+    let lastWordsStr;
+    if (lastWords.length === 0) {
+      // If the lastWords array is empty, just grab the last 30 characters from previousChunk
+      lastWordsStr = '...' + previousChunk.slice(-continuingFromStringLength);
+    } else {
+      // Join the last N words into a string, separated by spaces
+      lastWordsStr = lastWords.join(' ');
+    }
+
+    return `> continuing from \`...${lastWordsStr}...\`\n\n`;
+  }
+
+  private async _sendFullResponseAsAttachment(
+    fullAiResponse: string,
+    discordMessage: Message<boolean>,
+    replyMessage: Message<boolean>,
+  ) {
+    // add full chunk to the message as a `.md` attachement
+    const attachment = new AttachmentBuilder(Buffer.from(fullAiResponse), {
+      name: `reply_to_discordMessageId_${discordMessage.id}.md`,
+      description:
+        'The full Ai reponse to message ID:${discordMessage.id}, ' +
+        'which was split across multiple messages so is being sent as an' +
+        ' attachment for convenience.',
+    });
+    await replyMessage.edit({
+      files: [attachment],
+    });
   }
 }

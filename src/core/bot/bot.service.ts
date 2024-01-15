@@ -83,44 +83,44 @@ export class BotService {
       ...additionalArgs,
     });
 
-    let streamedResult = '';
+    let fullStreamedResult = '';
     let subStreamResult = '';
     let didResetOccur = false;
-    let tokens = 0;
+    let tokensInThisChunk = 0;
     const chunkSize = 10;
-    for await (const chunk of chatStream) {
+    for await (const newToken of chatStream) {
       // the full message
-      streamedResult += chunk;
-      tokens++;
+      fullStreamedResult += newToken;
+      tokensInThisChunk++;
       if (subStreamResult.length < splitAt) {
-        subStreamResult += chunk;
+        subStreamResult += newToken;
       } else {
         //
-        subStreamResult = subStreamResult.slice(subStreamResult.length * 0.95);
-        subStreamResult += chunk;
+        subStreamResult = subStreamResult.slice(subStreamResult.length * 0.9);
+        subStreamResult += newToken;
         didResetOccur = true;
       }
 
-      if (tokens === chunkSize) {
-        this._logger.log(`Streaming chunk of data: ${subStreamResult}`);
+      if (tokensInThisChunk === chunkSize) {
+        this._logger.debug(`Streaming chunk of data: ${subStreamResult}`);
         yield {
-          data: streamedResult,
+          data: fullStreamedResult,
           theChunk: subStreamResult,
           didResetOccur,
         };
-        tokens = 0;
+        tokensInThisChunk = 0;
         didResetOccur = false;
       }
     }
     this._logger.log('Stream complete');
     yield {
-      data: streamedResult,
+      data: fullStreamedResult,
       theChunk: subStreamResult,
     };
 
     chatbot.memory.saveContext(
       { input: humanMessage },
-      { output: streamedResult },
+      { output: fullStreamedResult },
     );
   }
 }
