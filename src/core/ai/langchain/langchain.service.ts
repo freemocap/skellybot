@@ -36,7 +36,7 @@ export class LangchainService {
     const model = await this._createModel(modelName);
     const contextInstructionsOrAtLeastBeChill =
       contextInstructions ||
-      'I keep my answers short (1-2 sentences) unless there is a reason to say more.';
+      'I keep my answers short unless there is a reason to say more.';
     const prompt = ChatPromptTemplate.fromMessages([
       [
         'system',
