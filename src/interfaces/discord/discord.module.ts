@@ -12,6 +12,8 @@ import { AiChatsModule } from '../../core/database/collections/ai-chats/ai-chats
 import { CoupletsModule } from '../../core/database/collections/couplets/couplets.module';
 import { MessagesModule } from '../../core/database/collections/messages/messages.module';
 import { DiscordContextService } from './services/discord-context.service';
+import { DiscordPersistenceService } from './services/discord-persistence.service';
+import { DiscordMessageService } from './services/discord-message.service';
 
 @Module({
   imports: [
@@ -27,10 +29,12 @@ import { DiscordContextService } from './services/discord-context.service';
     MessagesModule,
   ],
   providers: [
+    DiscordReadyService,
     DiscordPingService,
     DiscordThreadService,
-    DiscordReadyService,
+    DiscordMessageService,
     DiscordContextService,
+    DiscordPersistenceService,
     Logger,
   ],
 })
