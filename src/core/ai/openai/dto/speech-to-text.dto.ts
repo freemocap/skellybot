@@ -18,8 +18,9 @@ export class SpeechToTextDto {
   @Type(() => Object)
   file: any;
 
+  @IsOptional()
   @IsIn(['whisper-1'])
-  model: 'whisper-1';
+  model: 'whisper-1' = 'whisper-1';
 
   @IsOptional()
   @IsString({ message: 'Language code must be a valid ISO-639-1 string.' })

@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import {
+  Attachment,
   AttachmentBuilder,
   ChatInputCommandInteraction,
   Message,
@@ -7,16 +8,20 @@ import {
   ThreadChannel,
 } from 'discord.js';
 import { BotService } from '../../../core/bot/bot.service';
-import { DiscordPersistenceService } from './discord-persistence.service';
+import { DiscordMongodbService } from './discord-mongodb.service';
 import { DiscordContextService } from './discord-context.service';
+import { OpenaiAudioService } from '../../../core/ai/openai/openai-audio.service';
+import axios from 'axios';
+import { DiscordAttachmentService } from './discord-attachment.service';
 
 @Injectable()
 export class DiscordMessageService {
   constructor(
     private readonly _logger: Logger,
     private readonly _botService: BotService,
-    private readonly _persistenceService: DiscordPersistenceService,
+    private readonly _persistenceService: DiscordMongodbService,
     private readonly _contextService: DiscordContextService,
+    private readonly _discordAttachmentService: DiscordAttachmentService,
   ) {}
 
   public beginWatchingIncomingMessages(
@@ -25,20 +30,25 @@ export class DiscordMessageService {
     thread: ThreadChannel,
   ) {
     const handleMessageCreation = async (discordMessage: Message) => {
-      if (discordMessage.author.bot) {
-        return;
-      }
-      if (discordMessage.channelId !== thread.id) {
-        return;
-      }
+      // ...existing code to check for bot author and matching channel...
 
-      this._logger.log(`Received message ${discordMessage.content}`);
-      await this._handleStream(
-        channel,
-        thread,
-        discordMessage.content,
-        discordMessage,
-      );
+      // Handle message with attachments
+      if (discordMessage.attachments.size > 0) {
+        for (const [, attachment] of discordMessage.attachments) {
+          await this._discordAttachmentService.handleAttachment(attachment);
+        }
+      } else {
+        // Handle message without attachments
+        this._logger.log(
+          `Received message without attachment: ${discordMessage.content}`,
+        );
+        await this._handleStream(
+          channel,
+          thread,
+          discordMessage.content,
+          discordMessage,
+        );
+      }
     };
 
     interaction.client.on('messageCreate', handleMessageCreation);
@@ -158,7 +168,7 @@ export class DiscordMessageService {
     const attachment = new AttachmentBuilder(Buffer.from(fullAiResponse), {
       name: `reply_to_discordMessageId_${discordMessage.id}.md`,
       description:
-        'The full Ai reponse to message ID:${discordMessage.id}, ' +
+        'The full Ai response to message ID:${discordMessage.id}, ' +
         'which was split across multiple messages so is being sent as an' +
         ' attachment for convenience.',
     });

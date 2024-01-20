@@ -6,7 +6,7 @@ import { AiChatsService } from '../../../core/database/collections/ai-chats/ai-c
 import { Message } from 'discord.js';
 
 @Injectable()
-export class DiscordPersistenceService {
+export class DiscordMongodbService {
   constructor(
     private readonly _coupletService: CoupletsService,
     private readonly _aiChatsService: AiChatsService,

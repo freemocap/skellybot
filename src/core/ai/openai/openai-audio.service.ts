@@ -25,12 +25,21 @@ export class OpenaiAudioService implements OnModuleInit {
     }
   }
 
-  public async createAudioTranscription(dto: SpeechToTextDto) {
+  public async createAudioTranscription(speechToTextDto: SpeechToTextDto) {
     try {
+      const { file, model, language, prompt, response_format, temperature } =
+        speechToTextDto;
+
       const transcriptionResponse =
         await this.openai.audio.transcriptions.create({
-          ...dto,
+          file: file,
+          model: model,
+          language: language,
+          prompt: prompt,
+          response_format: response_format || 'verbose_json', // Set default value if undefined
+          temperature: temperature || 0, // Set default value if undefined
         });
+
       this._logger.log(`Received transcription: ${transcriptionResponse.text}`);
       return transcriptionResponse;
     } catch (error) {
