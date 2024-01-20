@@ -1,4 +1,4 @@
-import { IsEnum, IsNotEmpty, IsObject, IsDateString } from 'class-validator';
+import { IsDateString, IsEnum, IsNotEmpty, IsObject } from 'class-validator';
 import { ContextRoute } from '../ai-chats/context-route.provider';
 
 export class CreateMessageDto {
