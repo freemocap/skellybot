@@ -17,6 +17,7 @@ export class DiscordMongodbService {
     aiChatId: string,
     contextRoute: ContextRoute,
     discordMessage: Message,
+    attachmentText: string,
     replyMessage: Message,
   ) {
     const humanMessageForDb = await this._messageService.createMessage({
@@ -25,6 +26,7 @@ export class DiscordMongodbService {
       speakerType: 'human',
       interfaceSource: 'discord',
       content: discordMessage.content,
+      attachmentText: attachmentText,
       messageSentTimestamp: discordMessage.createdAt,
       metadata: {
         jump_url: discordMessage.url,
@@ -38,6 +40,7 @@ export class DiscordMongodbService {
       speakerType: 'ai',
       interfaceSource: 'discord',
       content: replyMessage.content,
+      attachmentText: '',
       messageSentTimestamp: replyMessage.createdAt,
       metadata: {
         jump_url: replyMessage.url,

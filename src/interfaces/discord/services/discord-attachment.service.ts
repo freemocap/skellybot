@@ -17,55 +17,87 @@ export class DiscordAttachmentService {
 
   async handleAttachment(attachment: Attachment) {
     const fileType = attachment.name?.split('.').pop();
-
+    let attachmentResponse;
     switch (fileType) {
       case 'mp3':
       case 'wav':
       case 'ogg':
         // Handle audio files
-        await this.handleAudioAttachment(attachment);
+        attachmentResponse = {
+          type: 'transcript',
+          ...(await this.handleAudioAttachment(attachment)),
+        };
+        attachmentResponse.rawText = attachmentResponse.text;
+        attachmentResponse.text = `BEGIN AUDIO TRANSCRIPT: ${attachment.name}\n\n${attachmentResponse.text}\n\nEND AUDIO TRANSCRIPT: ${attachment.name}\n\n`;
         break;
       case 'mp4':
       case 'avi':
       case 'mkv':
         // Handle video files
-        await this.handleVideoAttachment(attachment);
+        attachmentResponse = {
+          type: 'transcript',
+          ...(await this.handleAudioAttachment(attachment)),
+        };
+        attachmentResponse.rawText = attachmentResponse.text;
+        attachmentResponse.text = `BEGIN VIDEO TRANSCRIPT: ${attachment.name}\n\n${attachmentResponse.text}\n\nEND VIDEO TRANSCRIPT: ${attachment.name}\n\n`;
         break;
       case 'txt':
       case 'pdf':
-        // Handle text files
-        await this.handleTextAttachment(attachment);
+        attachmentResponse = {
+          type: 'file_text',
+          rawText: await this.handleTextAttachment(attachment),
+        };
+        attachmentResponse.text = `BEGIN TEXT ATTACHMENT: ${attachment.name}\n\n${attachmentResponse.rawText}\n\nEND TEXT ATTACHMENT: ${attachment.name}\n\n`;
         break;
       case 'zip':
-        // Handle zip files
-        await this.handleZipAttachment(attachment);
+        attachmentResponse = {
+          type: 'zip',
+          rawText: await this.handleZipAttachment(attachment),
+        };
+        attachmentResponse.text = `BEGIN ZIP ATTACHMENT: ${attachment.name}\n\n${attachmentResponse.rawText}\n\nEND ZIP ATTACHMENT: ${attachment.name}\n\n`;
         break;
       default:
         this._logger.log('Unsupported file type:', fileType);
     }
+    return attachmentResponse;
+  }
+
+  private async _downloadAttachment(attachment: Attachment): Promise<string> {
+    this._logger.log('Processing audio attachment:', attachment.name);
+
+    // Define temp directory and file paths
+    const tempDirectoryPath = path.join(__dirname, 'temp');
+    const tempFilePath = path.join(
+      tempDirectoryPath,
+      `tempfile-${path.basename(attachment.name)}`,
+    );
+
+    // Ensure temp directory exists
+    await fs.promises.mkdir(tempDirectoryPath, { recursive: true });
+
+    // Download the attachment and save to file
+    const response = await axios({
+      method: 'get',
+      url: attachment.url,
+      responseType: 'stream',
+    });
+
+    const writer = createWriteStream(tempFilePath);
+    response.data.pipe(writer);
+    await promisify(stream.finished)(writer);
+
+    return tempFilePath;
   }
 
   private async handleAudioAttachment(attachment: Attachment) {
     this._logger.log('Processing audio attachment:', attachment.name);
+    let tempFilePath: string;
 
-    const tempFilePath = path.join(
-      __dirname,
-      'temp',
-      `tempfile-${path.basename(attachment.name)}`,
-    );
     try {
-      const writer = createWriteStream(tempFilePath);
-      const response = await axios({
-        method: 'get',
-        url: attachment.url,
-        responseType: 'stream',
-      });
-      response.data.pipe(writer);
+      // Download attachment
+      tempFilePath = await this._downloadAttachment(attachment);
 
-      // Use promisify to handle stream finished event with async/await
-      const finished = promisify(stream.finished);
-      await finished(writer);
-
+      // Process the downloaded file for transcription
       const transcriptionResponse =
         await this._openaiAudioService.createAudioTranscription({
           file: createReadStream(tempFilePath),
@@ -85,14 +117,17 @@ export class DiscordAttachmentService {
       );
       throw error;
     } finally {
-      try {
-        fs.unlinkSync(tempFilePath);
-      } catch (cleanupError) {
-        this._logger.error(
-          `Failed to clean up temporary file: ${
-            cleanupError.message || cleanupError
-          }`,
-        );
+      // Clean up the temp file
+      if (tempFilePath) {
+        try {
+          await fs.promises.unlink(tempFilePath);
+        } catch (cleanupError) {
+          this._logger.error(
+            `Failed to clean up temporary file: ${
+              cleanupError.message || cleanupError
+            }`,
+          );
+        }
       }
     }
   }

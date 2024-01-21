@@ -1,6 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
 import {
-  Attachment,
   AttachmentBuilder,
   ChatInputCommandInteraction,
   Message,
@@ -10,8 +9,6 @@ import {
 import { BotService } from '../../../core/bot/bot.service';
 import { DiscordMongodbService } from './discord-mongodb.service';
 import { DiscordContextService } from './discord-context.service';
-import { OpenaiAudioService } from '../../../core/ai/openai/openai-audio.service';
-import axios from 'axios';
 import { DiscordAttachmentService } from './discord-attachment.service';
 
 @Injectable()
@@ -30,51 +27,85 @@ export class DiscordMessageService {
     thread: ThreadChannel,
   ) {
     const handleMessageCreation = async (discordMessage: Message) => {
-      // ...existing code to check for bot author and matching channel...
-
-      // Handle message with attachments
-      if (discordMessage.attachments.size > 0) {
-        for (const [, attachment] of discordMessage.attachments) {
-          await this._discordAttachmentService.handleAttachment(attachment);
-        }
-      } else {
-        // Handle message without attachments
-        this._logger.log(
-          `Received message without attachment: ${discordMessage.content}`,
-        );
-        await this._handleStream(
-          channel,
-          thread,
-          discordMessage.content,
-          discordMessage,
-        );
+      if (discordMessage.author.bot) {
+        // Ignore messages from bots
+        return;
       }
-    };
+      if (discordMessage.channelId !== thread.id) {
+        // Ignore messages from other channels
+        return;
+      }
+      let humanInputText = discordMessage.content;
+      let attachmentText = '';
+      if (discordMessage.attachments.size > 0) {
+        if (humanInputText.length > 0) {
+          humanInputText =
+            'BEGIN TEXT FROM HUMAN INPUT:\n\n' +
+            humanInputText +
+            '\n\nEND TEXT FROM HUMAN INPUT\n\n';
+        }
+        attachmentText = 'BEGIN TEXT FROM ATTACHMENTS:\n\n';
+        for (const [, attachment] of discordMessage.attachments) {
+          const attachmentResponse =
+            await this._discordAttachmentService.handleAttachment(attachment);
+          attachmentText += attachmentResponse.text;
+          if (attachmentResponse.type === 'transcript') {
+            await discordMessage.reply(
+              `\`\`\`\n\n${attachmentResponse.text}\n\n\`\`\``,
+            );
+          }
+        }
+        attachmentText += 'END TEXT FROM ATTACHMENTS';
+      }
+      // Logging and handling the message stream should consider both human input and attachment text.
+      this._logger.log(
+        `Received message with${
+          discordMessage.attachments.size > 0 ? ' ' : 'out '
+        }attachment(s):\n\n ${humanInputText}`,
+      );
 
+      await this._handleStream(
+        channel,
+        thread,
+        humanInputText,
+        attachmentText,
+        discordMessage,
+      );
+    };
     interaction.client.on('messageCreate', handleMessageCreation);
   }
+
   public async sendInitialReply(
     interaction: ChatInputCommandInteraction,
     channel: TextChannel,
     thread: ThreadChannel,
     inputText: string,
   ) {
-    const initialMessage = await thread.send(inputText);
-    await interaction.editReply('Thread Created!');
-    await this._handleStream(channel, thread, inputText, initialMessage);
+    const initialMessage = await thread.send(
+      `Starting new chat with inital message:\n\n> ${inputText}`,
+    );
+    await interaction.editReply(
+      `Thread Created for user: ${interaction.user.username} - ${initialMessage.url}`,
+    );
+    await this._handleStream(channel, thread, inputText, '', initialMessage);
   }
 
   private async _handleStream(
     channel: TextChannel,
     thread: ThreadChannel,
-    inputText: string,
+    inputMessageText: string,
+    attachmentText: string,
     discordMessage: Message<boolean>,
   ) {
     thread.sendTyping();
 
-    const tokenStream = this._botService.streamResponse(thread.id, inputText, {
-      topic: channel.topic,
-    });
+    const tokenStream = this._botService.streamResponse(
+      thread.id,
+      inputMessageText + attachmentText,
+      {
+        topic: channel.topic,
+      },
+    );
 
     let replyMessage: Message<boolean> = undefined;
     let replyWasSplitAcrossMessages = false;
@@ -120,6 +151,7 @@ export class DiscordMessageService {
       thread.id,
       contextRoute,
       discordMessage,
+      attachmentText,
       replyMessage,
     );
   }
