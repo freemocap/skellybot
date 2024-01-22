@@ -1,4 +1,4 @@
-import { IsOptional, ValidateIf, IsObject, IsString } from 'class-validator';
+import { IsObject, IsOptional, IsString, ValidateIf } from 'class-validator';
 
 export class UserIdentifier {
   @IsString()

@@ -15,8 +15,11 @@ export class Message {
   @Prop({ required: true, enum: ['discord', 'slack'] })
   interfaceSource: string;
 
-  @Prop({ required: true })
+  @Prop({ required: false })
   content: string;
+
+  @Prop({ required: false })
+  attachmentText: string;
 
   @Prop({ required: true })
   messageSentTimestamp: Date;

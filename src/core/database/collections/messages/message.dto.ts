@@ -1,4 +1,10 @@
-import { IsEnum, IsNotEmpty, IsObject, IsDateString } from 'class-validator';
+import {
+  IsDateString,
+  IsEnum,
+  IsNotEmpty,
+  IsObject,
+  IsOptional,
+} from 'class-validator';
 import { ContextRoute } from '../ai-chats/context-route.provider';
 
 export class CreateMessageDto {
@@ -11,8 +17,11 @@ export class CreateMessageDto {
   @IsEnum(['discord', 'slack'])
   interfaceSource: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   content: string;
+
+  @IsOptional()
+  attachmentText: string;
 
   @IsNotEmpty()
   contextRoute: ContextRoute;

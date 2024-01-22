@@ -7,16 +7,18 @@ import {
   ThreadChannel,
 } from 'discord.js';
 import { BotService } from '../../../core/bot/bot.service';
-import { DiscordPersistenceService } from './discord-persistence.service';
+import { DiscordMongodbService } from './discord-mongodb.service';
 import { DiscordContextService } from './discord-context.service';
+import { DiscordAttachmentService } from './discord-attachment.service';
 
 @Injectable()
 export class DiscordMessageService {
   constructor(
     private readonly _logger: Logger,
     private readonly _botService: BotService,
-    private readonly _persistenceService: DiscordPersistenceService,
+    private readonly _persistenceService: DiscordMongodbService,
     private readonly _contextService: DiscordContextService,
+    private readonly _discordAttachmentService: DiscordAttachmentService,
   ) {}
 
   public beginWatchingIncomingMessages(
@@ -26,45 +28,82 @@ export class DiscordMessageService {
   ) {
     const handleMessageCreation = async (discordMessage: Message) => {
       if (discordMessage.author.bot) {
+        // Ignore messages from bots
         return;
       }
       if (discordMessage.channelId !== thread.id) {
+        // Ignore messages from other channels
         return;
       }
+      let humanInputText = discordMessage.content;
+      let attachmentText = '';
+      if (discordMessage.attachments.size > 0) {
+        if (humanInputText.length > 0) {
+          humanInputText =
+            'BEGIN TEXT FROM HUMAN INPUT:\n\n' +
+            humanInputText +
+            '\n\nEND TEXT FROM HUMAN INPUT\n\n';
+        }
+        attachmentText = 'BEGIN TEXT FROM ATTACHMENTS:\n\n';
+        for (const [, attachment] of discordMessage.attachments) {
+          const attachmentResponse =
+            await this._discordAttachmentService.handleAttachment(attachment);
+          attachmentText += attachmentResponse.text;
+          if (attachmentResponse.type === 'transcript') {
+            await discordMessage.reply(
+              `\`\`\`\n\n${attachmentResponse.text}\n\n\`\`\``,
+            );
+          }
+        }
+        attachmentText += 'END TEXT FROM ATTACHMENTS';
+      }
+      // Logging and handling the message stream should consider both human input and attachment text.
+      this._logger.log(
+        `Received message with${
+          discordMessage.attachments.size > 0 ? ' ' : 'out '
+        }attachment(s):\n\n ${humanInputText}`,
+      );
 
-      this._logger.log(`Received message ${discordMessage.content}`);
       await this._handleStream(
         channel,
         thread,
-        discordMessage.content,
+        humanInputText,
+        attachmentText,
         discordMessage,
       );
     };
-
     interaction.client.on('messageCreate', handleMessageCreation);
   }
+
   public async sendInitialReply(
     interaction: ChatInputCommandInteraction,
     channel: TextChannel,
     thread: ThreadChannel,
     inputText: string,
   ) {
-    const initialMessage = await thread.send(inputText);
-    await interaction.editReply('Thread Created!');
-    await this._handleStream(channel, thread, inputText, initialMessage);
+    const initialMessage = await thread.send(
+      `Starting new chat with inital message:\n\n> ${inputText}`,
+    );
+
+    await this._handleStream(channel, thread, inputText, '', initialMessage);
   }
 
   private async _handleStream(
     channel: TextChannel,
     thread: ThreadChannel,
-    inputText: string,
+    inputMessageText: string,
+    attachmentText: string,
     discordMessage: Message<boolean>,
   ) {
     thread.sendTyping();
 
-    const tokenStream = this._botService.streamResponse(thread.id, inputText, {
-      topic: channel.topic,
-    });
+    const tokenStream = this._botService.streamResponse(
+      thread.id,
+      inputMessageText + attachmentText,
+      {
+        topic: channel.topic,
+      },
+    );
 
     let replyMessage: Message<boolean> = undefined;
     let replyWasSplitAcrossMessages = false;
@@ -110,6 +149,7 @@ export class DiscordMessageService {
       thread.id,
       contextRoute,
       discordMessage,
+      attachmentText,
       replyMessage,
     );
   }
@@ -158,7 +198,7 @@ export class DiscordMessageService {
     const attachment = new AttachmentBuilder(Buffer.from(fullAiResponse), {
       name: `reply_to_discordMessageId_${discordMessage.id}.md`,
       description:
-        'The full Ai reponse to message ID:${discordMessage.id}, ' +
+        'The full Ai response to message ID:${discordMessage.id}, ' +
         'which was split across multiple messages so is being sent as an' +
         ' attachment for convenience.',
     });

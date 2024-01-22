@@ -14,7 +14,7 @@ export class OpenaiSecretsService {
     private readonly _cfgService: ConfigService,
   ) {}
 
-  async getOpenAIKey() {
+  async getOpenaiApiKey() {
     if (process.env.NODE_ENV === 'production') {
       const secretName = this._tokenMap.OPENAI_API_KEY;
       const [secret] = await this._sms.getSecretsManager().accessSecretVersion({

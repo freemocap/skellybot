@@ -22,7 +22,7 @@ export class LangchainService {
       this._logger.log('Creating model...');
       this._model = new OpenAI({
         modelName: modelName || 'gpt-4-1106-preview',
-        openAIApiKey: await this._openAiSecrets.getOpenAIKey(),
+        openAIApiKey: await this._openAiSecrets.getOpenaiApiKey(),
       });
     }
     this._logger.log('Returning model: ' + this._model.modelName);

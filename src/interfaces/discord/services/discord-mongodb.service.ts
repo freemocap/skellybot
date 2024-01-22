@@ -6,7 +6,7 @@ import { AiChatsService } from '../../../core/database/collections/ai-chats/ai-c
 import { Message } from 'discord.js';
 
 @Injectable()
-export class DiscordPersistenceService {
+export class DiscordMongodbService {
   constructor(
     private readonly _coupletService: CoupletsService,
     private readonly _aiChatsService: AiChatsService,
@@ -17,6 +17,7 @@ export class DiscordPersistenceService {
     aiChatId: string,
     contextRoute: ContextRoute,
     discordMessage: Message,
+    attachmentText: string,
     replyMessage: Message,
   ) {
     const humanMessageForDb = await this._messageService.createMessage({
@@ -25,6 +26,7 @@ export class DiscordPersistenceService {
       speakerType: 'human',
       interfaceSource: 'discord',
       content: discordMessage.content,
+      attachmentText: attachmentText,
       messageSentTimestamp: discordMessage.createdAt,
       metadata: {
         jump_url: discordMessage.url,
@@ -38,6 +40,7 @@ export class DiscordPersistenceService {
       speakerType: 'ai',
       interfaceSource: 'discord',
       content: replyMessage.content,
+      attachmentText: '',
       messageSentTimestamp: replyMessage.createdAt,
       metadata: {
         jump_url: replyMessage.url,

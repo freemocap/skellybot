@@ -1,12 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
 import {
+  ChannelType,
+  Guild,
+  GuildEmoji,
   Message,
   ReactionEmoji,
   TextChannel,
   ThreadChannel,
-  ChannelType,
-  Guild,
-  GuildEmoji,
 } from 'discord.js';
 import { DiscordContextRouteFactory } from '../../../core/database/collections/ai-chats/context-route.provider';
 

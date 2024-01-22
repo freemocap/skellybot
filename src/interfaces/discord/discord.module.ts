@@ -12,8 +12,11 @@ import { AiChatsModule } from '../../core/database/collections/ai-chats/ai-chats
 import { CoupletsModule } from '../../core/database/collections/couplets/couplets.module';
 import { MessagesModule } from '../../core/database/collections/messages/messages.module';
 import { DiscordContextService } from './services/discord-context.service';
-import { DiscordPersistenceService } from './services/discord-persistence.service';
+import { DiscordMongodbService } from './services/discord-mongodb.service';
 import { DiscordMessageService } from './services/discord-message.service';
+import { OpenaiAudioService } from '../../core/ai/openai/openai-audio.service';
+import { OpenaiModule } from '../../core/ai/openai/openai.module';
+import { DiscordAttachmentService } from './services/discord-attachment.service';
 
 @Module({
   imports: [
@@ -27,14 +30,16 @@ import { DiscordMessageService } from './services/discord-message.service';
     AiChatsModule,
     CoupletsModule,
     MessagesModule,
+    OpenaiModule,
   ],
   providers: [
     DiscordReadyService,
     DiscordPingService,
     DiscordThreadService,
     DiscordMessageService,
+    DiscordAttachmentService,
     DiscordContextService,
-    DiscordPersistenceService,
+    DiscordMongodbService,
     Logger,
   ],
 })
