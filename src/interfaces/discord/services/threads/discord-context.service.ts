@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import {
   ChannelType,
+  DMChannel,
   Guild,
   GuildEmoji,
   Message,
@@ -8,18 +9,31 @@ import {
   TextChannel,
   ThreadChannel,
 } from 'discord.js';
-import { DiscordContextRouteFactory } from '../../../core/database/collections/ai-chats/context-route.provider';
+import { DiscordContextRouteFactory } from '../../../../core/database/collections/ai-chats/context-route.provider';
 
 @Injectable()
 export class DiscordContextService {
   private readonly logger = new Logger(DiscordContextService.name);
   instructionsChannelPattern = new RegExp('bot-instructions.*', 'i');
 
-  getContextRoute(channel: TextChannel, thread?: ThreadChannel) {
+  getContextRoute(message: Message) {
     // TODO - Handle Direct Messages
+    let channel: TextChannel | null;
+    let thread: ThreadChannel | null;
+
+    const isInThread = message.channel instanceof ThreadChannel;
+    if (isInThread) {
+      channel = message.channel.parent as TextChannel;
+      thread = message.channel as ThreadChannel;
+    } else {
+      channel = message.channel as TextChannel;
+      thread = null;
+    }
+
+    const isDirectMessage = message.channel instanceof DMChannel;
     try {
       return DiscordContextRouteFactory.create(
-        false,
+        isDirectMessage,
         {
           type: 'channel',
           contextId: channel.id,
