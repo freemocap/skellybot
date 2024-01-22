@@ -14,7 +14,7 @@ import { DiscordContextRouteFactory } from '../../../../core/database/collection
 @Injectable()
 export class DiscordContextService {
   private readonly logger = new Logger(DiscordContextService.name);
-  instructionsChannelPattern = new RegExp('bot-instructions.*', 'i');
+  instructionsChannelPattern = new RegExp('chatbot-instructions.*', 'i');
 
   getContextRoute(message: Message) {
     // TODO - Handle Direct Messages
@@ -113,7 +113,7 @@ export class DiscordContextService {
         .join('\n');
     } catch (error) {
       this.logger.error(`Failed to get instructions: ${error.message}`);
-      return ''; // In case of an error, return an empty string to keep the bot operational.
+      return ''; // In case of an error, return an empty string to keep the chatbot operational.
     }
   }
 

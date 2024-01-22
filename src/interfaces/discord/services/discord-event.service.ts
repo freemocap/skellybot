@@ -25,7 +25,7 @@ export class DiscordEventService implements OnModuleDestroy {
   }
 
   onModuleDestroy(): any {
-    this._logger.log('Shutting down Discord bot');
+    this._logger.log('Shutting down Discord chatbot');
     this._threadListenersService.stop();
   }
 }

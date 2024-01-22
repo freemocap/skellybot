@@ -20,7 +20,7 @@ export class DiscordThreadListenerService {
 
     this._logger.log(`Found ${aiChatIds.length} aiChatIds`);
     this._logger.log('Starting listener for previous aiChats');
-    // create a bot and load up its memory with the messages in the thread
+    // create a chatbot and load up its memory with the messages in the thread
     this._client.on('messageCreate', this.respondToThreadMessage.bind(this));
   }
 

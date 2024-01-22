@@ -11,7 +11,7 @@ import {
   User,
   userMention,
 } from 'discord.js';
-import { BotService } from '../../../../core/bot/bot.service';
+import { ChatbotManagerService } from '../../../../core/chatbot/chatbot-manager.service';
 import { UsersService } from '../../../../core/database/collections/users/users.service';
 import { AiChatsService } from '../../../../core/database/collections/ai-chats/ai-chats.service';
 import { DiscordContextService } from './discord-context.service';
@@ -25,7 +25,7 @@ export class DiscordThreadService {
     private readonly _usersService: UsersService,
     private readonly _contextService: DiscordContextService,
     private readonly _logger: Logger,
-    private readonly _botService: BotService,
+    private readonly _botService: ChatbotManagerService,
     private readonly _threadListenerService: DiscordThreadListenerService,
     private readonly _messageService: DiscordMessageService,
   ) {}
@@ -33,7 +33,7 @@ export class DiscordThreadService {
   @SlashCommand({
     name: 'chat',
     description:
-      'Opens a thread at this location and sets up a aiChat with with the bot.',
+      'Opens a thread at this location and sets up a aiChat with with the chatbot.',
   })
   public async onThreadCommand(
     @Context() [interaction]: SlashCommandContext,

@@ -1,15 +1,17 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { AttachmentBuilder, Message } from 'discord.js';
-import { BotService } from '../../../../core/bot/bot.service';
+import { ChatbotManagerService } from '../../../../core/chatbot/chatbot-manager.service';
 import { DiscordMongodbService } from '../discord-mongodb.service';
 import { DiscordContextService } from './discord-context.service';
 import { DiscordAttachmentService } from './discord-attachment.service';
+import { ChatbotResponseService } from '../../../../core/chatbot/chatbot-response.service';
 
 @Injectable()
 export class DiscordMessageService {
   constructor(
     private readonly _logger: Logger,
-    private readonly _botService: BotService,
+    private readonly _chatbotManagerService: ChatbotManagerService,
+    private readonly _chatbotResponseService: ChatbotResponseService,
     private readonly _persistenceService: DiscordMongodbService,
     private readonly _contextService: DiscordContextService,
     private readonly _discordAttachmentService: DiscordAttachmentService,
@@ -53,7 +55,7 @@ export class DiscordMessageService {
   ) {
     discordMessage.channel.sendTyping();
 
-    const tokenStream = this._botService.streamResponse(
+    const tokenStream = this._chatbotResponseService.streamResponse(
       discordMessage.channel.id,
       inputMessageText + attachmentText,
       {
