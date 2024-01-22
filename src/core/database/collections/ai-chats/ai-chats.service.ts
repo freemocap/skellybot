@@ -13,6 +13,10 @@ export class AiChatsService {
     @InjectModel(AiChat.name)
     private readonly aiChatModel: Model<AiChatDocument>,
   ) {}
+  async findAllChatIds(): Promise<string[]> {
+    const aiChats = await this.aiChatModel.find().select('aiChatId').exec();
+    return aiChats.map((aiChat) => aiChat.aiChatId);
+  }
 
   async findAll(): Promise<AiChatDocument[]> {
     return this.aiChatModel.find().exec();
