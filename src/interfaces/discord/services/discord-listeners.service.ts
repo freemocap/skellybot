@@ -24,10 +24,16 @@ export class DiscordListenersService {
     this._client.on('messageCreate', this.respondToThreadMessage.bind(this));
   }
 
-  private respondToThreadMessage(message: Message) {
-    // Check if the message's channel ID is in the set of active listeners
+  private async respondToThreadMessage(message: Message) {
     if (this.activeThreadListeners.has(message.channel.id)) {
-      this._messageService.respondToMessage(message);
+      try {
+        await this._messageService.respondToMessage(message);
+      } catch (e) {
+        this._logger.error(e);
+        await message.channel.send(
+          `There was an error responding to your message: \n\n > ${e}`,
+        );
+      }
     }
   }
 
