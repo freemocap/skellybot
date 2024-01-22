@@ -15,30 +15,28 @@ export class DiscordMessageService {
     private readonly _discordAttachmentService: DiscordAttachmentService,
   ) {}
 
-  public async respondToMessage(discordMessage: Message) {
-    let humanInputText = discordMessage.content;
-    let attachmentText = '';
-    if (discordMessage.attachments.size > 0) {
-      if (humanInputText.length > 0) {
-        humanInputText =
-          'BEGIN TEXT FROM HUMAN INPUT:\n\n' +
-          humanInputText +
-          '\n\nEND TEXT FROM HUMAN INPUT\n\n';
+  public async respondToMessage(
+    discordMessage: Message,
+    firstMessage: boolean = false,
+  ) {
+    if (!firstMessage) {
+      if (discordMessage.author.bot) {
+        return;
       }
-      attachmentText = 'BEGIN TEXT FROM ATTACHMENTS:\n\n';
-      for (const [, attachment] of discordMessage.attachments) {
-        const attachmentResponse =
-          await this._discordAttachmentService.handleAttachment(attachment);
-        attachmentText += attachmentResponse.text;
-        if (attachmentResponse.type === 'transcript') {
-          await discordMessage.reply(
-            `\`\`\`\n\n${attachmentResponse.text}\n\n\`\`\``,
-          );
-        }
-      }
-      attachmentText += 'END TEXT FROM ATTACHMENTS';
     }
-    // Logging and handling the message stream should consider both human input and attachment text.
+    // if first character of message is `~`, ignore it
+    if (discordMessage.content.startsWith('~')) {
+      return;
+    }
+
+    // TODO - if Bot is mentioned in the message, respond
+    // if (message.mentions.has(this._client.user.id)) {
+    //   await this._messageService.handleMessage(message);
+    //   return;
+    // }
+
+    const { humanInputText, attachmentText } =
+      await this._extractMessageContent(discordMessage);
     this._logger.log(
       `Received message with${
         discordMessage.attachments.size > 0 ? ' ' : 'out '
@@ -110,6 +108,32 @@ export class DiscordMessageService {
       attachmentText,
       replyMessage,
     );
+  }
+
+  private async _extractMessageContent(discordMessage: Message<boolean>) {
+    let humanInputText = discordMessage.content;
+    let attachmentText = '';
+    if (discordMessage.attachments.size > 0) {
+      if (humanInputText.length > 0) {
+        humanInputText =
+          'BEGIN TEXT FROM HUMAN INPUT:\n\n' +
+          humanInputText +
+          '\n\nEND TEXT FROM HUMAN INPUT\n\n';
+      }
+      attachmentText = 'BEGIN TEXT FROM ATTACHMENTS:\n\n';
+      for (const [, attachment] of discordMessage.attachments) {
+        const attachmentResponse =
+          await this._discordAttachmentService.handleAttachment(attachment);
+        attachmentText += attachmentResponse.text;
+        if (attachmentResponse.type === 'transcript') {
+          await discordMessage.reply(
+            `\`\`\`\n\n${attachmentResponse.text}\n\n\`\`\``,
+          );
+        }
+      }
+      attachmentText += 'END TEXT FROM ATTACHMENTS';
+    }
+    return { humanInputText, attachmentText };
   }
 
   private async _handleMessageLengthOverflow(

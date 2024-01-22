@@ -19,13 +19,6 @@ export class DiscordEventService implements OnModuleDestroy {
     await this._discordListenersService.start();
   }
 
-  @On('messageCreate')
-  public async onMessageCreate(
-    @Context() [message]: ContextOf<'messageCreate'>,
-  ) {
-    await this._discordListenersService.handleMessage(message);
-  }
-
   @On('warn')
   public onWarn(@Context() [message]: ContextOf<'warn'>) {
     this.logger.warn(message);

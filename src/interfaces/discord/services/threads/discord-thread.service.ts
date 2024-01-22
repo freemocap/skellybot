@@ -1,12 +1,22 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Context, Options, SlashCommand, SlashCommandContext } from 'necord';
 import { DiscordTextDto } from '../../dto/discord-text.dto';
-import { EmbedBuilder, TextChannel, userMention } from 'discord.js';
+import {
+  CacheType,
+  ChatInputCommandInteraction,
+  EmbedBuilder,
+  PrivateThreadChannel,
+  PublicThreadChannel,
+  TextChannel,
+  User,
+  userMention,
+} from 'discord.js';
 import { BotService } from '../../../../core/bot/bot.service';
 import { UsersService } from '../../../../core/database/collections/users/users.service';
 import { AiChatsService } from '../../../../core/database/collections/ai-chats/ai-chats.service';
 import { DiscordContextService } from './discord-context.service';
 import { DiscordListenersService } from '../discord-listeners.service';
+import { DiscordMessageService } from './discord-message.service';
 
 @Injectable()
 export class DiscordThreadService {
@@ -17,6 +27,7 @@ export class DiscordThreadService {
     private readonly _logger: Logger,
     private readonly _botService: BotService,
     private readonly _listenersService: DiscordListenersService,
+    private readonly _messageService: DiscordMessageService,
   ) {}
 
   @SlashCommand({
@@ -37,6 +48,64 @@ export class DiscordThreadService {
       `Creating thread with starting text:'${startingText.text}' in channel: name= ${interaction.channel.name}, id=${interaction.channel.id} `,
     );
     const channel = interaction.channel as TextChannel;
+    const thread = await this._createNewThread(startingText, interaction);
+
+    const firstThreadMessage = await thread.send(
+      `Starting new chat with initial message:\n\n> ${startingText.text}`,
+    );
+    await this._createAiChat(
+      firstThreadMessage,
+      channel,
+      thread,
+      interaction.user,
+    );
+
+    await this._listenersService.startThreadListener(thread.id);
+    await this._messageService.respondToMessage(firstThreadMessage, true);
+  }
+
+  private async _createAiChat(
+    firstThreadMessage,
+    channel: TextChannel,
+    thread: PublicThreadChannel<boolean> | PrivateThreadChannel,
+    user: User,
+  ) {
+    const contextRoute =
+      this._contextService.getContextRoute(firstThreadMessage);
+    const contextInstructions =
+      await this._contextService.getContextInstructions(channel);
+    this._logger.log(
+      `Creating bot with contextInstructions: \n ''' \n ${contextInstructions}\n '''`,
+    );
+
+    await this._botService.createBot(
+      thread.id,
+      'gpt-4-1106-preview',
+      contextInstructions || '.',
+    );
+
+    const userDocument = await this._usersService.getOrCreateUser({
+      identifiers: {
+        discord: {
+          id: user.id,
+          username: user.username,
+        },
+      },
+    });
+
+    const aiChat = await this._aiChatsService.createAiChat({
+      ownerUser: userDocument,
+      contextRoute,
+      aiChatId: thread.id,
+      couplets: [],
+    });
+    this._logger.log(`Created aiChat: ${JSON.stringify(aiChat)}`);
+  }
+
+  private async _createNewThread(
+    startingText: DiscordTextDto,
+    interaction: ChatInputCommandInteraction<CacheType>,
+  ) {
     const maxThreadNameLength = 100; // Discord's maximum thread name length
     let threadName = startingText.text;
     if (threadName.length > maxThreadNameLength) {
@@ -64,43 +133,6 @@ export class DiscordThreadService {
     const thread = await replyMessage.startThread({
       name: threadName,
     });
-
-    const firstThreadMessage = await thread.send(
-      `Starting new chat with initial message:\n\n> ${startingText.text}`,
-    );
-
-    const contextRoute =
-      this._contextService.getContextRoute(firstThreadMessage);
-    const contextInstructions =
-      await this._contextService.getContextInstructions(channel);
-    this._logger.log(
-      `Creating bot with contextInstructions: \n ''' \n ${contextInstructions}\n '''`,
-    );
-
-    const bot = await this._botService.createBot(
-      thread.id,
-      'gpt-4-1106-preview',
-      contextInstructions || '.',
-    );
-
-    const user = await this._usersService.getOrCreateUser({
-      identifiers: {
-        discord: {
-          id: interaction.user.id,
-          username: interaction.user.username,
-        },
-      },
-    });
-
-    const aiChat = await this._aiChatsService.createAiChat({
-      ownerUser: user,
-      contextRoute,
-      aiChatId: thread.id,
-      couplets: [],
-    });
-    this._logger.log(`Created aiChat: ${JSON.stringify(aiChat)}`);
-
-    await this._listenersService.startThreadListener(thread.id, aiChat, bot);
-    await this._listenersService.handleMessage(firstThreadMessage, true);
+    return thread;
   }
 }
