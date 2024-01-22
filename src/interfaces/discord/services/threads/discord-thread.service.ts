@@ -11,7 +11,7 @@ import {
   User,
   userMention,
 } from 'discord.js';
-import { ChatbotManagerService } from '../../../../core/chatbot/chatbot-manager.service';
+import { ChatbotManagerService } from '../../../../core/database/collections/chatbot/chatbot-manager.service';
 import { UsersService } from '../../../../core/database/collections/users/users.service';
 import { AiChatsService } from '../../../../core/database/collections/ai-chats/ai-chats.service';
 import { DiscordContextService } from './discord-context.service';

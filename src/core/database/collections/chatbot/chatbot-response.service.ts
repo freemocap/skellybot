@@ -26,7 +26,11 @@ export class ChatbotResponseService {
       text: humanMessage,
       ...additionalArgs,
     });
-    chatbot.memory.saveContext({ input: humanMessage }, { output: aiResponse });
+    this._chatbotManagerService.updateMemory({
+      humanMessage,
+      aiResponse,
+    });
+
     return aiResponse;
   }
 

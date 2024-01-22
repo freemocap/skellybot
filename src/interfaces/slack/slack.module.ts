@@ -4,7 +4,7 @@ import { SlackCommandMethodDiscovery } from './decorators/discovery';
 import { DiscoveryModule } from '@golevelup/nestjs-discovery';
 import { SlackBoltModule } from './bolt/slack-bolt.module';
 import { GcpModule } from '../../core/gcp/gcp.module';
-import { ChatbotModule } from '../../core/chatbot/chatbot.module';
+import { ChatbotModule } from '../../core/database/collections/chatbot/chatbot.module';
 
 @Module({
   imports: [SlackBoltModule, DiscoveryModule, ChatbotModule, GcpModule],

@@ -1,11 +1,15 @@
-import { Chatbot } from './chatbot.dto';
-import { LangchainService } from '../ai/langchain/langchain.service';
+import { LangchainService } from '../../../ai/langchain/langchain.service';
 import { Injectable, Logger } from '@nestjs/common';
+import { Chatbot, ChatbotDocument } from './chatbot.schema';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 
 @Injectable()
 export class ChatbotManagerService {
-  private _chatbots: Map<string, Chatbot> = new Map();
+  private _chatbots: Map<string, ChatbotDocument> = new Map();
   constructor(
+    @InjectModel(Chatbot.name)
+    private readonly _chatbotModel: Model<ChatbotDocument>,
     private readonly _logger: Logger,
     private readonly _langchainService: LangchainService,
   ) {}
@@ -24,12 +28,18 @@ export class ChatbotManagerService {
         contextInstructions,
       );
 
-    const chatbot = { chain, memory } as Chatbot;
+    const chatbot = new this._chatbotModel({
+      chatbotId,
+      chain,
+      memory,
+    });
     this._chatbots.set(chatbotId, chatbot);
     this._logger.log(`Chatbot with id: ${chatbotId} created successfully`);
 
-    return chatbot;
+    return chatbot.save();
   }
+
+  public async updateMemory(humanMessage: string, aireponse: strnkm);
   public getChatbotById(chatbotId: string | number) {
     try {
       this._logger.log(`Fetching chatbot with id: ${chatbotId}`);

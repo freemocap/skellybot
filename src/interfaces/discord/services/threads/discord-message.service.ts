@@ -1,10 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { AttachmentBuilder, Message } from 'discord.js';
-import { ChatbotManagerService } from '../../../../core/chatbot/chatbot-manager.service';
+import { ChatbotManagerService } from '../../../../core/database/collections/chatbot/chatbot-manager.service';
 import { DiscordMongodbService } from '../discord-mongodb.service';
 import { DiscordContextService } from './discord-context.service';
 import { DiscordAttachmentService } from './discord-attachment.service';
-import { ChatbotResponseService } from '../../../../core/chatbot/chatbot-response.service';
+import { ChatbotResponseService } from '../../../../core/database/collections/chatbot/chatbot-response.service';
 
 @Injectable()
 export class DiscordMessageService {
