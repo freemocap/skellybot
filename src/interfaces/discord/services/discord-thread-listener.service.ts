@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { AiChatsService } from '../../../core/database/collections/ai-chats/ai-chats.service';
 import { Client, Message } from 'discord.js';
 import { DiscordMessageService } from './threads/discord-message.service';
+import { ChatbotManagerService } from '../../../core/database/collections/chatbot/chatbot-manager.service';
 
 @Injectable()
 export class DiscordThreadListenerService {
@@ -11,17 +12,24 @@ export class DiscordThreadListenerService {
     private readonly _logger: Logger,
     private readonly _aiChatsService: AiChatsService,
     private readonly _messageService: DiscordMessageService,
+    private readonly _chatbotManagerService: ChatbotManagerService,
   ) {}
 
   public async start() {
     this._logger.log('Starting up Discord Thread listeners');
-    const aiChatIds = await this._aiChatsService.findAllChatIds();
-    aiChatIds.forEach((aiChatId) => this.activeThreadListeners.add(aiChatId));
+    const aiChatIds = await this._reloadChatbots();
 
     this._logger.log(`Found ${aiChatIds.length} aiChatIds`);
     this._logger.log('Starting listener for previous aiChats');
     // create a chatbot and load up its memory with the messages in the thread
     this._client.on('messageCreate', this.respondToThreadMessage.bind(this));
+  }
+
+  private async _reloadChatbots() {
+    const aiChatIds = await this._aiChatsService.findAllChatIds();
+
+    aiChatIds.forEach((aiChatId) => this.activeThreadListeners.add(aiChatId));
+    return aiChatIds;
   }
 
   private async respondToThreadMessage(message: Message) {

@@ -8,8 +8,8 @@ import {
   SlackEventMiddlewareArgs,
 } from '@slack/bolt';
 import { SlackMessage } from './decorators/slack-message.decorator';
-import { ChatbotManagerService } from '../../core/chatbot/chatbot-manager.service';
-import { ChatbotResponseService } from '../../core/chatbot/chatbot-response.service';
+import { ChatbotManagerService } from '../../core/database/collections/chatbot/chatbot-manager.service';
+import { ChatbotResponseService } from '../../core/database/collections/chatbot/chatbot-response.service';
 
 @Injectable()
 export class SlackService {

@@ -7,7 +7,7 @@ import { DiscordEventService } from './services/discord-event.service';
 import { DiscordThreadService } from './services/threads/discord-thread.service';
 import { GcpModule } from '../../core/gcp/gcp.module';
 import { UsersModule } from '../../core/database/collections/users/users.module';
-import { ChatbotModule } from '../../core/chatbot/chatbot.module';
+import { ChatbotModule } from '../../core/database/collections/chatbot/chatbot.module';
 import { AiChatsModule } from '../../core/database/collections/ai-chats/ai-chats.module';
 import { CoupletsModule } from '../../core/database/collections/couplets/couplets.module';
 import { MessagesModule } from '../../core/database/collections/messages/messages.module';
