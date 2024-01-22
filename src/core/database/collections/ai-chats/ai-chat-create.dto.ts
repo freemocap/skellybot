@@ -1,4 +1,9 @@
-import { IsNotEmpty, IsString, ValidateNested } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { ContextRoute } from './context-route.provider';
 import { UserIdentifier } from '../users/user-identifiers';
@@ -16,6 +21,10 @@ export class AiChatCreateDto {
   @ValidateNested()
   @Type(() => ContextRoute)
   contextRoute: ContextRoute;
+
+  @IsString()
+  @IsOptional()
+  contextInstructions: string;
 
   @ValidateNested({ each: true })
   @Type(() => Couplet)

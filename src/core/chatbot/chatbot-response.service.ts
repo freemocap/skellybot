@@ -14,7 +14,7 @@ export class ChatbotResponseService {
   ) {}
 
   public async generateAiResponse(
-    chatbotId: string | number,
+    chatbotId: string,
     humanMessage: string,
     additionalArgs: object,
   ) {
@@ -26,12 +26,16 @@ export class ChatbotResponseService {
       text: humanMessage,
       ...additionalArgs,
     });
-    chatbot.memory.saveContext({ input: humanMessage }, { output: aiResponse });
+    this._chatbotManagerService.updateChatbotMemory(
+      chatbotId,
+      humanMessage,
+      aiResponse,
+    );
     return aiResponse;
   }
 
   async *streamResponse(
-    chatbotId: string | number,
+    chatbotId: string,
     humanMessage: string,
     additionalArgs: any,
     options: StreamResponseOptions = new StreamResponseOptions(),
@@ -86,9 +90,10 @@ export class ChatbotResponseService {
       theChunk: subStreamResult,
     };
 
-    chatbot.memory.saveContext(
-      { input: humanMessage },
-      { output: fullStreamedResult },
+    this._chatbotManagerService.updateChatbotMemory(
+      chatbotId,
+      humanMessage,
+      fullStreamedResult,
     );
   }
 }

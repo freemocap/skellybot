@@ -96,6 +96,7 @@ export class DiscordThreadService {
     const aiChat = await this._aiChatsService.createAiChat({
       ownerUser: userDocument,
       contextRoute,
+      contextInstructions,
       aiChatId: thread.id,
       couplets: [],
     });

@@ -30,6 +30,19 @@ export class ChatbotManagerService {
 
     return chatbot;
   }
+
+  public updateChatbotMemory(
+    chatbotId: string,
+    humanMessage: string,
+    aiResponse: string,
+  ) {
+    const chatbot = this.getChatbotById(chatbotId);
+    if (!chatbot) {
+      throw new Error(`Could not find chatbot with id: ${chatbotId}`);
+    }
+    chatbot.memory.saveContext({ input: humanMessage }, { output: aiResponse });
+  }
+
   public getChatbotById(chatbotId: string | number) {
     try {
       this._logger.log(`Fetching chatbot with id: ${chatbotId}`);

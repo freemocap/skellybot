@@ -11,6 +11,9 @@ export class AiChat {
   @Prop({ type: ContextRoute, required: true })
   contextRoute: ContextRoute;
 
+  @Prop()
+  contextInstructions: string;
+
   @Prop({ required: true, unique: true })
   aiChatId: string;
 
