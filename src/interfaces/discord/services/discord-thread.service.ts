@@ -27,7 +27,7 @@ export class DiscordThreadService implements OnModuleDestroy {
   })
   public async onThreadCommand(
     @Context() [interaction]: SlashCommandContext,
-    @Options() startingText: DiscordTextDto,
+    @Options({ required: false }) startingText?: DiscordTextDto,
   ) {
     await interaction.deferReply();
     const { text } = startingText;
@@ -40,11 +40,22 @@ export class DiscordThreadService implements OnModuleDestroy {
     if (threadName.length > maxThreadNameLength) {
       threadName = threadName.substring(0, maxThreadNameLength);
     }
-    const thread = await channel.threads.create({
+
+    const replyMessage = await interaction.editReply(
+      `Thread Created for user: ${interaction.user.username}`,
+    );
+    const thread = await replyMessage.startThread({
       name: threadName,
       autoArchiveDuration: 60,
-      reason: 'wow this is a thread',
+      reason: `Thread created for user: ${interaction.user.username}`,
     });
+
+    //
+    // const thread = await channel.threads.create({
+    //   name: threadName,
+    //   autoArchiveDuration: 60,
+    //   reason: 'wow this is a thread',
+    // });
 
     const contextRoute = this._contextService.getContextRoute(channel, thread);
     const contextInstructions =

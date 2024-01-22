@@ -42,6 +42,7 @@ export class DiscordAttachmentService {
         attachmentResponse.text = `BEGIN VIDEO TRANSCRIPT: ${attachment.name}\n\n${attachmentResponse.text}\n\nEND VIDEO TRANSCRIPT: ${attachment.name}\n\n`;
         break;
       case 'txt':
+      case 'md':
       case 'pdf':
         attachmentResponse = {
           type: 'file_text',
@@ -145,14 +146,5 @@ export class DiscordAttachmentService {
   private async handleZipAttachment(attachment: Attachment) {
     // Zip processing logic here - unzip and process each file according to its type.
     this._logger.log('Processing zip attachment:', attachment.name);
-  }
-
-  private getMimeTypeForExtension(extension: string): string {
-    const mimeTypes: { [key: string]: string } = {
-      mp3: 'audio/mpeg',
-      wav: 'audio/wav',
-      ogg: 'audio/ogg',
-    };
-    return mimeTypes[extension] || 'application/octet-stream'; // Fallback to binary stream
   }
 }

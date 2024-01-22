@@ -4,7 +4,7 @@ export class DiscordTextDto {
   @StringOption({
     name: 'text',
     description: 'Your text',
-    required: true,
+    required: false,
   })
   text: string;
 }

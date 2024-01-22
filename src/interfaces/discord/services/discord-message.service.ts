@@ -84,9 +84,7 @@ export class DiscordMessageService {
     const initialMessage = await thread.send(
       `Starting new chat with inital message:\n\n> ${inputText}`,
     );
-    await interaction.editReply(
-      `Thread Created for user: ${interaction.user.username} - ${initialMessage.url}`,
-    );
+
     await this._handleStream(channel, thread, inputText, '', initialMessage);
   }
 
