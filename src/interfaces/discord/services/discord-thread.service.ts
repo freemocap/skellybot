@@ -1,7 +1,7 @@
 import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { Context, Options, SlashCommand, SlashCommandContext } from 'necord';
 import { DiscordTextDto } from '../dto/discord-text.dto';
-import { Client, TextChannel } from 'discord.js';
+import { Client, EmbedBuilder, TextChannel, userMention } from 'discord.js';
 import { BotService } from '../../../core/bot/bot.service';
 import { UsersService } from '../../../core/database/collections/users/users.service';
 import { AiChatsService } from '../../../core/database/collections/ai-chats/ai-chats.service';
@@ -30,7 +30,7 @@ export class DiscordThreadService implements OnModuleDestroy {
     @Options({ required: false }) startingText?: DiscordTextDto,
   ) {
     await interaction.deferReply();
-    const { text } = startingText;
+    const { text } = startingText || { text: '.' };
     this._logger.log(
       `Creating thread with starting text:'${text}' in channel: name= ${interaction.channel.name}, id=${interaction.channel.id} `,
     );
@@ -40,22 +40,43 @@ export class DiscordThreadService implements OnModuleDestroy {
     if (threadName.length > maxThreadNameLength) {
       threadName = threadName.substring(0, maxThreadNameLength);
     }
+    const threadTitleEmbed = new EmbedBuilder()
+      .setColor(0x0099ff)
+      .setTitle(threadName)
+      .setURL('https://github.com/freemocap/skellybot')
+      .setAuthor({
+        name: interaction.user.username,
+        iconURL: interaction.user.avatarURL(),
+      });
 
-    const replyMessage = await interaction.editReply(
-      `Thread Created for user: ${interaction.user.username}`,
-    );
+    // .setDescription('Some description here')
+    // .setThumbnail('https://i.imgur.com/AfFp7pu.png')
+    // .addFields(
+    //   { name: 'Regular field title', value: 'Some value here' },
+    //   { name: '\u200B', value: '\u200B' },
+    //   { name: 'Inline field title', value: 'Some value here', inline: true },
+    //   { name: 'Inline field title', value: 'Some value here', inline: true },
+    // )
+    // .addFields({
+    //   name: 'Inline field title',
+    //   value: 'Some value here',
+    //   inline: true,
+    // })
+    // .setImage('https://i.imgur.com/AfFp7pu.png')
+    // .setTimestamp()
+    // .setFooter({
+    //   text: 'Some footer text here',
+    //   iconURL: 'https://i.imgur.com/AfFp7pu.png',
+    // });
+
+    const replyMessage = await interaction.editReply({
+      content: `Thread Created for user: ${userMention(interaction.user.id)}`,
+      embeds: [threadTitleEmbed],
+      attachments: [],
+    });
     const thread = await replyMessage.startThread({
       name: threadName,
-      autoArchiveDuration: 60,
-      reason: `Thread created for user: ${interaction.user.username}`,
     });
-
-    //
-    // const thread = await channel.threads.create({
-    //   name: threadName,
-    //   autoArchiveDuration: 60,
-    //   reason: 'wow this is a thread',
-    // });
 
     const contextRoute = this._contextService.getContextRoute(channel, thread);
     const contextInstructions =
@@ -64,12 +85,10 @@ export class DiscordThreadService implements OnModuleDestroy {
       `Creating bot with contextInstructions: \n ''' \n ${contextInstructions}\n '''`,
     );
 
-    // await this._botService.createChatbot(thread.id);
-
     await this._botService.createBot(
       thread.id,
       'gpt-4-1106-preview',
-      contextInstructions || '',
+      contextInstructions || '.',
     );
 
     const user = await this._usersService.getOrCreateUser({
@@ -81,12 +100,14 @@ export class DiscordThreadService implements OnModuleDestroy {
       },
     });
 
-    await this._aiChatsService.createAiChat({
+    const aiChat = await this._aiChatsService.createAiChat({
       ownerUser: user,
       contextRoute,
       aiChatId: thread.id,
       couplets: [],
     });
+    this._logger.log(`Created aiChat: ${JSON.stringify(aiChat)}`);
+    // await replyMessage.editReply({attachments: [aiChat]
     this._messageService.beginWatchingIncomingMessages(
       interaction,
       channel,
