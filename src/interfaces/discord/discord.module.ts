@@ -16,7 +16,7 @@ import { DiscordMongodbService } from './services/discord-mongodb.service';
 import { DiscordMessageService } from './services/threads/discord-message.service';
 import { OpenaiModule } from '../../core/ai/openai/openai.module';
 import { DiscordAttachmentService } from './services/threads/discord-attachment.service';
-import { DiscordListenersService } from './services/discord-listeners.service';
+import { DiscordThreadListenerService } from './services/discord-thread-listener.service';
 
 @Module({
   imports: [
@@ -33,7 +33,7 @@ import { DiscordListenersService } from './services/discord-listeners.service';
     OpenaiModule,
   ],
   providers: [
-    DiscordListenersService,
+    DiscordThreadListenerService,
     DiscordEventService,
     DiscordPingService,
     DiscordThreadService,

@@ -4,7 +4,7 @@ import { Client, Message } from 'discord.js';
 import { DiscordMessageService } from './threads/discord-message.service';
 
 @Injectable()
-export class DiscordListenersService {
+export class DiscordThreadListenerService {
   private activeThreadListeners = new Set<string>();
   public constructor(
     private readonly _client: Client,

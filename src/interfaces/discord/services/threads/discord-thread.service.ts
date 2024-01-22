@@ -15,7 +15,7 @@ import { BotService } from '../../../../core/bot/bot.service';
 import { UsersService } from '../../../../core/database/collections/users/users.service';
 import { AiChatsService } from '../../../../core/database/collections/ai-chats/ai-chats.service';
 import { DiscordContextService } from './discord-context.service';
-import { DiscordListenersService } from '../discord-listeners.service';
+import { DiscordThreadListenerService } from '../discord-thread-listener.service';
 import { DiscordMessageService } from './discord-message.service';
 
 @Injectable()
@@ -26,7 +26,7 @@ export class DiscordThreadService {
     private readonly _contextService: DiscordContextService,
     private readonly _logger: Logger,
     private readonly _botService: BotService,
-    private readonly _listenersService: DiscordListenersService,
+    private readonly _threadListenerService: DiscordThreadListenerService,
     private readonly _messageService: DiscordMessageService,
   ) {}
 
@@ -60,7 +60,7 @@ export class DiscordThreadService {
       interaction.user,
     );
 
-    await this._listenersService.startThreadListener(thread.id);
+    await this._threadListenerService.startThreadListener(thread.id);
     await this._messageService.respondToMessage(firstThreadMessage, true);
   }
 

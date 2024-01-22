@@ -1,7 +1,7 @@
 import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { Context, ContextOf, On, Once } from 'necord';
 import { Client } from 'discord.js';
-import { DiscordListenersService } from './discord-listeners.service';
+import { DiscordThreadListenerService } from './discord-thread-listener.service';
 
 @Injectable()
 export class DiscordEventService implements OnModuleDestroy {
@@ -10,13 +10,13 @@ export class DiscordEventService implements OnModuleDestroy {
   public constructor(
     private readonly client: Client,
     private readonly _logger: Logger,
-    private readonly _discordListenersService: DiscordListenersService,
+    private readonly _threadListenersService: DiscordThreadListenerService,
   ) {}
 
   @Once('ready')
   public async onReady(@Context() [client]: ContextOf<'ready'>) {
     this.logger.log(`Bot logged in as ${client.user.username}!`);
-    await this._discordListenersService.start();
+    await this._threadListenersService.start();
   }
 
   @On('warn')
@@ -26,6 +26,6 @@ export class DiscordEventService implements OnModuleDestroy {
 
   onModuleDestroy(): any {
     this._logger.log('Shutting down Discord bot');
-    this._discordListenersService.stop();
+    this._threadListenersService.stop();
   }
 }
