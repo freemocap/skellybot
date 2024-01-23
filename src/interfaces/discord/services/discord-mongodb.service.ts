@@ -14,16 +14,19 @@ export class DiscordMongodbService {
   ) {}
 
   public async persistInteraction(
+    ownerUserId: string,
     aiChatId: string,
     contextRoute: ContextRoute,
     discordMessage: Message,
     attachmentText: string,
     replyMessage: Message,
+    firstMessage: boolean = false,
   ) {
     const humanMessageForDb = await this._messageService.createMessage({
       contextRoute,
       messageId: discordMessage.id,
       speakerType: 'human',
+      speakerId: ownerUserId,
       interfaceSource: 'discord',
       content: discordMessage.content,
       attachmentText: attachmentText,
@@ -38,6 +41,7 @@ export class DiscordMongodbService {
       contextRoute,
       messageId: replyMessage.id,
       speakerType: 'ai',
+      speakerId: replyMessage.author.id,
       interfaceSource: 'discord',
       content: replyMessage.content,
       attachmentText: '',
@@ -49,6 +53,7 @@ export class DiscordMongodbService {
     });
 
     const couplet = await this._coupletService.createCouplet({
+      initialExchange: firstMessage,
       contextRoute,
       humanMessage: humanMessageForDb,
       aiResponse: aiMessageForDb,

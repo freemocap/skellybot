@@ -8,14 +8,17 @@ export type AiChatDocument = AiChat & Document;
 
 @Schema({ timestamps: true })
 export class AiChat {
+  @Prop({ required: true, unique: true })
+  aiChatId: string;
+
   @Prop({ type: ContextRoute, required: true })
   contextRoute: ContextRoute;
 
   @Prop()
   contextInstructions: string;
 
-  @Prop({ required: true, unique: true })
-  aiChatId: string;
+  @Prop()
+  modelName: string;
 
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   ownerUser: User;

@@ -12,6 +12,10 @@ export class Message {
   @Prop({ required: true, enum: ['human', 'ai', 'system'] })
   speakerType: string;
 
+  // TODO - This probably shouldn't be optional, but I don't want to break anything with the Database right now
+  @Prop({ required: false })
+  speakerId: string;
+
   @Prop({ required: true, enum: ['discord', 'slack'] })
   interfaceSource: string;
 

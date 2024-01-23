@@ -14,6 +14,11 @@ export class CreateMessageDto {
   @IsEnum(['human', 'ai', 'system'])
   speakerType: string;
 
+  // TODO - This probably shouldn't be optional, but I don't want to break anything with the Database right now
+  // TODO - This should probably be a UserIdentifier or something (or maybe a SpeakerIdentifier? Which can be like a UserIdentifier that can be non-human?)
+  @IsOptional()
+  speakerId: string;
+
   @IsEnum(['discord', 'slack'])
   interfaceSource: string;
 

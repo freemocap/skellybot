@@ -3,6 +3,7 @@ import { SlackModule } from '../interfaces/slack/slack.module';
 import { MainController } from './main.controller';
 import { ConfigModule } from '@nestjs/config';
 import { DiscordModule } from '../interfaces/discord/discord.module';
+import { DatabaseModule } from '../core/database/database.module';
 
 @Module({
   imports: [
@@ -20,5 +21,6 @@ import { DiscordModule } from '../interfaces/discord/discord.module';
     DiscordModule,
   ],
   controllers: [MainController],
+  providers: [],
 })
 export class MainModule {}

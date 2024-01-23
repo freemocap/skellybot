@@ -3,7 +3,7 @@ import { DiscordPingService } from './services/discord-ping.service';
 import { NecordModule } from 'necord';
 
 import { DiscordConfigService } from './services/discord-config.service';
-import { DiscordEventService } from './services/discord-event.service';
+import { DiscordEventService } from './services/events/discord-event.service';
 import { DiscordThreadService } from './services/threads/discord-thread.service';
 import { GcpModule } from '../../core/gcp/gcp.module';
 import { UsersModule } from '../../core/database/collections/users/users.module';
@@ -16,7 +16,7 @@ import { DiscordMongodbService } from './services/discord-mongodb.service';
 import { DiscordMessageService } from './services/threads/discord-message.service';
 import { OpenaiModule } from '../../core/ai/openai/openai.module';
 import { DiscordAttachmentService } from './services/threads/discord-attachment.service';
-import { DiscordThreadListenerService } from './services/discord-thread-listener.service';
+import { DiscordOnMessageService } from './services/events/discord-on-message.service';
 
 @Module({
   imports: [
@@ -33,7 +33,7 @@ import { DiscordThreadListenerService } from './services/discord-thread-listener
     OpenaiModule,
   ],
   providers: [
-    DiscordThreadListenerService,
+    DiscordOnMessageService,
     DiscordEventService,
     DiscordPingService,
     DiscordThreadService,

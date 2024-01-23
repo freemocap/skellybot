@@ -7,6 +7,10 @@ export type CoupletDocument = Couplet & Document;
 
 @Schema({ timestamps: true })
 export class Couplet {
+  // TODO - This probably shouldn't be optional, but I don't want to break anything with the Database right now
+  @Prop()
+  initialExchange: boolean;
+
   @Prop({ type: Types.ObjectId, ref: 'Message', required: true })
   humanMessage: Message;
 

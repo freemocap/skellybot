@@ -5,28 +5,16 @@ import {
   CacheType,
   ChatInputCommandInteraction,
   EmbedBuilder,
-  PrivateThreadChannel,
-  PublicThreadChannel,
-  TextChannel,
-  User,
   userMention,
 } from 'discord.js';
-import { ChatbotManagerService } from '../../../../core/chatbot/chatbot-manager.service';
-import { UsersService } from '../../../../core/database/collections/users/users.service';
-import { AiChatsService } from '../../../../core/database/collections/ai-chats/ai-chats.service';
-import { DiscordContextService } from './discord-context.service';
-import { DiscordThreadListenerService } from '../discord-thread-listener.service';
+import { DiscordOnMessageService } from '../events/discord-on-message.service';
 import { DiscordMessageService } from './discord-message.service';
 
 @Injectable()
 export class DiscordThreadService {
   constructor(
-    private readonly _aiChatsService: AiChatsService,
-    private readonly _usersService: UsersService,
-    private readonly _contextService: DiscordContextService,
     private readonly _logger: Logger,
-    private readonly _botService: ChatbotManagerService,
-    private readonly _threadListenerService: DiscordThreadListenerService,
+    private readonly _onMessageService: DiscordOnMessageService,
     private readonly _messageService: DiscordMessageService,
   ) {}
 
@@ -47,60 +35,17 @@ export class DiscordThreadService {
     this._logger.log(
       `Creating thread with starting text:'${startingText.text}' in channel: name= ${interaction.channel.name}, id=${interaction.channel.id} `,
     );
-    const channel = interaction.channel as TextChannel;
     const thread = await this._createNewThread(startingText, interaction);
 
     const firstThreadMessage = await thread.send(
       `Starting new chat with initial message:\n\n> ${startingText.text}`,
     );
-    await this._createAiChat(
+
+    await this._onMessageService.addActiveChat(firstThreadMessage);
+    await this._messageService.respondToMessage(
       firstThreadMessage,
-      channel,
-      thread,
-      interaction.user,
+      interaction.user.id,
     );
-
-    await this._threadListenerService.startThreadListener(thread.id);
-    await this._messageService.respondToMessage(firstThreadMessage, true);
-  }
-
-  private async _createAiChat(
-    firstThreadMessage,
-    channel: TextChannel,
-    thread: PublicThreadChannel<boolean> | PrivateThreadChannel,
-    user: User,
-  ) {
-    const contextRoute =
-      this._contextService.getContextRoute(firstThreadMessage);
-    const contextInstructions =
-      await this._contextService.getContextInstructions(channel);
-    this._logger.log(
-      `Creating bot with contextInstructions: \n ''' \n ${contextInstructions}\n '''`,
-    );
-
-    await this._botService.createBot(
-      thread.id,
-      'gpt-4-1106-preview',
-      contextInstructions || '.',
-    );
-
-    const userDocument = await this._usersService.getOrCreateUser({
-      identifiers: {
-        discord: {
-          id: user.id,
-          username: user.username,
-        },
-      },
-    });
-
-    const aiChat = await this._aiChatsService.createAiChat({
-      ownerUser: userDocument,
-      contextRoute,
-      contextInstructions,
-      aiChatId: thread.id,
-      couplets: [],
-    });
-    this._logger.log(`Created aiChat: ${JSON.stringify(aiChat)}`);
   }
 
   private async _createNewThread(
@@ -124,16 +69,15 @@ export class DiscordThreadService {
         value: 'https://github.com/freemocap/skellybot',
       });
 
-    const replyMessage = await interaction.editReply({
+    const threadCreationMessage = await interaction.editReply({
       content: `Thread Created for user: ${userMention(
         interaction.user.id,
       )} with starting text:\n\n> ${startingText.text}`,
       embeds: [threadTitleEmbed],
       attachments: [],
     });
-    const thread = await replyMessage.startThread({
+    return await threadCreationMessage.startThread({
       name: threadName,
     });
-    return thread;
   }
 }

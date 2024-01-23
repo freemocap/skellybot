@@ -1,10 +1,12 @@
 import { Chatbot } from './chatbot.dto';
 import { LangchainService } from '../ai/langchain/langchain.service';
 import { Injectable, Logger } from '@nestjs/common';
+import { AiChatDocument } from '../database/collections/ai-chats/ai-chat.schema';
 
 @Injectable()
 export class ChatbotManagerService {
   private _chatbots: Map<string, Chatbot> = new Map();
+
   constructor(
     private readonly _logger: Logger,
     private readonly _langchainService: LangchainService,
@@ -31,6 +33,40 @@ export class ChatbotManagerService {
     return chatbot;
   }
 
+  public async loadChatbotFromAiChatDocument(
+    aiChat: AiChatDocument,
+  ): Promise<Chatbot> {
+    try {
+      const { chain, memory } =
+        await this._langchainService.createBufferMemoryChain(
+          aiChat.modelName,
+          aiChat.contextInstructions,
+        );
+      const chatbot = { chain, memory } as Chatbot;
+
+      aiChat = await aiChat.populate('couplets');
+
+      for (const couplet of aiChat.couplets) {
+        this.updateChatbotMemory(
+          aiChat.aiChatId,
+          couplet.humanMessage.content,
+          couplet.aiResponse.content,
+        );
+      }
+
+      this._chatbots.set(aiChat.aiChatId, chatbot);
+      this._logger.debug(
+        `Chatbot with id: ${aiChat.aiChatId} re-created successfully`,
+      );
+      return chatbot;
+    } catch (error) {
+      this._logger.error(
+        `Could not load chatbot from aiChat: ${aiChat.aiChatId}`,
+      );
+      throw error;
+    }
+  }
+
   public updateChatbotMemory(
     chatbotId: string,
     humanMessage: string,
@@ -44,12 +80,11 @@ export class ChatbotManagerService {
   }
 
   public getChatbotById(chatbotId: string | number) {
-    try {
-      this._logger.log(`Fetching chatbot with id: ${chatbotId}`);
-      return this._chatbots.get(String(chatbotId));
-    } catch (error) {
-      this._logger.error(`Could not find chatbot for chatbotId: ${chatbotId}`);
-      throw error;
+    this._logger.log(`Fetching chatbot with id: ${chatbotId}`);
+    const chatbot = this._chatbots.get(String(chatbotId));
+    if (!chatbot) {
+      throw new Error(`Could not find chatbot with id: ${chatbotId}`);
     }
+    return chatbot;
   }
 }

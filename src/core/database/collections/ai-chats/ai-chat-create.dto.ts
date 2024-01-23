@@ -29,6 +29,10 @@ export class AiChatCreateDto {
   @ValidateNested({ each: true })
   @Type(() => Couplet)
   couplets: Couplet[];
+
+  @IsString()
+  @IsOptional()
+  modelName: string;
 }
 
 export class UpdateAiChatDto {

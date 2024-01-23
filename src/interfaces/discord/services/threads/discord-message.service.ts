@@ -10,33 +10,13 @@ import { ChatbotResponseService } from '../../../../core/chatbot/chatbot-respons
 export class DiscordMessageService {
   constructor(
     private readonly _logger: Logger,
-    private readonly _chatbotManagerService: ChatbotManagerService,
     private readonly _chatbotResponseService: ChatbotResponseService,
     private readonly _persistenceService: DiscordMongodbService,
     private readonly _contextService: DiscordContextService,
     private readonly _discordAttachmentService: DiscordAttachmentService,
   ) {}
 
-  public async respondToMessage(
-    discordMessage: Message,
-    firstMessage: boolean = false,
-  ) {
-    if (!firstMessage) {
-      if (discordMessage.author.bot) {
-        return;
-      }
-    }
-    // if first character of message is `~`, ignore it
-    if (discordMessage.content.startsWith('~')) {
-      return;
-    }
-
-    // TODO - if Bot is mentioned in the message, respond
-    // if (message.mentions.has(this._client.user.id)) {
-    //   await this._messageService.handleMessage(message);
-    //   return;
-    // }
-
+  public async respondToMessage(discordMessage: Message, humanUserId: string) {
     const { humanInputText, attachmentText } =
       await this._extractMessageContent(discordMessage);
     this._logger.log(
@@ -45,10 +25,16 @@ export class DiscordMessageService {
       }attachment(s):\n\n ${humanInputText}`,
     );
 
-    await this._handleStream(humanInputText, attachmentText, discordMessage);
+    await this._handleStream(
+      humanUserId,
+      humanInputText,
+      attachmentText,
+      discordMessage,
+    );
   }
 
   private async _handleStream(
+    humanUserId: string,
     inputMessageText: string,
     attachmentText: string,
     discordMessage: Message<boolean>,
@@ -104,6 +90,7 @@ export class DiscordMessageService {
     }
     const contextRoute = this._contextService.getContextRoute(discordMessage);
     await this._persistenceService.persistInteraction(
+      humanUserId,
       discordMessage.channel.id,
       contextRoute,
       discordMessage,

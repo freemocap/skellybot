@@ -36,6 +36,18 @@ export class AiChatsService {
     return createdAiChat.save();
   }
 
+  public async getOrCreateAiChat(
+    createAiChatDto: AiChatCreateDto,
+  ): Promise<AiChatDocument> {
+    const existingAiChat = await this.aiChatModel
+      .findOne({ aiChatId: createAiChatDto.aiChatId })
+      .exec();
+    if (existingAiChat) {
+      return existingAiChat;
+    }
+    return this.createAiChat(createAiChatDto);
+  }
+
   public async addCouplets(
     aiChatId: string,
     couplets: [Couplet],
