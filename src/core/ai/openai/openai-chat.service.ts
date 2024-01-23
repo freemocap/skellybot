@@ -38,29 +38,38 @@ export class OpenaiChatService implements OnModuleInit {
     this.configs.set(chatbotId, config);
   }
 
-  async create(chatId: string, systemPrompt: string, config: OpenAiChatConfig) {
+  public create(chatId: string, config: OpenAiChatConfig) {
     this._storeConfig(chatId, config);
-    config.messages.push({ role: 'system', content: systemPrompt });
-    if (config.stream) {
-      return this._createStream(config);
-    } else {
-      return this._createCompletion(config);
-    }
   }
 
+  public async getAiResponse(chatId: string, humanMessage: string) {
+    const config = this.configs.get(chatId);
+    config.messages.push({ role: 'user', content: humanMessage });
+
+    return await this.openai.chat.completions.create(config);
+  }
   private async _createStream(config: OpenAiChatConfig) {
+    // Start the stream by creating the completion with the config object
     const completion = await this.openai.chat.completions.create(config);
-    return async function* generateResponses() {
+
+    // Return an async generator function
+    return (async function* () {
+      let fullResponse = ''; // Initialize a string to store the full response
+
       // @ts-ignore
       for await (const chunk of completion) {
-        yield chunk.choices[0].delta.content;
-      }
-      return completion;
-    };
-  }
+        if (chunk.choices && chunk.choices[0] && chunk.choices[0].delta) {
+          // Accumulate the response data
+          const content = chunk.choices[0].delta.content;
+          fullResponse += content;
 
-  private async _createCompletion(config: OpenAiChatConfig) {
-    const completion = await this.openai.chat.completions.create(config);
-    return completion;
+          // Yield each content chunk for the caller to process in real-time
+          yield { content, fullResponse: false };
+        }
+      }
+
+      // Once the stream is finished, yield one last time with the full response
+      yield { content: fullResponse, fullResponse: true };
+    })();
   }
 }

@@ -6,6 +6,7 @@ import { ChatbotManagerService } from '../../../../core/chatbot/chatbot-manager.
 import { AiChatDocument } from '../../../../core/database/collections/ai-chats/ai-chat.schema';
 import { DiscordContextService } from '../threads/discord-context.service';
 import { UsersService } from '../../../../core/database/collections/users/users.service';
+import { OpenaiChatService } from '../../../../core/ai/openai/openai-chat.service';
 
 @Injectable()
 export class DiscordOnMessageService {
@@ -20,6 +21,7 @@ export class DiscordOnMessageService {
     private readonly _chatbotManagerService: ChatbotManagerService,
     private readonly _contextService: DiscordContextService,
     private readonly _usersService: UsersService,
+    private readonly _openaiChatService: OpenaiChatService,
   ) {}
   public async addActiveChat(message: Message) {
     const aiChatId = message.channel.id;
@@ -35,11 +37,18 @@ export class DiscordOnMessageService {
     const contextInstructions =
       await this._contextService.getContextInstructions(message);
 
-    await this._chatbotManagerService.createBot(
-      aiChatId,
-      'gpt-4-1106-preview',
-      contextInstructions,
-    );
+    // await this._chatbotManagerService.createBot(
+    //   aiChatId,
+    //   'gpt-4-1106-preview',
+    //   contextInstructions,
+    // );
+
+    this._openaiChatService.create(aiChatId, {
+      messages: [{ role: 'system', content: contextInstructions }],
+      model: 'gpt-4-1106-preview',
+      temperature: 0.7,
+      stream: true,
+    });
     const aiChat = await this._aiChatsService.createAiChat({
       aiChatId,
       ownerUser,

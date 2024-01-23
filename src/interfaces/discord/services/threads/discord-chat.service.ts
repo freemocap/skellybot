@@ -11,9 +11,10 @@ import { DiscordOnMessageService } from '../events/discord-on-message.service';
 import { DiscordMessageService } from './discord-message.service';
 
 @Injectable()
-export class DiscordThreadService {
+export class DiscordChatService {
+  private readonly logger = new Logger(DiscordChatService.name);
+
   constructor(
-    private readonly _logger: Logger,
     private readonly _onMessageService: DiscordOnMessageService,
     private readonly _messageService: DiscordMessageService,
   ) {}
@@ -23,30 +24,34 @@ export class DiscordThreadService {
     description:
       'Opens a thread at this location and sets up a aiChat with with the chatbot.',
   })
-  public async onThreadCommand(
+  public async onChatCommand(
     @Context() [interaction]: SlashCommandContext,
     @Options({ required: false }) startingText?: DiscordTextDto,
   ) {
-    await interaction.deferReply();
-    if (!startingText.text) {
-      startingText.text = '.';
+    try {
+      await interaction.deferReply();
+      if (!startingText.text) {
+        startingText.text = '.';
+      }
+
+      this.logger.log(
+        `Creating thread with starting text:'${startingText.text}' in channel: name= ${interaction.channel.name}, id=${interaction.channel.id} `,
+      );
+      const thread = await this._createNewThread(startingText, interaction);
+
+      const firstThreadMessage = await thread.send(
+        `Starting new chat with initial message:\n\n> ${startingText.text}`,
+      );
+
+      await this._onMessageService.addActiveChat(firstThreadMessage);
+      await this._messageService.respondToMessage(
+        firstThreadMessage,
+        interaction.user.id,
+        true,
+      );
+    } catch (error) {
+      this.logger.error(error);
     }
-
-    this._logger.log(
-      `Creating thread with starting text:'${startingText.text}' in channel: name= ${interaction.channel.name}, id=${interaction.channel.id} `,
-    );
-    const thread = await this._createNewThread(startingText, interaction);
-
-    const firstThreadMessage = await thread.send(
-      `Starting new chat with initial message:\n\n> ${startingText.text}`,
-    );
-
-    await this._onMessageService.addActiveChat(firstThreadMessage);
-    await this._messageService.respondToMessage(
-      firstThreadMessage,
-      interaction.user.id,
-      true,
-    );
   }
 
   private async _createNewThread(

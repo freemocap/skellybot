@@ -46,14 +46,21 @@ export class DiscordMessageService {
   ) {
     discordMessage.channel.sendTyping();
 
-    const tokenStream = this._chatbotResponseService.streamResponse(
+    // const tokenStream = this._chatbotResponseService.streamResponse(
+    //   discordMessage.channel.id,
+    //   inputMessageText + attachmentText,
+    //   {
+    //     // topic: channel.topic,
+    //   },
+    // );
+
+    const tokenStream = this._chatbotResponseService.openaiStreamResponse(
       discordMessage.channel.id,
       inputMessageText + attachmentText,
       {
         // topic: channel.topic,
       },
     );
-
     let replyMessage: Message<boolean> = undefined;
     let replyWasSplitAcrossMessages = false;
     let continuingFromString = '';
