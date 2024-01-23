@@ -1,15 +1,17 @@
-import { Chatbot } from './chatbot.dto';
+import { LangchainChatbot } from './chatbot.dto';
 import { LangchainService } from '../ai/langchain/langchain.service';
 import { Injectable, Logger } from '@nestjs/common';
 import { AiChatDocument } from '../database/collections/ai-chats/ai-chat.schema';
+import { OpenaiChatService } from '../ai/openai/openai-chat.service';
 
 @Injectable()
 export class ChatbotManagerService {
-  private _chatbots: Map<string, Chatbot> = new Map();
+  private _langchain_chatbots: Map<string, LangchainChatbot> = new Map();
 
   constructor(
     private readonly _logger: Logger,
     private readonly _langchainService: LangchainService,
+    private readonly _openaiChatService: OpenaiChatService,
   ) {}
 
   public async createBot(
@@ -26,8 +28,8 @@ export class ChatbotManagerService {
         contextInstructions,
       );
 
-    const chatbot = { chain, memory } as Chatbot;
-    this._chatbots.set(chatbotId, chatbot);
+    const chatbot = { chain, memory } as LangchainChatbot;
+    this._langchain_chatbots.set(chatbotId, chatbot);
     this._logger.log(`Chatbot with id: ${chatbotId} created successfully`);
 
     return chatbot;
@@ -35,16 +37,16 @@ export class ChatbotManagerService {
 
   public async loadChatbotFromAiChatDocument(
     aiChat: AiChatDocument,
-  ): Promise<Chatbot> {
+  ): Promise<LangchainChatbot> {
     try {
       const { chain, memory } =
         await this._langchainService.createBufferMemoryChain(
           aiChat.modelName,
           aiChat.contextInstructions,
         );
-      const chatbot = { chain, memory } as Chatbot;
+      const chatbot = { chain, memory } as LangchainChatbot;
 
-      this._chatbots.set(aiChat.aiChatId, chatbot);
+      this._langchain_chatbots.set(aiChat.aiChatId, chatbot);
 
       for (const couplet of aiChat.couplets) {
         this.updateChatbotMemory(
@@ -83,7 +85,7 @@ export class ChatbotManagerService {
 
   public getChatbotById(chatbotId: string | number) {
     this._logger.log(`Fetching chatbot with id: ${chatbotId}`);
-    const chatbot = this._chatbots.get(String(chatbotId));
+    const chatbot = this._langchain_chatbots.get(String(chatbotId));
     if (!chatbot) {
       throw new Error(`Could not find chatbot with id: ${chatbotId}`);
     }
