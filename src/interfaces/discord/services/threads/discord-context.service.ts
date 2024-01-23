@@ -61,10 +61,20 @@ export class DiscordContextService {
     }
   }
 
-  async getContextInstructions(channel: TextChannel) {
+  async getContextInstructions(message: Message) {
     try {
+      if (message.channel instanceof DMChannel) {
+        return 'This is a direct message with the Human.';
+      }
+      let channel: TextChannel | null;
+      if (message.channel instanceof ThreadChannel) {
+        channel = message.channel.parent as TextChannel;
+      } else {
+        channel = message.channel as TextChannel;
+      }
       const server = await channel.client.guilds.fetch(channel.guildId);
-      const channelInstructions = channel.topic || '';
+      const channelTopic = channel.topic || '';
+      const channelInstructions = await this._getBotReactionMessages(channel);
       const categoryInstructions = await this.getInstructions(
         server,
         channel.parentId,
@@ -73,6 +83,7 @@ export class DiscordContextService {
       return [
         serverInstructions,
         categoryInstructions,
+        channelTopic,
         channelInstructions,
       ].join('\n\n');
     } catch (error) {
@@ -99,22 +110,25 @@ export class DiscordContextService {
       if (!botConfigChannel) {
         return '';
       }
-
-      const messages = await botConfigChannel.messages.fetch({ limit: 100 });
-
-      const instructionMessages = messages.filter((message: Message) =>
-        message.reactions.cache.some((reaction) =>
-          this.isBotInstructionEmoji(reaction.emoji),
-        ),
-      );
-
-      return instructionMessages
-        .map((message: Message) => message.content)
-        .join('\n');
+      return await this._getBotReactionMessages(botConfigChannel);
     } catch (error) {
       this.logger.error(`Failed to get instructions: ${error.message}`);
       return ''; // In case of an error, return an empty string to keep the chatbot operational.
     }
+  }
+
+  private async _getBotReactionMessages(channel: TextChannel) {
+    const messages = await channel.messages.fetch({ limit: 100 });
+
+    const instructionMessages = messages.filter((message: Message) =>
+      message.reactions.cache.some((reaction) =>
+        this.isBotInstructionEmoji(reaction.emoji),
+      ),
+    );
+
+    return instructionMessages
+      .map((message: Message) => message.content)
+      .join('\n');
   }
 
   private isBotInstructionEmoji(emoji: GuildEmoji | ReactionEmoji): boolean {
