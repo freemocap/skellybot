@@ -45,6 +45,7 @@ export class DiscordThreadService {
     await this._messageService.respondToMessage(
       firstThreadMessage,
       interaction.user.id,
+      true,
     );
   }
 

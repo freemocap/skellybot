@@ -20,7 +20,7 @@ export class DiscordMongodbService {
     discordMessage: Message,
     attachmentText: string,
     replyMessage: Message,
-    firstMessage: boolean = false,
+    isFirstExchange: boolean = false,
   ) {
     const humanMessageForDb = await this._messageService.createMessage({
       contextRoute,
@@ -53,7 +53,7 @@ export class DiscordMongodbService {
     });
 
     const couplet = await this._coupletService.createCouplet({
-      initialExchange: firstMessage,
+      initialExchange: isFirstExchange,
       contextRoute,
       humanMessage: humanMessageForDb,
       aiResponse: aiMessageForDb,

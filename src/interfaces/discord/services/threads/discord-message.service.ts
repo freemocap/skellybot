@@ -1,6 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { AttachmentBuilder, Message } from 'discord.js';
-import { ChatbotManagerService } from '../../../../core/chatbot/chatbot-manager.service';
 import { DiscordMongodbService } from '../discord-mongodb.service';
 import { DiscordContextService } from './discord-context.service';
 import { DiscordAttachmentService } from './discord-attachment.service';
@@ -16,7 +15,11 @@ export class DiscordMessageService {
     private readonly _discordAttachmentService: DiscordAttachmentService,
   ) {}
 
-  public async respondToMessage(discordMessage: Message, humanUserId: string) {
+  public async respondToMessage(
+    discordMessage: Message,
+    humanUserId: string,
+    isFirstExchange: boolean = false,
+  ) {
     const { humanInputText, attachmentText } =
       await this._extractMessageContent(discordMessage);
     this._logger.log(
@@ -30,6 +33,7 @@ export class DiscordMessageService {
       humanInputText,
       attachmentText,
       discordMessage,
+      isFirstExchange,
     );
   }
 
@@ -38,6 +42,7 @@ export class DiscordMessageService {
     inputMessageText: string,
     attachmentText: string,
     discordMessage: Message<boolean>,
+    isFirstExchange: boolean = false,
   ) {
     discordMessage.channel.sendTyping();
 
@@ -96,6 +101,7 @@ export class DiscordMessageService {
       discordMessage,
       attachmentText,
       replyMessage,
+      isFirstExchange,
     );
   }
 

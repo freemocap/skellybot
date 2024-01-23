@@ -13,10 +13,6 @@ export class AiChatsService {
     @InjectModel(AiChat.name)
     private readonly aiChatModel: Model<AiChatDocument>,
   ) {}
-  async findAllChatIds(): Promise<string[]> {
-    const aiChats = await this.aiChatModel.find().select('aiChatId').exec();
-    return aiChats.map((aiChat) => aiChat.aiChatId);
-  }
 
   async findAll(): Promise<AiChatDocument[]> {
     return this.aiChatModel.find().exec();
@@ -38,16 +34,36 @@ export class AiChatsService {
 
   public async getOrCreateAiChat(
     createAiChatDto: AiChatCreateDto,
+    populateDocument?: boolean,
   ): Promise<AiChatDocument> {
-    const existingAiChat = await this.aiChatModel
-      .findOne({ aiChatId: createAiChatDto.aiChatId })
-      .exec();
-    if (existingAiChat) {
-      return existingAiChat;
+    const aiChat = await this.aiChatModel.findOne({
+      aiChatId: createAiChatDto.aiChatId,
+    });
+
+    if (aiChat && populateDocument) {
+      return await this._populateDocument(createAiChatDto.aiChatId);
     }
+
+    if (aiChat) {
+      return aiChat;
+    }
+
     return this.createAiChat(createAiChatDto);
   }
-
+  private async _populateDocument(aiChatId: string): Promise<AiChatDocument> {
+    return await this.aiChatModel
+      .findOne({ aiChatId: aiChatId })
+      .populate({
+        // Populate the 'couplets' field in the AiChat schema
+        path: 'couplets',
+        populate: [
+          // Within each 'Couplet', populate both 'humanMessage' and 'aiResponse' fields
+          { path: 'humanMessage', model: 'Message' },
+          { path: 'aiResponse', model: 'Message' },
+        ],
+      })
+      .exec();
+  }
   public async addCouplets(
     aiChatId: string,
     couplets: [Couplet],
@@ -81,15 +97,5 @@ export class AiChatsService {
         { new: true },
       )
       .exec();
-  }
-
-  async remove(aiChatId: string): Promise<AiChatDocument> {
-    const deletedAiChat = await this.aiChatModel
-      .findOneAndDelete({ aiChatId: aiChatId })
-      .exec();
-    if (!deletedAiChat) {
-      throw new Error(`AiChat with id ${aiChatId} not found`);
-    }
-    return deletedAiChat;
   }
 }

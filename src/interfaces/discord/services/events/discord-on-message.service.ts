@@ -92,16 +92,19 @@ export class DiscordOnMessageService {
       `Loading chatbot for threadId: ${message.channel.id} from database`,
     );
     const ownerUser = await this._getOwnerUser(message);
-
-    const aiChat = await this._aiChatsService.getOrCreateAiChat({
-      aiChatId: message.channel.id,
-      ownerUser,
-      contextRoute: this._contextService.getContextRoute(message),
-      contextInstructions:
-        await this._contextService.getContextInstructions(message),
-      couplets: [],
-      modelName: 'gpt-4-1106-preview',
-    });
+    const populateCouplets = true;
+    const aiChat = await this._aiChatsService.getOrCreateAiChat(
+      {
+        aiChatId: message.channel.id,
+        ownerUser,
+        contextRoute: this._contextService.getContextRoute(message),
+        contextInstructions:
+          await this._contextService.getContextInstructions(message),
+        couplets: [],
+        modelName: 'gpt-4-1106-preview',
+      },
+      populateCouplets,
+    );
     this.allAiChatsById.set(aiChat.aiChatId, aiChat);
 
     await this._chatbotManagerService.loadChatbotFromAiChatDocument(aiChat);

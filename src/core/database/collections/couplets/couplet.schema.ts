@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
-import { Message } from 'discord.js';
 import { ContextRoute } from '../ai-chats/context-route.provider';
+import { Message } from '../messages/message.schema';
 
 export type CoupletDocument = Couplet & Document;
 

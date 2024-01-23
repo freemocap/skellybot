@@ -44,7 +44,7 @@ export class ChatbotManagerService {
         );
       const chatbot = { chain, memory } as Chatbot;
 
-      aiChat = await aiChat.populate('couplets');
+      this._chatbots.set(aiChat.aiChatId, chatbot);
 
       for (const couplet of aiChat.couplets) {
         this.updateChatbotMemory(
@@ -54,20 +54,19 @@ export class ChatbotManagerService {
         );
       }
 
-      this._chatbots.set(aiChat.aiChatId, chatbot);
       this._logger.debug(
         `Chatbot with id: ${aiChat.aiChatId} re-created successfully`,
       );
       return chatbot;
     } catch (error) {
       this._logger.error(
-        `Could not load chatbot from aiChat: ${aiChat.aiChatId}`,
+        `Could not load chatbot from aiChat: ${aiChat.aiChatId} with error \n ${error} `,
       );
       throw error;
     }
   }
 
-  public updateChatbotMemory(
+  public async updateChatbotMemory(
     chatbotId: string,
     humanMessage: string,
     aiResponse: string,
@@ -76,7 +75,10 @@ export class ChatbotManagerService {
     if (!chatbot) {
       throw new Error(`Could not find chatbot with id: ${chatbotId}`);
     }
-    chatbot.memory.saveContext({ input: humanMessage }, { output: aiResponse });
+    await chatbot.memory.saveContext(
+      { input: humanMessage },
+      { output: aiResponse },
+    );
   }
 
   public getChatbotById(chatbotId: string | number) {
