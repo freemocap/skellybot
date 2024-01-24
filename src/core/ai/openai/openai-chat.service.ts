@@ -2,7 +2,6 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { OpenaiSecretsService } from './openai-secrets.service';
 import { OpenAI } from 'openai';
 import { AiChatDocument } from '../../database/collections/ai-chats/ai-chat.schema';
-import { LangchainChatbot } from '../../chatbot/chatbot.dto';
 
 export interface OpenAiChatConfig {
   //https://platform.openai.com/docs/api-reference/chat
@@ -61,13 +60,19 @@ export class OpenaiChatService implements OnModuleInit {
 
     const allStreamedChunks = [];
     let fullAiResponseText = '';
-
+    let chunkToYield = '';
+    const yieldAtLength = 20;
     // @ts-ignore
     for await (const newChunk of chatStream) {
-      // the full message
       allStreamedChunks.push(newChunk);
       fullAiResponseText += newChunk.choices[0].delta.content;
       const chunkText = newChunk.choices[0].delta.content;
+      chunkToYield += chunkText;
+      if (chunkToYield.length >= yieldAtLength) {
+        this.logger.debug(`Streaming text chunk: ${chunkText}`);
+        yield chunkText;
+        chunkToYield = '';
+      }
       this.logger.debug(`Streaming text chunk: ${chunkText}`);
       yield chunkText;
     }
