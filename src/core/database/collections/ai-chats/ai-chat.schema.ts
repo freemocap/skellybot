@@ -3,16 +3,23 @@ import { Document, Types } from 'mongoose';
 import { ContextRoute } from './context-route.provider';
 import { User } from '../users/user.schema';
 import { Couplet } from '../couplets/couplet.schema';
+import { OpenAiChatConfig } from '../../../ai/openai/openai-chat.service';
 
 export type AiChatDocument = AiChat & Document;
 
 @Schema({ timestamps: true })
 export class AiChat {
+  @Prop({ required: true, unique: true })
+  aiChatId: string;
+
   @Prop({ type: ContextRoute, required: true })
   contextRoute: ContextRoute;
 
-  @Prop({ required: true, unique: true })
-  aiChatId: string;
+  @Prop()
+  contextInstructions: string;
+
+  @Prop()
+  modelName: string;
 
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   ownerUser: User;

@@ -8,24 +8,23 @@ import { Couplet, CoupletDocument } from './couplet.schema';
 
 @Injectable()
 export class CoupletsService {
-  linkedModels = ['humanMessage', 'aiMessage'];
   constructor(
     @InjectModel(Couplet.name)
-    private readonly CoupletModel: Model<CoupletDocument>,
+    private readonly _coupletModel: Model<CoupletDocument>,
   ) {}
 
   async findAll(): Promise<CoupletDocument[]> {
-    return this.CoupletModel.find().exec();
+    return this._coupletModel.find().exec();
   }
 
   async findOne(coupletId: string): Promise<CoupletDocument> {
-    return this.CoupletModel.findOne({ coupletId: coupletId }).exec();
+    return this._coupletModel.findOne({ coupletId: coupletId }).exec();
   }
 
   public async createCouplet(
     createCoupletDto: CreateCoupletDto,
   ): Promise<CoupletDocument> {
-    const createdCouplet = new this.CoupletModel({
+    const createdCouplet = new this._coupletModel({
       ...createCoupletDto,
       uuid: uuidv4(),
     });
@@ -33,9 +32,11 @@ export class CoupletsService {
   }
 
   async remove(coupletId: string): Promise<CoupletDocument> {
-    const deletedCouplet = await this.CoupletModel.findOneAndDelete({
-      coupletId: coupletId,
-    }).exec();
+    const deletedCouplet = await this._coupletModel
+      .findOneAndDelete({
+        coupletId: coupletId,
+      })
+      .exec();
     if (!deletedCouplet) {
       throw new Error(`Couplet with coupletId ${coupletId} not found`);
     }

@@ -5,6 +5,9 @@ import { Types } from 'mongoose';
 import { ContextRoute } from '../ai-chats/context-route.provider';
 
 export class CreateCoupletDto {
+  @IsOptional()
+  initialExchange: boolean;
+
   @ValidateNested()
   @Prop({ type: Types.ObjectId, ref: 'Message', required: true })
   humanMessage: Message;

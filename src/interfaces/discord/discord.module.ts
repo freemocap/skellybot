@@ -3,11 +3,11 @@ import { DiscordPingService } from './services/discord-ping.service';
 import { NecordModule } from 'necord';
 
 import { DiscordConfigService } from './services/discord-config.service';
-import { DiscordEventService } from './services/discord-event.service';
-import { DiscordThreadService } from './services/threads/discord-thread.service';
+import { DiscordEventService } from './services/events/discord-event.service';
+import { DiscordChatService } from './services/threads/discord-chat.service';
 import { GcpModule } from '../../core/gcp/gcp.module';
 import { UsersModule } from '../../core/database/collections/users/users.module';
-import { BotModule } from '../../core/bot/bot.module';
+import { ChatbotModule } from '../../core/chatbot/chatbot.module';
 import { AiChatsModule } from '../../core/database/collections/ai-chats/ai-chats.module';
 import { CoupletsModule } from '../../core/database/collections/couplets/couplets.module';
 import { MessagesModule } from '../../core/database/collections/messages/messages.module';
@@ -16,7 +16,7 @@ import { DiscordMongodbService } from './services/discord-mongodb.service';
 import { DiscordMessageService } from './services/threads/discord-message.service';
 import { OpenaiModule } from '../../core/ai/openai/openai.module';
 import { DiscordAttachmentService } from './services/threads/discord-attachment.service';
-import { DiscordThreadListenerService } from './services/discord-thread-listener.service';
+import { DiscordOnMessageService } from './services/events/discord-on-message.service';
 
 @Module({
   imports: [
@@ -26,17 +26,17 @@ import { DiscordThreadListenerService } from './services/discord-thread-listener
     }),
     GcpModule,
     UsersModule,
-    BotModule,
+    ChatbotModule,
     AiChatsModule,
     CoupletsModule,
     MessagesModule,
     OpenaiModule,
   ],
   providers: [
-    DiscordThreadListenerService,
+    DiscordOnMessageService,
     DiscordEventService,
     DiscordPingService,
-    DiscordThreadService,
+    DiscordChatService,
     DiscordMessageService,
     DiscordAttachmentService,
     DiscordContextService,
