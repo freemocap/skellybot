@@ -42,8 +42,8 @@ export class DiscordOnMessageService {
     //   contextInstructions,
     // );
 
-    this._openaiChatService.create(aiChatId, {
-      messages: [{ role: 'system', content: contextInstructions }],
+    this._openaiChatService.createChat(aiChatId, contextInstructions, {
+      messages: [],
       model: 'gpt-4-1106-preview',
       temperature: 0.7,
       stream: true,

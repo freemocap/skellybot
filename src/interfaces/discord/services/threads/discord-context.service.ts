@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import {
+  CategoryChannel,
   ChannelType,
   DMChannel,
   Guild,
@@ -14,10 +15,9 @@ import { DiscordContextRouteFactory } from '../../../../core/database/collection
 @Injectable()
 export class DiscordContextService {
   private readonly logger = new Logger(DiscordContextService.name);
-  instructionsChannelPattern = new RegExp('chatbot-instructions.*', 'i');
+  instructionsChannelPattern = new RegExp('bot-instructions.*', 'i');
 
   getContextRoute(message: Message) {
-    // TODO - Handle Direct Messages
     let channel: TextChannel | null;
     let thread: ThreadChannel | null;
 
@@ -77,7 +77,7 @@ export class DiscordContextService {
       const channelInstructions = await this._getBotReactionMessages(channel);
       const categoryInstructions = await this.getInstructions(
         server,
-        channel.parentId,
+        channel.parent as CategoryChannel,
       );
       const serverInstructions = await this.getInstructions(server, null);
       return [
@@ -96,11 +96,21 @@ export class DiscordContextService {
 
   private async getInstructions(
     server: Guild,
-    categoryId: string | null,
+    category: CategoryChannel | null,
   ): Promise<string> {
+    if (!category) {
+      this.logger.debug(
+        `Gathering 'top-level'/'server-wide' bot-instructions for server: ${server.name}`,
+      );
+    } else {
+      this.logger.debug(
+        `Gathering bot-instructions for category: '${category.name}' in server: '${server.name}'`,
+      );
+    }
     try {
       const channels = server.channels.cache.filter(
-        (ch) => ch.parentId === categoryId && ch.type === ChannelType.GuildText,
+        (ch) =>
+          ch.parent?.id === category?.id && ch.type === ChannelType.GuildText,
       );
 
       const botConfigChannel = channels.find((ch) =>
@@ -118,7 +128,7 @@ export class DiscordContextService {
   }
 
   private async _getBotReactionMessages(channel: TextChannel) {
-    const messages = await channel.messages.fetch({ limit: 100 });
+    const messages = await channel.messages.fetch();
 
     const instructionMessages = messages.filter((message: Message) =>
       message.reactions.cache.some((reaction) =>
