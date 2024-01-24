@@ -88,7 +88,7 @@ export class OpenaiChatService implements OnModuleInit {
   private _createChatConfigFromAiChatDocument(aiChat: AiChatDocument) {
     const chatConfig = {
       messages: [],
-      model: aiChat.modelName,
+      model: aiChat.modelName || 'gpt-4-1106-preview',
       temperature: 0.7,
       stream: true,
     } as OpenAiChatConfig;
