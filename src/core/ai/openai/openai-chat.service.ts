@@ -42,34 +42,39 @@ export class OpenaiChatService implements OnModuleInit {
     this._storeConfig(chatId, config);
   }
 
-  public async getAiResponse(chatId: string, humanMessage: string) {
+  public getAiResponseStream(chatId: string, humanMessage: string) {
     const config = this.configs.get(chatId);
     config.messages.push({ role: 'user', content: humanMessage });
 
+    return this.streamResponse(config);
+  }
+
+  public async getAiResponse(chatId: string, humanMessage: string) {
+    const config = this.configs.get(chatId);
+    config.messages.push({ role: 'user', content: humanMessage });
     return await this.openai.chat.completions.create(config);
   }
-  private async _createStream(config: OpenAiChatConfig) {
-    // Start the stream by creating the completion with the config object
-    const completion = await this.openai.chat.completions.create(config);
+  async *streamResponse(chatConfig: OpenAiChatConfig) {
+    const chatStream = await this.openai.chat.completions.create(chatConfig);
 
-    // Return an async generator function
-    return (async function* () {
-      let fullResponse = ''; // Initialize a string to store the full response
+    const allStreamedChunks = [];
+    let fullAiResponseText = '';
 
-      // @ts-ignore
-      for await (const chunk of completion) {
-        if (chunk.choices && chunk.choices[0] && chunk.choices[0].delta) {
-          // Accumulate the response data
-          const content = chunk.choices[0].delta.content;
-          fullResponse += content;
+    // @ts-ignore
+    for await (const newChunk of chatStream) {
+      // the full message
+      allStreamedChunks.push(newChunk);
+      fullAiResponseText += newChunk.choices[0].delta.content;
+      const chunkText = newChunk.choices[0].delta.content;
+      this.logger.debug(`Streaming text chunk: ${chunkText}`);
+      yield chunkText;
+    }
 
-          // Yield each content chunk for the caller to process in real-time
-          yield { content, fullResponse: false };
-        }
-      }
+    this.logger.log('Stream complete');
 
-      // Once the stream is finished, yield one last time with the full response
-      yield { content: fullResponse, fullResponse: true };
-    })();
+    chatConfig.messages.push({
+      role: 'assistant',
+      content: fullAiResponseText,
+    });
   }
 }

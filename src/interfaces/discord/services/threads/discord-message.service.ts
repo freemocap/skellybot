@@ -3,16 +3,16 @@ import { AttachmentBuilder, Message } from 'discord.js';
 import { DiscordMongodbService } from '../discord-mongodb.service';
 import { DiscordContextService } from './discord-context.service';
 import { DiscordAttachmentService } from './discord-attachment.service';
-import { ChatbotResponseService } from '../../../../core/chatbot/chatbot-response.service';
+import { OpenaiChatService } from '../../../../core/ai/openai/openai-chat.service';
 
 @Injectable()
 export class DiscordMessageService {
   constructor(
     private readonly _logger: Logger,
-    private readonly _chatbotResponseService: ChatbotResponseService,
     private readonly _persistenceService: DiscordMongodbService,
     private readonly _contextService: DiscordContextService,
     private readonly _discordAttachmentService: DiscordAttachmentService,
+    private readonly _openaiChatService: OpenaiChatService,
   ) {}
 
   public async respondToMessage(
@@ -20,21 +20,26 @@ export class DiscordMessageService {
     humanUserId: string,
     isFirstExchange: boolean = false,
   ) {
-    const { humanInputText, attachmentText } =
-      await this._extractMessageContent(discordMessage);
-    this._logger.log(
-      `Received message with${
-        discordMessage.attachments.size > 0 ? ' ' : 'out '
-      }attachment(s):\n\n ${humanInputText}`,
-    );
+    try {
+      const { humanInputText, attachmentText } =
+        await this._extractMessageContent(discordMessage);
+      this._logger.log(
+        `Received message with${
+          discordMessage.attachments.size > 0 ? ' ' : 'out '
+        }attachment(s):\n\n ${humanInputText}`,
+      );
 
-    await this._handleStream(
-      humanUserId,
-      humanInputText,
-      attachmentText,
-      discordMessage,
-      isFirstExchange,
-    );
+      await this._handleStream(
+        humanUserId,
+        humanInputText,
+        attachmentText,
+        discordMessage,
+        isFirstExchange,
+      );
+    } catch (error) {
+      this._logger.error(error);
+      throw new Error(error);
+    }
   }
 
   private async _handleStream(
@@ -46,68 +51,72 @@ export class DiscordMessageService {
   ) {
     discordMessage.channel.sendTyping();
 
-    // const tokenStream = this._chatbotResponseService.streamResponse(
-    //   discordMessage.channel.id,
-    //   inputMessageText + attachmentText,
-    //   {
-    //     // topic: channel.topic,
-    //   },
-    // );
-
-    const tokenStream = this._chatbotResponseService.openaiStreamResponse(
+    const aiResponseStream = this._openaiChatService.getAiResponseStream(
       discordMessage.channel.id,
       inputMessageText + attachmentText,
-      {
-        // topic: channel.topic,
-      },
     );
-    let replyMessage: Message<boolean> = undefined;
+    const maxMessageLength = 2000 * 0.9; // discord max message length is 2000 characters (and *0.9 to be safe)
+
+    const replyMessages: Message<boolean>[] = [
+      await discordMessage.reply('Awaiting reply...'),
+    ];
+    let currentReplyMessage = replyMessages[0];
     let replyWasSplitAcrossMessages = false;
-    let continuingFromString = '';
-    let replyChunk = '';
-    let fullAiResponse = '';
-    for await (const current of tokenStream) {
-      const { didResetOccur, theChunk } = current;
-      if (!replyMessage) {
-        replyMessage = await discordMessage.reply(theChunk);
+    let currentReplyMessageText = '';
+    let proposedReplyMessageText = '';
+    let fullAiTextResponse = '';
+    for await (const incomingTextChunk of aiResponseStream) {
+      if (!incomingTextChunk) {
         continue;
       }
+      fullAiTextResponse += incomingTextChunk;
 
-      if (didResetOccur) {
-        replyWasSplitAcrossMessages = true;
-        continuingFromString =
-          await this._handleMessageLengthOverflow(replyChunk);
-        replyMessage = await replyMessage.reply(
-          continuingFromString + theChunk,
-        );
-      }
+      proposedReplyMessageText += incomingTextChunk;
 
-      if (replyWasSplitAcrossMessages) {
-        await replyMessage.edit(continuingFromString + theChunk);
+      // If the proposed text is less than the max message length, just add it to the current text
+      if (proposedReplyMessageText.length < maxMessageLength) {
+        currentReplyMessageText = proposedReplyMessageText;
+        await currentReplyMessage.edit(currentReplyMessageText);
       } else {
-        await replyMessage.edit(theChunk);
-      }
+        // Otherwise, split the message and start a new one
+        this._logger.debug(
+          'Reply message too long, splitting into multiple messages',
+        );
+        replyWasSplitAcrossMessages = true;
+        const continuingFromString = `> continuing from \`...${currentReplyMessageText.slice(
+          -50,
+        )}...\`\n\n`;
 
-      replyChunk = theChunk;
-      fullAiResponse = current.data;
+        replyMessages.push(
+          await currentReplyMessage.reply(continuingFromString),
+        );
+        currentReplyMessage = replyMessages[replyMessages.length - 1];
+        proposedReplyMessageText = continuingFromString + incomingTextChunk;
+        currentReplyMessageText = proposedReplyMessageText;
+        await currentReplyMessage.edit(currentReplyMessageText);
+      }
     }
-    this._logger.debug(`Full Ai response`, fullAiResponse);
+
+    this._logger.debug(
+      `Stream done! Full Ai response: \n\n`,
+      fullAiTextResponse,
+    );
 
     if (replyWasSplitAcrossMessages) {
       await this._sendFullResponseAsAttachment(
-        fullAiResponse,
+        fullAiTextResponse,
         discordMessage,
-        replyMessage,
+        replyMessages[-1],
       );
     }
-    const contextRoute = this._contextService.getContextRoute(discordMessage);
     await this._persistenceService.persistInteraction(
       humanUserId,
       discordMessage.channel.id,
-      contextRoute,
+      await this._contextService.getContextRoute(discordMessage),
       discordMessage,
       attachmentText,
-      replyMessage,
+      replyMessages,
+      fullAiTextResponse,
       isFirstExchange,
     );
   }
@@ -136,41 +145,6 @@ export class DiscordMessageService {
       attachmentText += 'END TEXT FROM ATTACHMENTS';
     }
     return { humanInputText, attachmentText };
-  }
-
-  private async _handleMessageLengthOverflow(
-    previousChunk: string,
-    continuingFromStringLength: number = 50,
-  ) {
-    this._logger.debug(
-      'Message too long for initial Discord message, creating new Discord message',
-    );
-
-    const words = previousChunk.split(/\s+/);
-
-    const lastWords = [];
-    let charCount = 0;
-
-    // Iterate backwards through the words array and collect words until character count exceeds 20
-    for (let i = words.length - 1; i >= 0; i--) {
-      const word = words[i];
-      const wordLength = word.length + (lastWords.length > 0 ? 1 : 0); // Add 1 for a space if not the first word
-      if (charCount + wordLength > 20) break; // Stop if adding the next word would exceed 20 chars
-      charCount += wordLength; // Increment the character count
-      lastWords.unshift(word); // Add the word to the start of the array
-    }
-
-    // Handle the edge case of very long words
-    let lastWordsStr;
-    if (lastWords.length === 0) {
-      // If the lastWords array is empty, just grab the last 30 characters from previousChunk
-      lastWordsStr = '...' + previousChunk.slice(-continuingFromStringLength);
-    } else {
-      // Join the last N words into a string, separated by spaces
-      lastWordsStr = lastWords.join(' ');
-    }
-
-    return `> continuing from \`...${lastWordsStr}...\`\n\n`;
   }
 
   private async _sendFullResponseAsAttachment(

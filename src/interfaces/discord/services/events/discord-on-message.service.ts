@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { AiChatsService } from '../../../../core/database/collections/ai-chats/ai-chats.service';
-import { Client, Message, ThreadChannel } from 'discord.js';
+import { Message, ThreadChannel } from 'discord.js';
 import { DiscordMessageService } from '../threads/discord-message.service';
 import { ChatbotManagerService } from '../../../../core/chatbot/chatbot-manager.service';
 import { AiChatDocument } from '../../../../core/database/collections/ai-chats/ai-chat.schema';
@@ -15,7 +15,6 @@ export class DiscordOnMessageService {
   private readonly _logger = new Logger(DiscordOnMessageService.name);
 
   public constructor(
-    private readonly _client: Client,
     private readonly _aiChatsService: AiChatsService,
     private readonly _messageService: DiscordMessageService,
     private readonly _chatbotManagerService: ChatbotManagerService,

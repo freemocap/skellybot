@@ -19,7 +19,8 @@ export class DiscordMongodbService {
     contextRoute: ContextRoute,
     discordMessage: Message,
     attachmentText: string,
-    replyMessage: Message,
+    replyMessages: Message[],
+    fullAiTextResponse: string,
     isFirstExchange: boolean = false,
   ) {
     const humanMessageForDb = await this._messageService.createMessage({
@@ -33,22 +34,25 @@ export class DiscordMongodbService {
       messageSentTimestamp: discordMessage.createdAt,
       metadata: {
         jump_url: discordMessage.url,
-        ...JSON.parse(JSON.stringify(discordMessage)),
+        discord_messages: [...JSON.parse(JSON.stringify(discordMessage))],
       },
     });
 
+    const lastMessage = replyMessages[replyMessages.length - 1];
     const aiMessageForDb = await this._messageService.createMessage({
       contextRoute,
-      messageId: replyMessage.id,
+      messageId: lastMessage.id, // Use the last message in the array as the 'anchor' for the AI message
       speakerType: 'ai',
-      speakerId: replyMessage.author.id,
+      speakerId: lastMessage.author.id,
       interfaceSource: 'discord',
-      content: replyMessage.content,
+      content: fullAiTextResponse,
       attachmentText: '',
-      messageSentTimestamp: replyMessage.createdAt,
+      messageSentTimestamp: lastMessage.createdAt,
       metadata: {
-        jump_url: replyMessage.url,
-        ...JSON.parse(JSON.stringify(replyMessage)),
+        jump_url: lastMessage.url,
+        messages: replyMessages.map((message) =>
+          JSON.parse(JSON.stringify(message)),
+        ),
       },
     });
 

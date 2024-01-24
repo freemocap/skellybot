@@ -7,16 +7,16 @@ import {
   EmbedBuilder,
   userMention,
 } from 'discord.js';
-import { DiscordOnMessageService } from '../events/discord-on-message.service';
 import { DiscordMessageService } from './discord-message.service';
+import { DiscordOnMessageService } from '../events/discord-on-message.service';
 
 @Injectable()
 export class DiscordChatService {
   private readonly logger = new Logger(DiscordChatService.name);
 
   constructor(
-    private readonly _onMessageService: DiscordOnMessageService,
     private readonly _messageService: DiscordMessageService,
+    private readonly _onMessageService: DiscordOnMessageService,
   ) {}
 
   @SlashCommand({
