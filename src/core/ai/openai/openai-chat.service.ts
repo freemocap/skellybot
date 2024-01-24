@@ -1,6 +1,8 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { OpenaiSecretsService } from './openai-secrets.service';
 import { OpenAI } from 'openai';
+import { AiChatDocument } from '../../database/collections/ai-chats/ai-chat.schema';
+import { LangchainChatbot } from '../../chatbot/chatbot.dto';
 
 export interface OpenAiChatConfig {
   //https://platform.openai.com/docs/api-reference/chat
@@ -76,5 +78,36 @@ export class OpenaiChatService implements OnModuleInit {
       role: 'assistant',
       content: fullAiResponseText,
     });
+  }
+
+  async reloadChat(aiChat: AiChatDocument) {
+    const chatConfig = this._createChatConfigFromAiChatDocument(aiChat);
+    this._storeConfig(aiChat.aiChatId, chatConfig);
+  }
+
+  private _createChatConfigFromAiChatDocument(aiChat: AiChatDocument) {
+    const chatConfig = {
+      messages: [],
+      model: aiChat.modelName,
+      temperature: 0.7,
+      stream: true,
+    } as OpenAiChatConfig;
+
+    chatConfig.messages.push({
+      role: 'system',
+      content: aiChat.contextInstructions,
+    });
+
+    for (const couplet of aiChat.couplets) {
+      chatConfig.messages.push({
+        role: 'user',
+        content: couplet.humanMessage.content,
+      });
+      chatConfig.messages.push({
+        role: 'assistant',
+        content: couplet.aiResponse.content,
+      });
+    }
+    return chatConfig;
   }
 }

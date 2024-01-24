@@ -7,9 +7,9 @@ import { OpenaiChatService } from '../ai/openai/openai-chat.service';
 @Injectable()
 export class ChatbotManagerService {
   private _langchain_chatbots: Map<string, LangchainChatbot> = new Map();
+  private readonly logger: Logger = new Logger(ChatbotManagerService.name);
 
   constructor(
-    private readonly _logger: Logger,
     private readonly _langchainService: LangchainService,
     private readonly _openaiChatService: OpenaiChatService,
   ) {}
@@ -19,7 +19,7 @@ export class ChatbotManagerService {
     modelName?: string,
     contextInstructions?: string,
   ) {
-    this._logger.log(
+    this.logger.log(
       `Creating chatbot with id: ${chatbotId} and language model (llm): ${modelName}`,
     );
     const { chain, memory } =
@@ -30,7 +30,7 @@ export class ChatbotManagerService {
 
     const chatbot = { chain, memory } as LangchainChatbot;
     this._langchain_chatbots.set(chatbotId, chatbot);
-    this._logger.log(`Chatbot with id: ${chatbotId} created successfully`);
+    this.logger.log(`Chatbot with id: ${chatbotId} created successfully`);
 
     return chatbot;
   }
@@ -56,12 +56,12 @@ export class ChatbotManagerService {
         );
       }
 
-      this._logger.debug(
+      this.logger.debug(
         `Chatbot with id: ${aiChat.aiChatId} re-created successfully`,
       );
       return chatbot;
     } catch (error) {
-      this._logger.error(
+      this.logger.error(
         `Could not load chatbot from aiChat: ${aiChat.aiChatId} with error \n ${error} `,
       );
       throw error;
@@ -84,7 +84,7 @@ export class ChatbotManagerService {
   }
 
   public getChatbotById(chatbotId: string | number) {
-    this._logger.log(`Fetching chatbot with id: ${chatbotId}`);
+    this.logger.log(`Fetching chatbot with id: ${chatbotId}`);
     const chatbot = this._langchain_chatbots.get(String(chatbotId));
     if (!chatbot) {
       throw new Error(`Could not find chatbot with id: ${chatbotId}`);

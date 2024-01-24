@@ -50,7 +50,7 @@ export class DiscordChatService {
         true,
       );
     } catch (error) {
-      this.logger.error(error);
+      this.logger.error(`Caught error: ${error}`);
     }
   }
 

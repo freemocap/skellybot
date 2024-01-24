@@ -7,8 +7,8 @@ import { OpenaiChatService } from '../../../../core/ai/openai/openai-chat.servic
 
 @Injectable()
 export class DiscordMessageService {
+  private readonly logger = new Logger(DiscordMessageService.name);
   constructor(
-    private readonly _logger: Logger,
     private readonly _persistenceService: DiscordMongodbService,
     private readonly _contextService: DiscordContextService,
     private readonly _discordAttachmentService: DiscordAttachmentService,
@@ -23,7 +23,7 @@ export class DiscordMessageService {
     try {
       const { humanInputText, attachmentText } =
         await this._extractMessageContent(discordMessage);
-      this._logger.log(
+      this.logger.log(
         `Received message with${
           discordMessage.attachments.size > 0 ? ' ' : 'out '
         }attachment(s):\n\n ${humanInputText}`,
@@ -37,8 +37,7 @@ export class DiscordMessageService {
         isFirstExchange,
       );
     } catch (error) {
-      this._logger.error(error);
-      throw new Error(error);
+      this.logger.error(`Error in respondToMessage: ${error}`);
     }
   }
 
@@ -49,76 +48,79 @@ export class DiscordMessageService {
     discordMessage: Message<boolean>,
     isFirstExchange: boolean = false,
   ) {
-    discordMessage.channel.sendTyping();
+    try {
+      discordMessage.channel.sendTyping();
 
-    const aiResponseStream = this._openaiChatService.getAiResponseStream(
-      discordMessage.channel.id,
-      inputMessageText + attachmentText,
-    );
-    const maxMessageLength = 2000 * 0.9; // discord max message length is 2000 characters (and *0.9 to be safe)
-
-    const replyMessages: Message<boolean>[] = [
-      await discordMessage.reply('Awaiting reply...'),
-    ];
-    let currentReplyMessage = replyMessages[0];
-    let replyWasSplitAcrossMessages = false;
-    let currentReplyMessageText = '';
-    let proposedReplyMessageText = '';
-    let fullAiTextResponse = '';
-    for await (const incomingTextChunk of aiResponseStream) {
-      if (!incomingTextChunk) {
-        continue;
-      }
-      fullAiTextResponse += incomingTextChunk;
-
-      proposedReplyMessageText += incomingTextChunk;
-
-      // If the proposed text is less than the max message length, just add it to the current text
-      if (proposedReplyMessageText.length < maxMessageLength) {
-        currentReplyMessageText = proposedReplyMessageText;
-        await currentReplyMessage.edit(currentReplyMessageText);
-      } else {
-        // Otherwise, split the message and start a new one
-        this._logger.debug(
-          'Reply message too long, splitting into multiple messages',
-        );
-        replyWasSplitAcrossMessages = true;
-        const continuingFromString = `> continuing from \`...${currentReplyMessageText.slice(
-          -50,
-        )}...\`\n\n`;
-
-        replyMessages.push(
-          await currentReplyMessage.reply(continuingFromString),
-        );
-        currentReplyMessage = replyMessages[replyMessages.length - 1];
-        proposedReplyMessageText = continuingFromString + incomingTextChunk;
-        currentReplyMessageText = proposedReplyMessageText;
-        await currentReplyMessage.edit(currentReplyMessageText);
-      }
-    }
-
-    this._logger.debug(
-      `Stream done! Full Ai response: \n\n`,
-      fullAiTextResponse,
-    );
-
-    if (replyWasSplitAcrossMessages) {
-      await this._sendFullResponseAsAttachment(
-        fullAiTextResponse,
-        discordMessage,
-        replyMessages[-1],
+      const aiResponseStream = this._openaiChatService.getAiResponseStream(
+        discordMessage.channel.id,
+        inputMessageText + attachmentText,
       );
+      const maxMessageLength = 2000 * 0.9; // discord max message length is 2000 characters (and *0.9 to be safe)
+
+      const replyMessages: Message<boolean>[] = [
+        await discordMessage.reply('Awaiting reply...'),
+      ];
+      let currentReplyMessage = replyMessages[0];
+      let replyWasSplitAcrossMessages = false;
+      let currentReplyMessageText = '';
+      let proposedReplyMessageText = '';
+      let fullAiTextResponse = '';
+      for await (const incomingTextChunk of aiResponseStream) {
+        if (!incomingTextChunk) {
+          continue;
+        }
+        fullAiTextResponse += incomingTextChunk;
+
+        proposedReplyMessageText += incomingTextChunk;
+
+        // If the proposed text is less than the max message length, just add it to the current text
+        if (proposedReplyMessageText.length < maxMessageLength) {
+          currentReplyMessageText = proposedReplyMessageText;
+          await currentReplyMessage.edit(currentReplyMessageText);
+        } else {
+          // Otherwise, split the message and start a new one
+          this.logger.debug(
+            'Reply message too long, splitting into multiple messages',
+          );
+          replyWasSplitAcrossMessages = true;
+          const continuingFromString = `> continuing from \`...${currentReplyMessageText.slice(
+            -50,
+          )}...\`\n\n`;
+
+          replyMessages.push(
+            await currentReplyMessage.reply(continuingFromString),
+          );
+          currentReplyMessage = replyMessages[replyMessages.length - 1];
+          proposedReplyMessageText = continuingFromString + incomingTextChunk;
+          currentReplyMessageText = proposedReplyMessageText;
+          await currentReplyMessage.edit(currentReplyMessageText);
+        }
+      }
+
+      this.logger.debug(
+        `Stream done! Full Ai response: \n\n${fullAiTextResponse}`,
+      );
+
+      if (replyWasSplitAcrossMessages) {
+        await this._sendFullResponseAsAttachment(
+          fullAiTextResponse,
+          discordMessage,
+          replyMessages[-1],
+        );
+      }
+      await this._persistenceService.persistInteraction(
+        humanUserId,
+        discordMessage.channel.id,
+        await this._contextService.getContextRoute(discordMessage),
+        discordMessage,
+        attachmentText,
+        replyMessages,
+        fullAiTextResponse,
+        isFirstExchange,
+      );
+    } catch (error) {
+      this.logger.error(`Error in _handleStream: ${error}`);
     }
-    await this._persistenceService.persistInteraction(
-      humanUserId,
-      discordMessage.channel.id,
-      await this._contextService.getContextRoute(discordMessage),
-      discordMessage,
-      attachmentText,
-      replyMessages,
-      fullAiTextResponse,
-      isFirstExchange,
-    );
   }
 
   private async _extractMessageContent(discordMessage: Message<boolean>) {

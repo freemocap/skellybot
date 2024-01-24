@@ -12,7 +12,7 @@ import { OpenaiChatService } from '../../../../core/ai/openai/openai-chat.servic
 export class DiscordOnMessageService {
   private activeChats = new Set<string>();
   private allAiChatsById = new Map<string, AiChatDocument>();
-  private readonly _logger = new Logger(DiscordOnMessageService.name);
+  private readonly logger = new Logger(DiscordOnMessageService.name);
 
   public constructor(
     private readonly _aiChatsService: AiChatsService,
@@ -27,7 +27,7 @@ export class DiscordOnMessageService {
     if (this.activeChats.has(aiChatId)) {
       throw new Error(`Chat ${aiChatId} already exists in active chats!`);
     }
-    this._logger.debug(`Adding threadId ${message.channel.id} to active chats`);
+    this.logger.debug(`Adding threadId ${message.channel.id} to active chats`);
 
     const ownerUser = await this._getOwnerUser(message);
 
@@ -57,7 +57,7 @@ export class DiscordOnMessageService {
       modelName: 'gpt-4-1106-preview',
     });
 
-    this._logger.debug(`Adding threadId ${aiChatId} to active listeners`);
+    this.logger.debug(`Adding threadId ${aiChatId} to active listeners`);
     this.allAiChatsById.set(aiChatId, aiChat);
     this.activeChats.add(aiChatId);
   }
@@ -96,7 +96,7 @@ export class DiscordOnMessageService {
   }
 
   private async _reloadChatFromDatabase(message: Message<boolean>) {
-    this._logger.log(
+    this.logger.log(
       `Loading chatbot for threadId: ${message.channel.id} from database`,
     );
     const ownerUser = await this._getOwnerUser(message);
@@ -115,7 +115,7 @@ export class DiscordOnMessageService {
     );
     this.allAiChatsById.set(aiChat.aiChatId, aiChat);
 
-    await this._chatbotManagerService.loadChatbotFromAiChatDocument(aiChat);
+    await this._openaiChatService.reloadChat(aiChat);
   }
 
   private async _getOwnerUser(message: Message<boolean>) {

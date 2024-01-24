@@ -3,6 +3,7 @@ import { Document, Types } from 'mongoose';
 import { ContextRoute } from './context-route.provider';
 import { User } from '../users/user.schema';
 import { Couplet } from '../couplets/couplet.schema';
+import { OpenAiChatConfig } from '../../../ai/openai/openai-chat.service';
 
 export type AiChatDocument = AiChat & Document;
 
