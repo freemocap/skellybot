@@ -9,14 +9,7 @@ import {
   TargetMessage,
 } from 'necord';
 import { DiscordTextDto } from '../../dto/discord-text.dto';
-import {
-  CacheType,
-  ChatInputCommandInteraction,
-  EmbedBuilder,
-  Message,
-  ThreadChannel,
-  userMention,
-} from 'discord.js';
+import { EmbedBuilder, Message, ThreadChannel, userMention } from 'discord.js';
 import { DiscordMessageService } from './discord-message.service';
 import { DiscordOnMessageService } from '../events/discord-on-message.service';
 
