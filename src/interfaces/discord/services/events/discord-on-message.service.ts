@@ -92,7 +92,11 @@ export class DiscordOnMessageService {
     if (!this.activeChats.has(message.channel.id)) {
       await this._reloadChatFromDatabase(message);
     }
-    await this._messageService.respondToMessage(message, message.author.id);
+    await this._messageService.respondToMessage(
+      message,
+      message,
+      message.author.id,
+    );
   }
 
   private async _reloadChatFromDatabase(message: Message<boolean>) {
