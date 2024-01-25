@@ -1,11 +1,11 @@
 import {
-  IsString,
   IsIn,
-  IsOptional,
-  IsNumber,
-  Min,
-  Max,
   IsMimeType,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Max,
+  Min,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 

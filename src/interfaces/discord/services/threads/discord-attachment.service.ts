@@ -3,10 +3,11 @@ import { Attachment } from 'discord.js';
 import { OpenaiAudioService } from '../../../../core/ai/openai/openai-audio.service';
 import axios from 'axios';
 import * as path from 'path';
+import * as fs from 'fs';
 import { createReadStream, createWriteStream } from 'fs';
 import { promisify } from 'util';
 import * as stream from 'stream';
-import * as fs from 'fs';
+
 @Injectable()
 export class DiscordAttachmentService {
   constructor(

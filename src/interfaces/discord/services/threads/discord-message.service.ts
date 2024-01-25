@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { AttachmentBuilder, Message } from 'discord.js';
+import { AttachmentBuilder, Message, TextBasedChannel } from 'discord.js';
 import { DiscordMongodbService } from '../discord-mongodb.service';
 import { DiscordContextService } from './discord-context.service';
 import { DiscordAttachmentService } from './discord-attachment.service';
@@ -7,6 +7,7 @@ import { OpenaiChatService } from '../../../../core/ai/openai/openai-chat.servic
 
 @Injectable()
 export class DiscordMessageService {
+  private readonly maxMessageLength = 2000 * 0.85; // discord max message length is 2000 characters (and * 0.85 to be safe)
   private readonly logger = new Logger(DiscordMessageService.name);
   constructor(
     private readonly _persistenceService: DiscordMongodbService,
@@ -17,13 +18,17 @@ export class DiscordMessageService {
 
   public async respondToMessage(
     discordMessage: Message,
+    respondToChannelOrMessage: Message<boolean> | TextBasedChannel,
     humanUserId: string,
     isFirstExchange: boolean = false,
   ) {
-    discordMessage.channel.sendTyping();
+    await discordMessage.channel.sendTyping();
     try {
       const { humanInputText, attachmentText } =
-        await this._extractMessageContent(discordMessage);
+        await this.extractMessageContent(
+          discordMessage,
+          respondToChannelOrMessage,
+        );
       this.logger.log(
         `Received message with${
           discordMessage.attachments.size > 0 ? ' ' : 'out '
@@ -36,10 +41,52 @@ export class DiscordMessageService {
         attachmentText,
         discordMessage,
         isFirstExchange,
+        respondToChannelOrMessage,
       );
     } catch (error) {
       this.logger.error(`Error in respondToMessage: ${error}`);
     }
+  }
+
+  public async sendChunkedMessage(
+    channelOrMessage: Message<boolean> | TextBasedChannel,
+    responseText: string,
+  ) {
+    const messageParts = this._getChunks(responseText, this.maxMessageLength);
+    const replyMessages: Message<boolean>[] = [];
+
+    if (channelOrMessage instanceof Message) {
+      replyMessages.push(await channelOrMessage.reply(messageParts[0]));
+    } else {
+      replyMessages.push(await channelOrMessage.send(messageParts[0]));
+    }
+
+    if (messageParts.length > 1) {
+      // Send the rest of the message parts as replies to the first message
+      for (const textChunk of messageParts.slice(1)) {
+        replyMessages.push(
+          await replyMessages[replyMessages.length - 1].reply(textChunk),
+        );
+      }
+
+      await this._sendFullResponseAsAttachment(
+        responseText,
+        channelOrMessage.id,
+        replyMessages[replyMessages.length - 1],
+      );
+    }
+    return replyMessages;
+  }
+
+  private _getChunks(text: string, maxChunkSize: number): string[] {
+    const chunks = [];
+    while (text.length) {
+      const chunkSize = Math.min(text.length, maxChunkSize);
+      const chunk = text.slice(0, chunkSize);
+      chunks.push(chunk);
+      text = text.slice(chunkSize);
+    }
+    return chunks;
   }
 
   private async _handleStream(
@@ -48,6 +95,7 @@ export class DiscordMessageService {
     attachmentText: string,
     discordMessage: Message<boolean>,
     isFirstExchange: boolean = false,
+    respondToChannelOrMessage: Message<boolean> | TextBasedChannel,
   ) {
     try {
       const aiResponseStream = this._openaiChatService.getAiResponseStream(
@@ -56,10 +104,15 @@ export class DiscordMessageService {
       );
       const maxMessageLength = 2000 * 0.9; // discord max message length is 2000 characters (and *0.9 to be safe)
 
-      const replyMessages: Message<boolean>[] = [
-        await discordMessage.reply('Awaiting reply...'),
-      ];
-      let currentReplyMessage = replyMessages[0];
+      let currentReplyMessage: Message<boolean>;
+      if (respondToChannelOrMessage instanceof Message) {
+        currentReplyMessage =
+          await respondToChannelOrMessage.reply('Awaiting reply...');
+      } else {
+        currentReplyMessage =
+          await respondToChannelOrMessage.send('Awaiting reply...');
+      }
+      const replyMessages: Message<boolean>[] = [currentReplyMessage];
 
       let replyWasSplitAcrossMessages = false;
       let currentReplyMessageText = '';
@@ -103,7 +156,7 @@ export class DiscordMessageService {
       if (replyWasSplitAcrossMessages) {
         await this._sendFullResponseAsAttachment(
           fullAiTextResponse,
-          discordMessage,
+          discordMessage.id,
           replyMessages[-1],
         );
       }
@@ -122,7 +175,10 @@ export class DiscordMessageService {
     }
   }
 
-  private async _extractMessageContent(discordMessage: Message<boolean>) {
+  public async extractMessageContent(
+    discordMessage: Message<boolean>,
+    respondToChannelOrMessage?: Message<boolean> | TextBasedChannel,
+  ) {
     let humanInputText = discordMessage.content;
     let attachmentText = '';
     if (discordMessage.attachments.size > 0) {
@@ -137,35 +193,14 @@ export class DiscordMessageService {
         const attachmentResponse =
           await this._discordAttachmentService.handleAttachment(attachment);
         attachmentText += attachmentResponse.text;
-        if (attachmentResponse.type === 'transcript') {
-          const maxMessageLength = 1800; // Reduced to 1800 to account for "message X of N" text
-          const fullAttachmentText = attachmentResponse.text;
-          const attachmentTextLength = fullAttachmentText.length;
-
-          if (attachmentTextLength > maxMessageLength) {
-            const numberOfMessages = Math.ceil(
-              attachmentTextLength / maxMessageLength,
-            );
-            let replyMessage: Message<boolean>;
-            for (let i = 0; i < numberOfMessages; i++) {
-              const start = i * maxMessageLength;
-              const end = start + maxMessageLength;
-              const chunk = fullAttachmentText.slice(start, end);
-              const chunkMsg = `> Message ${
-                i + 1
-              } of ${numberOfMessages}\n\n${chunk}`;
-              replyMessage = await discordMessage.reply(chunkMsg);
-            }
-            if (replyMessage) {
-              await this._sendFullResponseAsAttachment(
-                attachmentResponse.text,
-                discordMessage,
-                replyMessage,
-              );
-            }
-          } else {
-            await discordMessage.reply(fullAttachmentText);
-          }
+        if (
+          respondToChannelOrMessage &&
+          attachmentResponse.type === 'transcript'
+        ) {
+          await this.sendChunkedMessage(
+            respondToChannelOrMessage,
+            attachmentText,
+          );
         }
         attachmentText += 'END TEXT FROM ATTACHMENTS';
       }
@@ -175,17 +210,18 @@ export class DiscordMessageService {
 
   private async _sendFullResponseAsAttachment(
     fullAiResponse: string,
-    discordMessage: Message<boolean>,
+    discordMessageId: string,
     replyMessage: Message<boolean>,
   ) {
     const attachment = new AttachmentBuilder(Buffer.from(fullAiResponse), {
-      name: `full_response_to_discordMessageId_${discordMessage.id}.md`,
+      name: `full_response_to_discordMessageId_${discordMessageId}.md`,
       description:
         'The full Ai response to message ID:${discordMessage.id}, ' +
         'which was split across multiple messages so is being sent as an' +
         ' attachment for convenience.',
     });
     await replyMessage.edit({
+      content: replyMessage.content,
       files: [attachment],
     });
   }
