@@ -1,6 +1,6 @@
 import { OpenaiSecretsService } from './openai-secrets.service';
 import { OpenAI } from 'openai';
-import { createReadStream, promises } from 'fs';
+import { promises } from 'fs';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { TextToSpeechDto } from './dto/text-to-speech.dto';
 import * as path from 'path';

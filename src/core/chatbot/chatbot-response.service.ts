@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ChatbotManagerService } from './chatbot-manager.service';
 import { OpenaiChatService } from '../ai/openai/openai-chat.service';
+
 class StreamResponseOptions {
   /**
    * Character limit to split the outgoing data
