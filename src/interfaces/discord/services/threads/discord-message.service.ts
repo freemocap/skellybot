@@ -139,8 +139,8 @@ export class DiscordMessageService {
         attachmentText += attachmentResponse.text;
         if (attachmentResponse.type === 'transcript') {
           const maxMessageLength = 1800; // Reduced to 1800 to account for "message X of N" text
-          const fullAttachmenText = attachmentResponse.text;
-          const attachmentTextLength = fullAttachmenText.length;
+          const fullAttachmentText = attachmentResponse.text;
+          const attachmentTextLength = fullAttachmentText.length;
 
           if (attachmentTextLength > maxMessageLength) {
             const numberOfMessages = Math.ceil(
@@ -150,7 +150,7 @@ export class DiscordMessageService {
             for (let i = 0; i < numberOfMessages; i++) {
               const start = i * maxMessageLength;
               const end = start + maxMessageLength;
-              const chunk = fullAttachmenText.slice(start, end);
+              const chunk = fullAttachmentText.slice(start, end);
               const chunkMsg = `> Message ${
                 i + 1
               } of ${numberOfMessages}\n\n${chunk}`;
@@ -164,13 +164,13 @@ export class DiscordMessageService {
               );
             }
           } else {
-            await discordMessage.reply(fullAttachmenText);
+            await discordMessage.reply(fullAttachmentText);
           }
         }
         attachmentText += 'END TEXT FROM ATTACHMENTS';
       }
-      return { humanInputText, attachmentText };
     }
+    return { humanInputText, attachmentText };
   }
 
   private async _sendFullResponseAsAttachment(
@@ -178,7 +178,6 @@ export class DiscordMessageService {
     discordMessage: Message<boolean>,
     replyMessage: Message<boolean>,
   ) {
-    // add full chunk to the message as a `.md` attachement
     const attachment = new AttachmentBuilder(Buffer.from(fullAiResponse), {
       name: `full_response_to_discordMessageId_${discordMessage.id}.md`,
       description:
