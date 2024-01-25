@@ -138,14 +138,39 @@ export class DiscordMessageService {
           await this._discordAttachmentService.handleAttachment(attachment);
         attachmentText += attachmentResponse.text;
         if (attachmentResponse.type === 'transcript') {
-          await discordMessage.reply(
-            `\`\`\`\n\n${attachmentResponse.text}\n\n\`\`\``,
-          );
+          const maxMessageLength = 1800; // Reduced to 1800 to account for "message X of N" text
+          const fullAttachmenText = attachmentResponse.text;
+          const attachmentTextLength = fullAttachmenText.length;
+
+          if (attachmentTextLength > maxMessageLength) {
+            const numberOfMessages = Math.ceil(
+              attachmentTextLength / maxMessageLength,
+            );
+            let replyMessage: Message<boolean>;
+            for (let i = 0; i < numberOfMessages; i++) {
+              const start = i * maxMessageLength;
+              const end = start + maxMessageLength;
+              const chunk = fullAttachmenText.slice(start, end);
+              const chunkMsg = `> Message ${
+                i + 1
+              } of ${numberOfMessages}\n\n${chunk}`;
+              replyMessage = await discordMessage.reply(chunkMsg);
+            }
+            if (replyMessage) {
+              await this._sendFullResponseAsAttachment(
+                attachmentResponse.text,
+                discordMessage,
+                replyMessage,
+              );
+            }
+          } else {
+            await discordMessage.reply(fullAttachmenText);
+          }
         }
+        attachmentText += 'END TEXT FROM ATTACHMENTS';
       }
-      attachmentText += 'END TEXT FROM ATTACHMENTS';
+      return { humanInputText, attachmentText };
     }
-    return { humanInputText, attachmentText };
   }
 
   private async _sendFullResponseAsAttachment(
@@ -155,7 +180,7 @@ export class DiscordMessageService {
   ) {
     // add full chunk to the message as a `.md` attachement
     const attachment = new AttachmentBuilder(Buffer.from(fullAiResponse), {
-      name: `reply_to_discordMessageId_${discordMessage.id}.md`,
+      name: `full_response_to_discordMessageId_${discordMessage.id}.md`,
       description:
         'The full Ai response to message ID:${discordMessage.id}, ' +
         'which was split across multiple messages so is being sent as an' +
