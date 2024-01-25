@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Context, ContextOf, On, Once } from 'necord';
 import { DiscordOnMessageService } from './discord-on-message.service';
+import { RateLimitData } from 'discord.js';
 
 @Injectable()
 export class DiscordEventService {
@@ -13,6 +14,11 @@ export class DiscordEventService {
   @Once('ready')
   public async onReady(@Context() [client]: ContextOf<'ready'>) {
     this.logger.log(`Bot logged in as ${client.user.username}!`);
+    client.on('rateLimit', (rateLimitInfo: RateLimitData) => {
+      this.logger.warn(
+        `Rate limit hit: ${rateLimitInfo.method} ${rateLimitInfo.route}`,
+      );
+    });
   }
 
   @On('warn')

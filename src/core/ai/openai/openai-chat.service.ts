@@ -2,7 +2,6 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { OpenaiSecretsService } from './openai-secrets.service';
 import { OpenAI } from 'openai';
 import { AiChatDocument } from '../../database/collections/ai-chats/ai-chat.schema';
-import { LangchainChatbot } from '../../chatbot/chatbot.dto';
 
 export interface OpenAiChatConfig {
   //https://platform.openai.com/docs/api-reference/chat
@@ -22,7 +21,7 @@ export interface OpenAiChatConfig {
 export class OpenaiChatService implements OnModuleInit {
   private readonly logger = new Logger(OpenaiChatService.name);
   private openai: OpenAI;
-  private configs: Map<string, OpenAiChatConfig> = new Map();
+  private _configs: Map<string, OpenAiChatConfig> = new Map();
 
   constructor(private readonly _openAiSecrets: OpenaiSecretsService) {}
 
@@ -37,22 +36,41 @@ export class OpenaiChatService implements OnModuleInit {
     }
   }
   private _storeConfig(chatbotId: string, config: OpenAiChatConfig) {
-    this.configs.set(chatbotId, config);
+    this._configs.set(chatbotId, config);
+  }
+  private _getConfigOrThrow(chatbotId: string) {
+    const config = this._configs.get(chatbotId);
+    if (!config) {
+      throw new Error(`No config found for chatbotId: ${chatbotId}`);
+    }
+    return config;
   }
 
-  public create(chatId: string, config: OpenAiChatConfig) {
+  public createChat(
+    chatId: string,
+    systemPrompt: string,
+    config: OpenAiChatConfig,
+  ) {
+    config.messages.push({ role: 'system', content: systemPrompt });
+    this.logger.debug(
+      `Creating chat with id: ${chatId} and config: ${JSON.stringify(
+        config,
+        null,
+        2,
+      )}`,
+    );
     this._storeConfig(chatId, config);
   }
 
   public getAiResponseStream(chatId: string, humanMessage: string) {
-    const config = this.configs.get(chatId);
+    const config = this._getConfigOrThrow(chatId);
     config.messages.push({ role: 'user', content: humanMessage });
 
     return this.streamResponse(config);
   }
 
   public async getAiResponse(chatId: string, humanMessage: string) {
-    const config = this.configs.get(chatId);
+    const config = this._getConfigOrThrow(chatId);
     config.messages.push({ role: 'user', content: humanMessage });
     return await this.openai.chat.completions.create(config);
   }
@@ -61,17 +79,25 @@ export class OpenaiChatService implements OnModuleInit {
 
     const allStreamedChunks = [];
     let fullAiResponseText = '';
-
+    let chunkToYield = '';
+    const yieldAtLength = 100;
     // @ts-ignore
     for await (const newChunk of chatStream) {
-      // the full message
       allStreamedChunks.push(newChunk);
       fullAiResponseText += newChunk.choices[0].delta.content;
       const chunkText = newChunk.choices[0].delta.content;
-      this.logger.debug(`Streaming text chunk: ${chunkText}`);
-      yield chunkText;
+      if (chunkText) {
+        chunkToYield += chunkText;
+      }
+      if (
+        chunkToYield.length >= yieldAtLength ||
+        newChunk.choices[0].finish_reason === 'stop'
+      ) {
+        this.logger.debug(`Streaming text chunk: ${chunkToYield}`);
+        yield chunkToYield;
+        chunkToYield = '';
+      }
     }
-
     this.logger.log('Stream complete');
 
     chatConfig.messages.push({
@@ -81,22 +107,24 @@ export class OpenaiChatService implements OnModuleInit {
   }
 
   async reloadChat(aiChat: AiChatDocument) {
-    const chatConfig = this._createChatConfigFromAiChatDocument(aiChat);
-    this._storeConfig(aiChat.aiChatId, chatConfig);
+    this.createChat(
+      aiChat.aiChatId,
+      aiChat.contextInstructions,
+      this._defaultChatConfig(),
+    );
+    this._reloadMessageHistoryFromAiChatDocument(aiChat);
   }
 
-  private _createChatConfigFromAiChatDocument(aiChat: AiChatDocument) {
-    const chatConfig = {
+  private _defaultChatConfig() {
+    return {
       messages: [],
-      model: aiChat.modelName,
+      model: 'gpt-4-1106-preview',
       temperature: 0.7,
       stream: true,
     } as OpenAiChatConfig;
-
-    chatConfig.messages.push({
-      role: 'system',
-      content: aiChat.contextInstructions,
-    });
+  }
+  private _reloadMessageHistoryFromAiChatDocument(aiChat: AiChatDocument) {
+    const chatConfig = this._getConfigOrThrow(aiChat.aiChatId);
 
     for (const couplet of aiChat.couplets) {
       chatConfig.messages.push({
