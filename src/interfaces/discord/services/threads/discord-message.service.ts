@@ -114,7 +114,6 @@ export class DiscordMessageService {
       }
       const replyMessages: Message<boolean>[] = [currentReplyMessage];
 
-      let replyWasSplitAcrossMessages = false;
       let currentReplyMessageText = '';
       let fullAiTextResponse = '';
       for await (const incomingTextChunk of aiResponseStream) {
@@ -135,7 +134,6 @@ export class DiscordMessageService {
           this.logger.debug(
             'Reply message too long, splitting into multiple messages',
           );
-          replyWasSplitAcrossMessages = true;
           const continuingFromString = `> continuing from \`...${currentReplyMessageText.slice(
             -50,
           )}...\`\n\n`;
@@ -153,11 +151,11 @@ export class DiscordMessageService {
         `Stream done! Full Ai response: \n\n${fullAiTextResponse}`,
       );
 
-      if (replyWasSplitAcrossMessages) {
+      if (replyMessages.length > 1) {
         await this._sendFullResponseAsAttachment(
           fullAiTextResponse,
           discordMessage.id,
-          replyMessages[-1],
+          replyMessages[replyMessages.length - 1],
         );
       }
       await this._persistenceService.persistInteraction(
