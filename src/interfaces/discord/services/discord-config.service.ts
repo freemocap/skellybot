@@ -23,6 +23,10 @@ export class DiscordConfigService {
         IntentsBitField.Flags.Guilds,
         IntentsBitField.Flags.GuildMessages,
         IntentsBitField.Flags.MessageContent,
+        IntentsBitField.Flags.GuildMessageReactions,
+        IntentsBitField.Flags.DirectMessages, // TODO - This doesn't work, why? Figure out how to make botto respond to DMs
+        IntentsBitField.Flags.DirectMessageReactions,
+        IntentsBitField.Flags.DirectMessageTyping,
       ],
     };
   }
