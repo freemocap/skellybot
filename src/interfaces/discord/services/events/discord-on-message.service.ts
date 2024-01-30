@@ -23,6 +23,7 @@ export class DiscordOnMessageService {
     private readonly _openaiChatService: OpenaiChatService,
   ) {}
   public async addActiveChat(message: Message) {
+    this.logger.debug(`Adding threadId ${message.channel.id} to active chats`);
     const aiChatId = message.channel.id;
     if (this.activeChats.has(aiChatId)) {
       throw new Error(`Chat ${aiChatId} already exists in active chats!`);
@@ -35,12 +36,6 @@ export class DiscordOnMessageService {
 
     const contextInstructions =
       await this._contextService.getContextInstructions(message);
-
-    // await this._chatbotManagerService.createBot(
-    //   aiChatId,
-    //   'gpt-4-1106-preview',
-    //   contextInstructions,
-    // );
 
     this._openaiChatService.createChat(aiChatId, contextInstructions, {
       messages: [],
@@ -89,6 +84,7 @@ export class DiscordOnMessageService {
     if (!this._shouldRespondToMessage(message)) {
       return;
     }
+    this.logger.debug(`Handling creation of message ${message.id}`);
     if (!this.activeChats.has(message.channel.id)) {
       await this._reloadChatFromDatabase(message);
     }
