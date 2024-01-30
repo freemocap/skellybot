@@ -195,10 +195,23 @@ export class DiscordMessageService {
           respondToChannelOrMessage &&
           attachmentResponse.type === 'transcript'
         ) {
-          await this.sendChunkedMessage(
+          const replyMessages = await this.sendChunkedMessage(
             respondToChannelOrMessage,
             attachmentText,
           );
+          const verboseJsonBuffer = Buffer.from(
+            JSON.stringify(attachmentResponse.verboseOutput, null, 4),
+            'utf-8',
+          );
+          await replyMessages[replyMessages.length - 1].edit({
+            content: replyMessages[replyMessages.length - 1].content,
+            files: [
+              {
+                attachment: verboseJsonBuffer,
+                name: `message-${discordMessage.id}-transcription.json`,
+              },
+            ],
+          });
         }
         attachmentText += 'END TEXT FROM ATTACHMENTS';
       }
