@@ -12,35 +12,56 @@ import * as stream from 'stream';
 @Injectable()
 export class DiscordAttachmentService {
   private readonly logger = new Logger(DiscordAttachmentService.name);
-  constructor(private readonly _openaiAudioService: OpenaiAudioService) {}
+
+  private fileHandlerMap: Record<
+    string,
+    (tempFilePath: string, attachment: Attachment) => Promise<any>
+  >;
+
+  constructor(private readonly _openaiAudioService: OpenaiAudioService) {
+    this.fileHandlerMap = {
+      // Audio types
+      '.mp3': this.handleAudioAttachment,
+      '.wav': this.handleAudioAttachment,
+      '.ogg': this.handleAudioAttachment,
+      '.flac': this.handleAudioAttachment,
+      '.m4a': this.handleAudioAttachment,
+      '.aac': this.handleAudioAttachment,
+      '.wma': this.handleAudioAttachment,
+      // Video types
+      '.mp4': this.handleVideoAttachment,
+      '.avi': this.handleVideoAttachment,
+      '.mov': this.handleVideoAttachment,
+      '.wmv': this.handleVideoAttachment,
+      '.flv': this.handleVideoAttachment,
+      '.mkv': this.handleVideoAttachment,
+      '.webm': this.handleVideoAttachment,
+      '.mpg': this.handleVideoAttachment,
+      '.mpeg': this.handleVideoAttachment,
+      '.m4v': this.handleVideoAttachment,
+      // ... other file types
+      '.zip': this.handleZipAttachment,
+      // Default handler for text files and others
+      default: this.handleTextAttachment,
+    };
+  }
 
   async handleAttachment(attachment: Attachment) {
     const tempFilePath = '';
     try {
       const tempFilePath = await this._downloadAttachment(attachment);
-      const mimeType = mime.lookup(attachment.name);
+      const fileExtension = path.extname(attachment.name).toLowerCase();
 
-      if (mimeType?.startsWith('audio/')) {
-        return await this.handleAudioAttachment(tempFilePath, attachment);
-      } else if (mimeType?.startsWith('video/')) {
-        return await this.handleVideoAttachment(attachment);
-      } else if (path.extname(attachment.name).toLowerCase() === '.zip') {
-        return await this.handleZipAttachment(attachment);
-      } else {
-        // Default to handling as a text file if we don't recognize the file type
-        return await this.handleTextAttachment(tempFilePath, attachment);
-      }
+      const handler =
+        this.fileHandlerMap[fileExtension] || this.fileHandlerMap['default'];
+      return await handler.call(this, tempFilePath, attachment);
 
-      // TODO - handle PDF, docx, and other complex text-type attachments
-      // TODO - handle image attachments -> would need add `OpenaiImageService` `to OpenaiModule`
-      // TODO - handle other attachments?
-      // TODO - parse text attachements into json if possible? i.e. .md (by heading/bullet point), .csv, .toml, .yaml, etc
+      // TODOs remain the same
     } catch (error) {
       this.logger.error(`Error handling attachment: ${error}`);
       return null;
     } finally {
       try {
-        // Clean up temp file, if it's still around
         await fs.promises.unlink(tempFilePath);
       } catch {}
     }
@@ -112,7 +133,10 @@ export class DiscordAttachmentService {
     }
   }
 
-  private async handleVideoAttachment(attachment: Attachment) {
+  private async handleVideoAttachment(
+    tempFilePath: string,
+    attachment: Attachment,
+  ) {
     // Add Video processing logic here - basically, strip the audio and treat it as an audio attachment
     this.logger.log('Processing video attachment:', attachment.name);
     // Example return format (adjust according to your actual logic)
@@ -123,7 +147,10 @@ export class DiscordAttachmentService {
     };
   }
 
-  private async handleZipAttachment(attachment: Attachment) {
+  private async handleZipAttachment(
+    tempFilePath: string,
+    attachment: Attachment,
+  ) {
     // Add Zip processing logic here - basically, unzip it and process each internal file as a separate attachment
     this.logger.log('Processing zip attachment:', attachment.name);
     // Example return format (adjust according to your actual logic)
