@@ -201,10 +201,16 @@ export class DiscordMessageService {
           );
           const verboseJsonBuffer = Buffer.from(
             JSON.stringify(attachmentResponse.verboseOutput, null, 4),
+            'utf-8',
           );
           await replyMessages[replyMessages.length - 1].edit({
             content: replyMessages[replyMessages.length - 1].content,
-            files: [new AttachmentBuilder(verboseJsonBuffer)],
+            files: [
+              {
+                attachment: verboseJsonBuffer,
+                name: `message-${discordMessage.id}-transcription.json`,
+              },
+            ],
           });
         }
         attachmentText += 'END TEXT FROM ATTACHMENTS';
