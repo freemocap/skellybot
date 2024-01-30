@@ -11,58 +11,46 @@ import * as stream from 'stream';
 
 @Injectable()
 export class DiscordAttachmentService {
-  constructor(
-    private readonly _logger: Logger,
-    private readonly _openaiAudioService: OpenaiAudioService,
-  ) {}
+  private readonly logger = new Logger(DiscordAttachmentService.name);
+  constructor(private readonly _openaiAudioService: OpenaiAudioService) {}
 
   async handleAttachment(attachment: Attachment) {
-    const fileType = this.extractFileType(attachment.name);
-    let handler;
-
-    if (fileType === 'zip') {
-      handler = this.handleZipAttachment.bind(this);
-    } else if (this.isAudioType(mime.lookup(attachment.name))) {
-      handler = this.handleAudioAttachment.bind(this);
-    } else if (this.isVideoType(mime.lookup(attachment.name))) {
-      handler = this.handleVideoAttachment.bind(this);
-    } else {
-      // Attempt to read as text
-      try {
-        const tempFilePath = await this._downloadAttachment(attachment);
-        await fs.promises.readFile(tempFilePath, 'utf8');
-        // If this point is reached, it's likely a text file
-        handler = this.handleTextAttachment.bind(this);
-      } catch (error) {
-        // If it's not text, determine the handler based on MIME type
-        this._logger.error(`Error determining file type: ${error}`);
-        return null;
-      }
-    }
-
+    const tempFilePath = '';
     try {
-      const response = await handler(attachment);
-      return this.formatResponse(
-        response,
-        mime.lookup(attachment.name),
-        attachment,
-      );
+      const tempFilePath = await this._downloadAttachment(attachment);
+      const mimeType = mime.lookup(attachment.name);
+
+      if (mimeType?.startsWith('audio/')) {
+        return await this.handleAudioAttachment(tempFilePath, attachment);
+      } else if (mimeType?.startsWith('video/')) {
+        return await this.handleVideoAttachment(attachment);
+      } else if (path.extname(attachment.name).toLowerCase() === '.zip') {
+        return await this.handleZipAttachment(attachment);
+      } else {
+        // Default to handling as a text file if we don't recognize the file type
+        return await this.handleTextAttachment(tempFilePath, attachment);
+      }
+
+      // TODO - handle PDF, docx, and other complex text-type attachments
+      // TODO - handle image attachments -> would need add `OpenaiImageService` `to OpenaiModule`
+      // TODO - handle other attachments?
+      // TODO - parse text attachements into json if possible? i.e. .md (by heading/bullet point), .csv, .toml, .yaml, etc
     } catch (error) {
-      this._logger.error(`Error processing attachment: ${error}`);
+      this.logger.error(`Error handling attachment: ${error}`);
       return null;
+    } finally {
+      try {
+        // Clean up temp file, if it's still around
+        await fs.promises.unlink(tempFilePath);
+      } catch {}
     }
   }
-  private isAudioType(mimeType: string) {
-    return mimeType.startsWith('audio/');
-  }
 
-  private isVideoType(mimeType: string) {
-    return mimeType.startsWith('video/');
-  }
-
-  private async handleAudioAttachment(attachment: Attachment) {
-    this._logger.log('Processing audio attachment:', attachment.name);
-    const audioFilePath = await this._downloadAttachment(attachment);
+  private async handleAudioAttachment(
+    audioFilePath: string,
+    attachment: Attachment,
+  ) {
+    this.logger.log('Processing audio attachment:', attachment.name);
 
     try {
       const transcriptionResponse =
@@ -74,40 +62,59 @@ export class DiscordAttachmentService {
           temperature: 0,
         });
 
-      this._logger.log(
-        `Transcription: ${JSON.stringify(transcriptionResponse.text, null, 2)}`,
+      this.logger.log(
+        `Transcription: \n\n ${JSON.stringify(
+          transcriptionResponse.text,
+          null,
+          2,
+        )}`,
       );
 
-      return {
+      const rawResponse = {
         type: 'transcript',
         rawText: transcriptionResponse.text,
         decorator: `AUDIO TRANSCRIPT: ${attachment.name}`,
         verboseOutput: transcriptionResponse,
       };
+      return this.formatResponse(
+        rawResponse,
+        mime.lookup(attachment.name),
+        attachment,
+      );
     } catch (error) {
-      this._logger.error(
+      this.logger.error(
         `Error processing audio attachment: ${error.message || error}`,
       );
       throw error;
     } finally {
-      await fs.promises.unlink(audioFilePath);
     }
   }
 
-  private async handleTextAttachment(attachment: Attachment) {
-    // Add Text processing logic here
-    this._logger.log('Processing text attachment:', attachment.name);
-    // Example return format (adjust according to your actual logic)
-    return {
-      type: 'file_text',
-      rawText: 'Example text content',
-      decorator: `TEXT ATTACHMENT: ${attachment.name}`,
-    };
+  private async handleTextAttachment(
+    tempFilePath: string,
+    attachment: Attachment,
+  ) {
+    try {
+      const textFileContent = await fs.promises.readFile(tempFilePath, 'utf-8');
+      this.logger.log('Processing text attachment:', attachment.name);
+      const rawResponse = {
+        type: 'text_file',
+        rawText: textFileContent,
+        decorator: `TEXT ATTACHMENT: ${attachment.name}`,
+      };
+      return this.formatResponse(
+        rawResponse,
+        mime.lookup(attachment.name),
+        attachment,
+      );
+    } catch {
+      return false;
+    }
   }
 
   private async handleVideoAttachment(attachment: Attachment) {
-    // Add Video processing logic here
-    this._logger.log('Processing video attachment:', attachment.name);
+    // Add Video processing logic here - basically, strip the audio and treat it as an audio attachment
+    this.logger.log('Processing video attachment:', attachment.name);
     // Example return format (adjust according to your actual logic)
     return {
       type: 'transcript',
@@ -117,8 +124,8 @@ export class DiscordAttachmentService {
   }
 
   private async handleZipAttachment(attachment: Attachment) {
-    // Add Zip processing logic here
-    this._logger.log('Processing zip attachment:', attachment.name);
+    // Add Zip processing logic here - basically, unzip it and process each internal file as a separate attachment
+    this.logger.log('Processing zip attachment:', attachment.name);
     // Example return format (adjust according to your actual logic)
     return {
       type: 'zip',
@@ -128,7 +135,7 @@ export class DiscordAttachmentService {
   }
 
   private async _downloadAttachment(attachment: Attachment): Promise<string> {
-    this._logger.log('Downloading attachment:', attachment.name);
+    this.logger.log('Downloading attachment:', attachment.name);
     try {
       const tempDirectoryPath = path.join(__dirname, 'temp');
       const tempFilePath = path.join(
@@ -146,7 +153,7 @@ export class DiscordAttachmentService {
       await promisify(stream.finished)(writer);
       return tempFilePath;
     } catch (error) {
-      this._logger.error(`Error downloading attachment: ${error}`);
+      this.logger.error(`Error downloading attachment: ${error}`);
       throw error;
     }
   }
