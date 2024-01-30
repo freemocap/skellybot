@@ -47,6 +47,8 @@ name: Build and Deploy to Cloud Run
 on:
   push:
     branches: [ "main" ]
+    paths-ignore:
+      - 'Writerside/**' #don't build if changes are only to docs
 
 env:
   PROJECT_ID: mocap-test-project # TODO: update Google Cloud project id
