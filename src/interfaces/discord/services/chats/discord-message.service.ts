@@ -23,6 +23,7 @@ export class DiscordMessageService {
     isFirstExchange: boolean = false,
   ) {
     await discordMessage.channel.sendTyping();
+    this.logger.log(`Responding to message id ${discordMessage.id}`);
     try {
       const { humanInputText, attachmentText } =
         await this.extractMessageContent(
@@ -35,7 +36,7 @@ export class DiscordMessageService {
         }attachment(s):\n\n ${humanInputText}`,
       );
 
-      await this._handleStream(
+      await this._handleResponseStream(
         humanUserId,
         humanInputText,
         attachmentText,
@@ -52,6 +53,7 @@ export class DiscordMessageService {
     channelOrMessage: Message<boolean> | TextBasedChannel,
     responseText: string,
   ) {
+    this.logger.debug(`Sending chunked message: ${responseText}`);
     const messageParts = this._getChunks(responseText, this.maxMessageLength);
     const replyMessages: Message<boolean>[] = [];
 
@@ -89,7 +91,7 @@ export class DiscordMessageService {
     return chunks;
   }
 
-  private async _handleStream(
+  private async _handleResponseStream(
     humanUserId: string,
     inputMessageText: string,
     attachmentText: string,
@@ -97,6 +99,9 @@ export class DiscordMessageService {
     isFirstExchange: boolean = false,
     respondToChannelOrMessage: Message<boolean> | TextBasedChannel,
   ) {
+    this.logger.debug(
+      `Handling response stream for message id ${discordMessage.id}`,
+    );
     try {
       const aiResponseStream = this._openaiChatService.getAiResponseStream(
         discordMessage.channel.id,

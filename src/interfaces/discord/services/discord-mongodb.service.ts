@@ -24,7 +24,7 @@ export class DiscordMongodbService {
     fullAiTextResponse: string,
     isFirstExchange: boolean = false,
   ) {
-    this.logger.debug('Persisting interaction to database...');
+    this.logger.debug(`Persisting interaction for ${aiChatId} to database...`);
     try {
       const humanMessageForDb = await this._messageService.createMessage({
         contextRoute,

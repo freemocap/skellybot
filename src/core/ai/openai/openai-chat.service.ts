@@ -63,6 +63,7 @@ export class OpenaiChatService implements OnModuleInit {
   }
 
   public getAiResponseStream(chatId: string, humanMessage: string) {
+    this.logger.debug(`Getting AI response stream for chatId: ${chatId}`);
     const config = this._getConfigOrThrow(chatId);
     config.messages.push({ role: 'user', content: humanMessage });
 

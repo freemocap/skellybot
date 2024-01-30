@@ -47,6 +47,7 @@ export class DiscordAttachmentService {
   }
 
   async handleAttachment(attachment: Attachment) {
+    this.logger.log('Handling attachment:', attachment.name);
     const tempFilePath = '';
     try {
       const tempFilePath = await this._downloadAttachment(attachment);
@@ -115,6 +116,7 @@ export class DiscordAttachmentService {
     tempFilePath: string,
     attachment: Attachment,
   ) {
+    this.logger.log('Processing text attachment:', attachment.name);
     try {
       const textFileContent = await fs.promises.readFile(tempFilePath, 'utf-8');
       this.logger.log('Processing text attachment:', attachment.name);
@@ -137,6 +139,7 @@ export class DiscordAttachmentService {
     tempFilePath: string,
     attachment: Attachment,
   ) {
+    this.logger.log('Processing video attachment:', attachment.name);
     // Add Video processing logic here - basically, strip the audio and treat it as an audio attachment
     this.logger.log('Processing video attachment:', attachment.name);
     // Example return format (adjust according to your actual logic)
@@ -151,6 +154,7 @@ export class DiscordAttachmentService {
     tempFilePath: string,
     attachment: Attachment,
   ) {
+    this.logger.log('Processing zip attachment:', attachment.name);
     // Add Zip processing logic here - basically, unzip it and process each internal file as a separate attachment
     this.logger.log('Processing zip attachment:', attachment.name);
     // Example return format (adjust according to your actual logic)
@@ -195,9 +199,5 @@ export class DiscordAttachmentService {
       ...response,
       text: `> ${fileType} file URL: ${simpleUrl}\n\n\`\`\`\n\nBEGIN ${response.decorator}\n\n${response.rawText}\n\nEND ${response.decorator}\n\n\`\`\``,
     };
-  }
-
-  private extractFileType(filename: string | undefined): string {
-    return filename?.split('.').pop() || '';
   }
 }
