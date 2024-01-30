@@ -1,4 +1,4 @@
-# Environment Setup
+# Dev Environment Setup
 
 ## Discord Env
 1. rename .env.discord.example to .env.discord
