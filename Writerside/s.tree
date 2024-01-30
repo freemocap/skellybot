@@ -17,6 +17,7 @@
             </toc-element>
         </toc-element>
     </toc-element>
+    <toc-element topic="SkellyBot-Server-Setup-Guide.md"/>
     <toc-element topic="Concepts.md">
         <toc-element topic="ContextRoute.md">
             <toc-element topic="User.md">
