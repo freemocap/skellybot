@@ -21,7 +21,7 @@
 
 
 ## Setting up your Server
-### Heirarcical Context Instructions
+### Hierarchical Context Instructions
 
 When you make a new thread, the bot will create its `System Prompt` based on **Context Instructions** pulled from the following places (in order):
 - **Server-wide Instructions**-Messages tagged with the 🤖 emoji in the `bot-instructions*` channel at the 'top level' of the server (i.e. outside of any category
