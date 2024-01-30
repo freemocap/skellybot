@@ -49,7 +49,7 @@ export class DiscordChatService {
         `Starting new chat with initial message:\n\n> ${startingText.text}`,
       );
 
-      await this._onMessageService.addActiveChat(firstThreadMessage);
+      await this._onMessageService.addActiveChat(thread.id, firstThreadMessage);
       await this._messageService.respondToMessage(
         firstThreadMessage,
         firstThreadMessage,
@@ -66,31 +66,31 @@ export class DiscordChatService {
   })
   public async onMessageContextChatCommand(
     @Context() [interaction]: MessageCommandContext,
-    @TargetMessage() message: Message,
+    @TargetMessage() targetMessage: Message,
   ) {
     await interaction.deferReply();
 
     try {
-      const { humanInputText, attachmentText } =
-        await this._messageService.extractMessageContent(message);
+      // const { humanInputText, attachmentText } =
+      //   await this._messageService.extractMessageContent(targetMessage);
 
       this.logger.log(
-        `Received 'message context menu' command for Message: ${message.id} in channel: name= ${interaction.channel.name}, id=${message.channel.id} `,
+        `Received 'message context menu' command for Message: ${targetMessage.id} in channel: name= ${interaction.channel.name}, id=${targetMessage.channel.id} `,
       );
       const thread = await this._createNewThread(
-        humanInputText + attachmentText,
+        targetMessage.content || '.',
         interaction,
       );
 
-      const firstThreadMessage = await thread.send(
-        `Starting new chat with initial message:\n\n> ${
-          humanInputText + attachmentText
-        }`,
+      await this._onMessageService.addActiveChat(
+        thread.id,
+        await thread.send(
+          `Started new thread for ${userMention(interaction.user.id)}`,
+        ),
       );
 
-      await this._onMessageService.addActiveChat(firstThreadMessage);
       await this._messageService.respondToMessage(
-        firstThreadMessage,
+        targetMessage,
         thread,
         interaction.user.id,
         true,
@@ -125,14 +125,14 @@ export class DiscordChatService {
         threadAnchorMessage = await interaction.channel.parent.send({
           content: `Thread Created for user: ${userMention(
             interaction.user.id,
-          )} with starting text:\n\n> ${startingTextString}`,
+          )}`,
           embeds: [threadTitleEmbed],
         });
       } else {
         threadAnchorMessage = await interaction.channel.send({
           content: `Thread Created for user: ${userMention(
             interaction.user.id,
-          )} with starting text:\n\n> ${startingTextString}`,
+          )}`,
           embeds: [threadTitleEmbed],
         });
       }

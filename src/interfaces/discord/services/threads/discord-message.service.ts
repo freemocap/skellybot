@@ -35,7 +35,7 @@ export class DiscordMessageService {
         }attachment(s):\n\n ${humanInputText}`,
       );
 
-      await this._handleStream(
+      return await this._handleStream(
         humanUserId,
         humanInputText,
         attachmentText,
@@ -145,6 +145,7 @@ export class DiscordMessageService {
           currentReplyMessageText = continuingFromString + incomingTextChunk;
           await currentReplyMessage.edit(currentReplyMessageText);
         }
+        return replyMessages;
       }
 
       this.logger.debug(
