@@ -27,7 +27,7 @@ export class DiscordConfigureServerCommand {
     @Context() [interaction]: MessageCommandContext,
     @TargetMessage() message: Message,
   ) {
-    await interaction.deferReply();
+    await interaction.deferReply({ ephemeral: true });
 
     this.logger.log(
       `Received /deploy command in channel: name= ${interaction.channel.name}, id=${interaction.channel.id}`,
@@ -50,6 +50,9 @@ export class DiscordConfigureServerCommand {
       this.logger.error(errorMessage);
       await interaction.editReply(errorMessage);
     } finally {
+      await interaction.editReply(
+        'Server configuration (hypothetically) complete.',
+      );
       try {
         await fs.promises.unlink(tempFilePath);
       } catch {}
