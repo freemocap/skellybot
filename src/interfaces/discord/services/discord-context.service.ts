@@ -10,7 +10,7 @@ import {
   TextChannel,
   ThreadChannel,
 } from 'discord.js';
-import { DiscordContextRouteFactory } from '../../../../core/database/collections/ai-chats/context-route.provider';
+import { DiscordContextRouteFactory } from '../../../core/database/collections/ai-chats/context-route.provider';
 
 @Injectable()
 export class DiscordContextService {

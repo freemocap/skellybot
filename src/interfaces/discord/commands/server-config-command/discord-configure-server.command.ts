@@ -5,7 +5,6 @@ import {
   MessageCommandContext,
   TargetMessage,
 } from 'necord';
-import { DiscordAttachmentService } from '../../services/chat-command/discord-attachment.service';
 import { Message } from 'discord.js';
 import * as path from 'path';
 import fs from 'fs';
@@ -16,9 +15,6 @@ import { ServerConfig } from './server-config-interface';
 export class DiscordConfigureServerCommand {
   private readonly logger = new Logger(DiscordConfigureServerCommand.name);
 
-  constructor(
-    private readonly _discordAttachmentService: DiscordAttachmentService,
-  ) {}
   @MessageCommand({
     name: 'Configure server from JSON',
     guilds: ['1198365355698028595'],

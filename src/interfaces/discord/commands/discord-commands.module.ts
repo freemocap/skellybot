@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 import { DiscordConfigureServerCommand } from './server-config-command/discord-configure-server.command';
-import { DiscordAttachmentService } from '../services/chat-command/discord-attachment.service';
-import { OpenaiModule } from '../../../core/ai/openai/openai.module';
+import { DiscordChatMessageCommand } from './chat-command/discord-chat.message-command';
+import { DiscordModule } from '../discord.module';
 
 @Module({
-  imports: [OpenaiModule],
-  providers: [DiscordAttachmentService, DiscordConfigureServerCommand],
+  imports: [DiscordModule],
+  providers: [DiscordConfigureServerCommand, DiscordChatMessageCommand],
 })
 export class DiscordCommandsModule {}

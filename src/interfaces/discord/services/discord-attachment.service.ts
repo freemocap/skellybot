@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Attachment } from 'discord.js';
-import { OpenaiAudioService } from '../../../../core/ai/openai/openai-audio.service';
+import { OpenaiAudioService } from '../../../core/ai/openai/openai-audio.service';
 import axios from 'axios';
 import * as mime from 'mime-types'; // Ensure to import mime-types
 import * as path from 'path';

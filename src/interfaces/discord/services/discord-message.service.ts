@@ -1,9 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { AttachmentBuilder, Message, TextBasedChannel } from 'discord.js';
-import { DiscordMongodbService } from '../discord-mongodb.service';
+import { DiscordMongodbService } from './discord-mongodb.service';
 import { DiscordContextService } from './discord-context.service';
 import { DiscordAttachmentService } from './discord-attachment.service';
-import { OpenaiChatService } from '../../../../core/ai/openai/openai-chat.service';
+import { OpenaiChatService } from '../../../core/ai/openai/openai-chat.service';
 
 @Injectable()
 export class DiscordMessageService {
