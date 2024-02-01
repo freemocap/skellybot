@@ -5,12 +5,12 @@ import {
   MessageCommandContext,
   TargetMessage,
 } from 'necord';
-import { DiscordAttachmentService } from '../services/chats/discord-attachment.service';
+import { DiscordAttachmentService } from '../../services/chat-command/discord-attachment.service';
 import { Message } from 'discord.js';
 import * as path from 'path';
 import fs from 'fs';
 import axios from 'axios';
-import { ServerConfig } from './server-config-command/server-config-interface';
+import { ServerConfig } from './server-config-interface';
 
 @Injectable()
 export class DiscordConfigureServerCommand {
