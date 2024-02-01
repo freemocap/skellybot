@@ -13,6 +13,7 @@ import { EmbedBuilder, Message, ThreadChannel, userMention } from 'discord.js';
 import { DiscordMessageService } from './discord-message.service';
 import { DiscordOnMessageService } from '../events/discord-on-message.service';
 
+// TODO - Clean this up, extract commands to the `commands` folder and let this be a "make a thread" service
 @Injectable()
 export class DiscordChatService {
   private readonly logger = new Logger(DiscordChatService.name);

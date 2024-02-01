@@ -1,0 +1,46 @@
+{
+  "categories": [
+    {
+      "name": "WowCategory",
+      "viewableBy": "default",
+      "editableBy": [
+        "Me"
+      ]
+    }
+  ],
+  "roles": [
+    {
+      "name": "WowRoleWow",
+      "syncPermissionsWithRole": "Me"
+    }
+  ],
+  "nicknames": [
+    {
+      "nicknameIdMap": {
+        "362711467104927744": "CoolUserGuy"
+      }
+    }
+  ],
+  "channels": [
+    {
+      "name": "wow-channel",
+      "type": "text",
+      "viewableBy": "default",
+      "editableBy": [
+        "Me"
+      ],
+      "parentCategory": "*General*"
+    }
+  ],
+  "messages": [
+    {
+      "name": "welcome-message",
+      "content": "WoweeZee!",
+      "channelName": "wow-channel",
+      "reactions": [
+        "👋",
+        "✨"
+      ]
+    }
+  ]
+}

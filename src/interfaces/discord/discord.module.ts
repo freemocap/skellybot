@@ -17,6 +17,7 @@ import { DiscordMessageService } from './services/chats/discord-message.service'
 import { OpenaiModule } from '../../core/ai/openai/openai.module';
 import { DiscordAttachmentService } from './services/chats/discord-attachment.service';
 import { DiscordOnMessageService } from './services/events/discord-on-message.service';
+import { DiscordCommandsModule } from './commands/discord-commands.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { DiscordOnMessageService } from './services/events/discord-on-message.se
     CoupletsModule,
     MessagesModule,
     OpenaiModule,
+    DiscordCommandsModule,
   ],
   providers: [
     DiscordOnMessageService,
