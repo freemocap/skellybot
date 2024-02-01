@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
-import { DiscordPingService } from './services/discord-ping.service';
+import { DiscordPingCommand } from './commands/discord-ping-command.service';
 import { NecordModule } from 'necord';
 
 import { DiscordConfigService } from './services/discord-config.service';
-import { DiscordEventService } from './services/events/discord-event.service';
+import { DiscordStartUpService } from './services/discord-start-up.service';
 import { GcpModule } from '../../core/gcp/gcp.module';
 import { UsersModule } from '../../core/database/collections/users/users.module';
 import { ChatbotModule } from '../../core/chatbot/chatbot.module';
@@ -15,7 +15,10 @@ import { DiscordMongodbService } from './services/discord-mongodb.service';
 import { DiscordMessageService } from './services/discord-message.service';
 import { OpenaiModule } from '../../core/ai/openai/openai.module';
 import { DiscordAttachmentService } from './services/discord-attachment.service';
-import { DiscordOnMessageService } from './services/events/discord-on-message.service';
+import { DiscordOnMessageService } from './services/discord-on-message.service';
+import { DiscordChatCommand } from './commands/discord-chat.command';
+import { DiscordConfigureServerCommand } from './commands/server-config-command/discord-configure-server.command';
+import { DiscordThreadService } from './services/discord-thread.service';
 
 @Module({
   imports: [
@@ -32,13 +35,17 @@ import { DiscordOnMessageService } from './services/events/discord-on-message.se
     OpenaiModule,
   ],
   providers: [
-    DiscordEventService,
     DiscordOnMessageService,
-    DiscordPingService,
     DiscordMessageService,
     DiscordAttachmentService,
     DiscordContextService,
+    DiscordThreadService,
     DiscordMongodbService,
+    DiscordPingCommand,
+    DiscordChatCommand,
+    DiscordConfigureServerCommand,
+
+    DiscordStartUpService,
   ],
   exports: [DiscordMongodbService],
 })

@@ -42,4 +42,9 @@ export class DiscordConfigService {
 
     return this._cfgService.getOrThrow('DISCORD_BOT_TOKEN');
   }
+
+  public getDevServers() {
+    const devServers = this._cfgService.get<string>('DEV_SERVERS').split(',');
+    return devServers ? devServers : [];
+  }
 }

@@ -17,7 +17,6 @@ export class DiscordConfigureServerCommand {
 
   @MessageCommand({
     name: 'Configure server from JSON',
-    guilds: ['1198365355698028595'],
   })
   public async onDeployCommand(
     @Context() [interaction]: MessageCommandContext,

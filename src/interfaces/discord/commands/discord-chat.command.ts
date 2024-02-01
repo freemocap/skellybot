@@ -1,14 +1,18 @@
 import { Injectable, Logger } from '@nestjs/common';
 import {
   Context,
+  MessageCommand,
+  MessageCommandContext,
   Options,
   SlashCommand,
   SlashCommandContext,
   StringOption,
+  TargetMessage,
 } from 'necord';
-import { DiscordMessageService } from '../../services/discord-message.service';
-import { DiscordOnMessageService } from '../../services/events/discord-on-message.service';
-import { DiscordThreadService } from '../../services/discord-thread.service';
+import { DiscordMessageService } from '../services/discord-message.service';
+import { DiscordOnMessageService } from '../services/discord-on-message.service';
+import { DiscordThreadService } from '../services/discord-thread.service';
+import { Message } from 'discord.js';
 
 export class StartingTextDto {
   @StringOption({
@@ -20,8 +24,8 @@ export class StartingTextDto {
 }
 
 @Injectable()
-export class DiscordSlashChatCommand {
-  private readonly logger = new Logger(DiscordSlashChatCommand.name);
+export class DiscordChatCommand {
+  private readonly logger = new Logger(DiscordChatCommand.name);
 
   constructor(
     private readonly _messageService: DiscordMessageService,
@@ -60,6 +64,44 @@ export class DiscordSlashChatCommand {
       await this._messageService.respondToMessage(
         firstThreadMessage,
         firstThreadMessage,
+        interaction.user.id,
+        true,
+      );
+    } catch (error) {
+      this.logger.error(`Caught error: ${error}`);
+    }
+  }
+
+  @MessageCommand({
+    name: 'Open `/chat` thread',
+  })
+  public async onMessageContextChatCommand(
+    @Context() [interaction]: MessageCommandContext,
+    @TargetMessage() message: Message,
+  ) {
+    await interaction.deferReply();
+    try {
+      const { humanInputText, attachmentText } =
+        await this._messageService.extractMessageContent(message);
+
+      this.logger.log(
+        `Received 'message context menu' command for Message: ${message.id} in channel: name= ${interaction.channel.name}, id=${message.channel.id} `,
+      );
+      const thread = await this._threadService.createNewThread(
+        humanInputText + attachmentText,
+        interaction,
+      );
+
+      const firstThreadMessage = await thread.send(
+        `Starting new chat with initial message:\n\n> ${
+          humanInputText + attachmentText
+        }`,
+      );
+
+      await this._onMessageService.addActiveChat(firstThreadMessage);
+      await this._messageService.respondToMessage(
+        firstThreadMessage,
+        thread,
         interaction.user.id,
         true,
       );

@@ -1,12 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { AiChatsService } from '../../../../core/database/collections/ai-chats/ai-chats.service';
+import { AiChatsService } from '../../../core/database/collections/ai-chats/ai-chats.service';
 import { Message, ThreadChannel } from 'discord.js';
-import { DiscordMessageService } from '../discord-message.service';
-import { ChatbotManagerService } from '../../../../core/chatbot/chatbot-manager.service';
-import { AiChatDocument } from '../../../../core/database/collections/ai-chats/ai-chat.schema';
-import { DiscordContextService } from '../discord-context.service';
-import { UsersService } from '../../../../core/database/collections/users/users.service';
-import { OpenaiChatService } from '../../../../core/ai/openai/openai-chat.service';
+import { DiscordMessageService } from './discord-message.service';
+import { ChatbotManagerService } from '../../../core/chatbot/chatbot-manager.service';
+import { AiChatDocument } from '../../../core/database/collections/ai-chats/ai-chat.schema';
+import { DiscordContextService } from './discord-context.service';
+import { UsersService } from '../../../core/database/collections/users/users.service';
+import { OpenaiChatService } from '../../../core/ai/openai/openai-chat.service';
 
 @Injectable()
 export class DiscordOnMessageService {
