@@ -27,7 +27,7 @@ export class DiscordConfigureServerCommand {
     @Context() [interaction]: MessageCommandContext,
     @TargetMessage() message: Message,
   ) {
-    interaction.deferReply();
+    await interaction.deferReply();
 
     this.logger.log(
       `Received /deploy command in channel: name= ${interaction.channel.name}, id=${interaction.channel.id}`,
