@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { DiscordPingCommand } from './commands/discord-ping-command.service';
+import { DiscordPingWowCommand } from './commands/discord-ping-wow.command';
 import { NecordModule } from 'necord';
 
 import { DiscordConfigService } from './services/discord-config.service';
@@ -19,6 +19,7 @@ import { DiscordOnMessageService } from './services/discord-on-message.service';
 import { DiscordChatCommand } from './commands/discord-chat.command';
 import { DiscordConfigureServerCommand } from './commands/server-config-command/discord-configure-server.command';
 import { DiscordThreadService } from './services/discord-thread.service';
+import { DiscordServerConfigService } from './commands/server-config-command/discord-server-configuration.service';
 
 @Module({
   imports: [
@@ -41,10 +42,10 @@ import { DiscordThreadService } from './services/discord-thread.service';
     DiscordContextService,
     DiscordThreadService,
     DiscordMongodbService,
-    DiscordPingCommand,
+    DiscordPingWowCommand,
     DiscordChatCommand,
     DiscordConfigureServerCommand,
-
+    DiscordServerConfigService,
     DiscordStartUpService,
   ],
   exports: [DiscordMongodbService],

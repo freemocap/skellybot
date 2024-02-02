@@ -2,34 +2,37 @@
   "categories": [
     {
       "name": "WowCategory",
-      "viewableBy": "default",
-      "editableBy": [
-        "Me"
-      ]
+      "permissionsOverwrites": [
+        {
+          "roleName": "@Me",
+          "allow": ["VIEW_CHANNEL", "SEND_MESSAGES", "READ_MESSAGE_HISTORY"],
+          "deny": ["MANAGE_CHANNELS"]
+        }
+      ],
+      "position": 1
     }
   ],
   "roles": [
     {
       "name": "WowRoleWow",
-      "syncPermissionsWithRole": "Me"
+      "color": "#FF00FF",
+      "syncPermissionsWithRole": "@Me",
+      "hoist": true
     }
   ],
-  "nicknames": [
+  "members": [
     {
-      "nicknameIdMap": {
-        "362711467104927744": "CoolUserGuy"
-      }
+      "username": "SkellyBot",
+      "nickname": "coolSkellyBotWowo",
+      "roles": ["WowRoleWow"]
     }
   ],
   "channels": [
     {
       "name": "wow-channel",
-      "type": "text",
-      "viewableBy": "default",
-      "editableBy": [
-        "Me"
-      ],
-      "parentCategory": "*General*"
+      "type": "TEXT",
+      "permissionsOverwrites": [],
+      "parentCategory": "WowCategory"
     }
   ],
   "messages": [
@@ -37,10 +40,7 @@
       "name": "welcome-message",
       "content": "WoweeZee!",
       "channelName": "wow-channel",
-      "reactions": [
-        "👋",
-        "✨"
-      ]
+      "reactions": ["👋", "✨"]
     }
   ]
 }

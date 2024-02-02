@@ -9,16 +9,24 @@ import { Message } from 'discord.js';
 import * as path from 'path';
 import fs from 'fs';
 import axios from 'axios';
-import { ServerConfig } from './server-config-interface';
+import { DiscordServerConfigService } from './discord-server-configuration.service';
+import {
+  DiscordServerConfig,
+  validateServerConfig,
+} from './server-config-schema';
 
 @Injectable()
 export class DiscordConfigureServerCommand {
   private readonly logger = new Logger(DiscordConfigureServerCommand.name);
 
+  constructor(
+    private readonly _serverConfigService: DiscordServerConfigService,
+  ) {}
+
   @MessageCommand({
     name: 'Configure server from JSON',
   })
-  public async onDeployCommand(
+  public async onCommandInvoke(
     @Context() [interaction]: MessageCommandContext,
     @TargetMessage() message: Message,
   ) {
@@ -30,24 +38,25 @@ export class DiscordConfigureServerCommand {
 
     const tempFilePath = '';
     try {
-      const serverConfig: ServerConfig =
+      const serverConfig: DiscordServerConfig =
         await this._getServerConfigFromAttachment(message);
 
       this.logger.debug(
         'Server config:\n\n',
         JSON.stringify(serverConfig, null, 2),
       );
-      //TODO - add the logic to configure the server
+      const response = await this._serverConfigService.configureServer(
+        interaction.guild.id,
+        serverConfig,
+      );
+      await interaction.editReply(
+        `Server Config command returned: ${JSON.stringify(response)}`,
+      );
     } catch (error) {
-      const errorMessage = `Error processing attachment: ${
-        error.message || error
-      }`;
+      const errorMessage = `Error Occurred: ${error.message || error}`;
       this.logger.error(errorMessage);
       await interaction.editReply(errorMessage);
     } finally {
-      await interaction.editReply(
-        'Server configuration (hypothetically) complete.',
-      );
       try {
         await fs.promises.unlink(tempFilePath);
       } catch {}
@@ -72,7 +81,17 @@ export class DiscordConfigureServerCommand {
       });
 
       const fileContent = response.data.toString('utf-8');
-      return JSON.parse(fileContent);
+      const valdationResponse = await validateServerConfig(
+        JSON.parse(fileContent),
+      );
+      if (!valdationResponse.isValid) {
+        throw new Error(
+          `Invalid server configuration: ${valdationResponse.errors
+            .map((error) => error.toString())
+            .join(', ')}`,
+        );
+      }
+      return valdationResponse.config;
     } catch (error) {
       throw new Error(`Error processing attachment: ${error.message || error}`);
     }
