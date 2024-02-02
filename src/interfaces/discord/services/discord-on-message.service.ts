@@ -2,11 +2,11 @@ import { Injectable, Logger } from '@nestjs/common';
 import { AiChatsService } from '../../../core/database/collections/ai-chats/ai-chats.service';
 import { Message, ThreadChannel } from 'discord.js';
 import { DiscordMessageService } from './discord-message.service';
-import { ChatbotManagerService } from '../../../core/chatbot/chatbot-manager.service';
 import { AiChatDocument } from '../../../core/database/collections/ai-chats/ai-chat.schema';
-import { DiscordContextService } from './discord-context.service';
+import { DiscordContextRouteService } from './discord-context-route.service';
 import { UsersService } from '../../../core/database/collections/users/users.service';
 import { OpenaiChatService } from '../../../core/ai/openai/openai-chat.service';
+import { DiscordContextPromptService } from './discord-context-prompt.service';
 
 @Injectable()
 export class DiscordOnMessageService {
@@ -17,8 +17,8 @@ export class DiscordOnMessageService {
   public constructor(
     private readonly _aiChatsService: AiChatsService,
     private readonly _messageService: DiscordMessageService,
-    private readonly _chatbotManagerService: ChatbotManagerService,
-    private readonly _contextService: DiscordContextService,
+    private readonly _contextRouteService: DiscordContextRouteService,
+    private readonly _contextPromptService: DiscordContextPromptService,
     private readonly _usersService: UsersService,
     private readonly _openaiChatService: OpenaiChatService,
   ) {}
@@ -32,12 +32,12 @@ export class DiscordOnMessageService {
 
     const ownerUser = await this._getOwnerUser(message);
 
-    const contextRoute = this._contextService.getContextRoute(message);
+    const contextRoute = this._contextRouteService.getContextRoute(message);
 
-    const contextInstructions =
-      await this._contextService.getContextInstructions(message);
+    const contextPrompt =
+      await this._contextPromptService.getContextPromptFromMessage(message);
 
-    this._openaiChatService.createChat(aiChatId, contextInstructions, {
+    this._openaiChatService.createChat(aiChatId, contextPrompt, {
       messages: [],
       model: 'gpt-4-1106-preview',
       temperature: 0.7,
@@ -47,7 +47,7 @@ export class DiscordOnMessageService {
       aiChatId,
       ownerUser,
       contextRoute,
-      contextInstructions,
+      contextInstructions: contextPrompt,
       couplets: [],
       modelName: 'gpt-4-1106-preview',
     });
@@ -105,9 +105,9 @@ export class DiscordOnMessageService {
       {
         aiChatId: message.channel.id,
         ownerUser,
-        contextRoute: this._contextService.getContextRoute(message),
+        contextRoute: this._contextRouteService.getContextRoute(message),
         contextInstructions:
-          await this._contextService.getContextInstructions(message),
+          await this._contextPromptService.getContextPromptFromMessage(message),
         couplets: [],
         modelName: 'gpt-4-1106-preview',
       },

@@ -5,11 +5,15 @@ import {
   DiscordRoleConfig,
   DiscordServerConfig,
 } from './server-config-schema';
+import { DiscordMessageService } from '../../services/discord-message.service';
 
 @Injectable()
 export class DiscordServerConfigService {
   private readonly logger = new Logger(DiscordServerConfigService.name);
-  constructor(private readonly client: Client) {}
+  constructor(
+    private readonly client: Client,
+    private readonly _messageService: DiscordMessageService,
+  ) {}
 
   public async configureServer(
     serverID: string,

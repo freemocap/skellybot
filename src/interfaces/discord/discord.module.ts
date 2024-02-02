@@ -10,7 +10,7 @@ import { ChatbotModule } from '../../core/chatbot/chatbot.module';
 import { AiChatsModule } from '../../core/database/collections/ai-chats/ai-chats.module';
 import { CoupletsModule } from '../../core/database/collections/couplets/couplets.module';
 import { MessagesModule } from '../../core/database/collections/messages/messages.module';
-import { DiscordContextService } from './services/discord-context.service';
+import { DiscordContextRouteService } from './services/discord-context-route.service';
 import { DiscordMongodbService } from './services/discord-mongodb.service';
 import { DiscordMessageService } from './services/discord-message.service';
 import { OpenaiModule } from '../../core/ai/openai/openai.module';
@@ -20,6 +20,7 @@ import { DiscordChatCommand } from './commands/discord-chat.command';
 import { DiscordConfigureServerCommand } from './commands/server-config-command/discord-configure-server.command';
 import { DiscordThreadService } from './services/discord-thread.service';
 import { DiscordServerConfigService } from './commands/server-config-command/discord-server-configuration.service';
+import { DiscordContextPromptService } from './services/discord-context-prompt.service';
 
 @Module({
   imports: [
@@ -39,7 +40,8 @@ import { DiscordServerConfigService } from './commands/server-config-command/dis
     DiscordOnMessageService,
     DiscordMessageService,
     DiscordAttachmentService,
-    DiscordContextService,
+    DiscordContextRouteService,
+    DiscordContextPromptService,
     DiscordThreadService,
     DiscordMongodbService,
     DiscordPingWowCommand,
