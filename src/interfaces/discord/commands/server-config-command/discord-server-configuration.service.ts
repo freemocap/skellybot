@@ -175,9 +175,9 @@ export class DiscordServerConfigService {
         (c) => c.name === channelConfig.name,
       );
       if (!existingChannel) {
-        const channelType = ChannelType.GuildForum
-          ? channelConfig.type === 'forum'
-          : ChannelType.GuildText;
+        // const channelType = ChannelType.GuildForum
+        //   ? channelConfig.type === 'forum'
+        //   : ChannelType.GuildText;
         createdChannel = (await server.channels.create({
           name: channelConfig.name,
           type: ChannelType.GuildText, //TODO - support forum channels
