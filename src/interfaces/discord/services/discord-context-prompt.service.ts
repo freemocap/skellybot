@@ -65,16 +65,10 @@ export class DiscordContextPromptService {
       );
     }
     try {
-      const channels = server.channels.cache.filter(
-        (ch) =>
-          ch.parent?.id === category?.id && ch.type === ChannelType.GuildText,
+      const botConfigChannel = await this.getOrCreatePromptChannel(
+        server,
+        category,
       );
-
-      const botConfigChannel = channels.find(
-        (ch) =>
-          this.instructionsChannelPattern.test(ch.name) ||
-          this.oldInstructionsChannelPattern.test(ch.name),
-      ) as TextChannel | undefined;
 
       if (!botConfigChannel) {
         return '';
@@ -84,6 +78,33 @@ export class DiscordContextPromptService {
       this.logger.error(`Failed to get instructions: ${error.message}`);
       return ''; // In case of an error, return an empty string to keep the chatbot operational.
     }
+  }
+
+  public async getOrCreatePromptChannel(
+    server: Guild,
+    category: CategoryChannel,
+  ) {
+    const channels = server.channels.cache.filter(
+      (ch) =>
+        ch.parent?.id === category?.id && ch.type === ChannelType.GuildText,
+    );
+
+    const botConfigChannel = channels.find(
+      (ch) =>
+        this.instructionsChannelPattern.test(ch.name) ||
+        this.oldInstructionsChannelPattern.test(ch.name),
+    ) as TextChannel | undefined;
+
+    if (!botConfigChannel) {
+      this.logger.debug(
+        `No bot-instructions channel found in category: ${category?.name} - creating one now...`,
+      );
+      return await category.children.create({
+        name: this.getDefaultBotChannelName() as string,
+        topic: `Bot instructions for this category! Messages tagged with ${this.botPromptEmoji} will be used as context prompts for the chatbot.`,
+      });
+    }
+    return botConfigChannel;
   }
 
   private async _getBotReactionMessages(channel: TextChannel) {

@@ -51,7 +51,10 @@ export class DiscordServerConfigService {
         categoryConfig.name,
       );
       const botPromptChannel =
-        await this._createBotPromptSettingsChannelIfNotExists(category);
+        await this._contextPromptService.getOrCreatePromptChannel(
+          server,
+          category,
+        );
 
       await this._sendBotPromptSettingsMessage(
         botPromptChannel,
@@ -79,28 +82,6 @@ export class DiscordServerConfigService {
     });
     this.logger.log(`Created category: ${category.name}`);
     return category;
-  }
-
-  private async _createBotPromptSettingsChannelIfNotExists(
-    category: CategoryChannel,
-  ) {
-    const botChannelName =
-      this._contextPromptService.getDefaultBotChannelName();
-    const existingChannel = category.children.find(
-      (c) => c.name === botChannelName,
-    );
-
-    if (existingChannel) {
-      this.logger.log(
-        `Bot settings channel already exists, skipping: "${botChannelName}"`,
-      );
-      return existingChannel;
-    }
-    return await category.guild.channels.create({
-      name: botChannelName,
-      type: ChannelType.GuildText,
-      parent: category,
-    });
   }
 
   private async _configureRoles(
