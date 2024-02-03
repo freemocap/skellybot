@@ -16,6 +16,7 @@ export class DiscordContextPromptService {
   private readonly logger = new Logger(DiscordContextPromptService.name);
   oldInstructionsChannelPattern = new RegExp('.*bot-instructions.*', 'i');
   instructionsChannelPattern = new RegExp('.*🤖-?prompt-?settings.*', 'i');
+  botPromptEmoji = '🤖';
 
   async getContextPromptFromMessage(message: Message) {
     try {
@@ -99,8 +100,18 @@ export class DiscordContextPromptService {
       .join('\n');
   }
 
-  private isBotInstructionEmoji(emoji: GuildEmoji | ReactionEmoji): boolean {
+  public isBotInstructionEmoji(emoji: GuildEmoji | ReactionEmoji): boolean {
     // Ensure emoji.name is not `null` before comparison
-    return emoji.name === '🤖';
+    return emoji.name === this.botPromptEmoji;
+  }
+
+  public getDefaultBotChannelName() {
+    const botChannelName = '🤖-Prompt-Settings';
+    if (!this.instructionsChannelPattern.test(botChannelName)) {
+      throw new Error(
+        `The bot channel name does not match the expected pattern: ${botChannelName}`,
+      );
+    }
+    return botChannelName;
   }
 }

@@ -34,6 +34,11 @@ export class DiscordCategoryConfig {
   @IsNumber()
   @IsOptional()
   position?: number;
+
+  @IsArray()
+  @IsOptional()
+  @ValidateNested({ each: true })
+  botPromptMessages: string[];
 }
 
 export class DiscordRoleConfig {
@@ -64,6 +69,10 @@ export class DiscordTextChannelConfig {
   @IsString()
   @IsOptional()
   parentCategory?: string | null;
+
+  @IsString()
+  @IsOptional()
+  topic?: string;
 }
 
 export class DiscordMessageConfig {

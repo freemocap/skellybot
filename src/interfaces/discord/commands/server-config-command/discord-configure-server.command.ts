@@ -5,7 +5,7 @@ import {
   MessageCommandContext,
   TargetMessage,
 } from 'necord';
-import { Message } from 'discord.js';
+import { GuildMember, Message, PermissionsBitField } from 'discord.js';
 import * as path from 'path';
 import fs from 'fs';
 import axios from 'axios';
@@ -31,6 +31,17 @@ export class DiscordConfigureServerCommand {
     @TargetMessage() message: Message,
   ) {
     await interaction.deferReply({ ephemeral: true });
+
+    const invokingMember = interaction.member as GuildMember;
+    if (
+      !invokingMember.permissions.has(PermissionsBitField.Flags.ManageChannels)
+    ) {
+      await interaction.editReply({
+        content:
+          'You need to have the "Manage Channels" permission to use this command.',
+      });
+      return;
+    }
 
     this.logger.log(
       `Received /deploy command in channel: name= ${interaction.channel.name}, id=${interaction.channel.id}`,

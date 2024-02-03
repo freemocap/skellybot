@@ -1,11 +1,21 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ChannelType, Client, Guild, GuildMember } from 'discord.js';
 import {
+  CategoryChannel,
+  ChannelType,
+  Client,
+  Guild,
+  GuildBasedChannel,
+  GuildMember,
+  TextChannel,
+} from 'discord.js';
+import {
+  DiscordCategoryConfig,
   DiscordMemberConfig,
   DiscordRoleConfig,
   DiscordServerConfig,
 } from './server-config-schema';
 import { DiscordMessageService } from '../../services/discord-message.service';
+import { DiscordContextPromptService } from '../../services/discord-context-prompt.service';
 
 @Injectable()
 export class DiscordServerConfigService {
@@ -13,6 +23,7 @@ export class DiscordServerConfigService {
   constructor(
     private readonly client: Client,
     private readonly _messageService: DiscordMessageService,
+    private readonly _contextPromptService: DiscordContextPromptService,
   ) {}
 
   public async configureServer(
@@ -35,7 +46,17 @@ export class DiscordServerConfigService {
   ) {
     this.logger.log('Configuring categories...');
     for (const categoryConfig of serverConfig.categories) {
-      await this._createCategoryIfNotExists(server, categoryConfig.name);
+      const category = await this._createCategoryIfNotExists(
+        server,
+        categoryConfig.name,
+      );
+      const botPromptChannel =
+        await this._createBotPromptSettingsChannelIfNotExists(category);
+
+      await this._sendBotPromptSettingsMessage(
+        botPromptChannel,
+        categoryConfig,
+      );
     }
     // TODO - configure permissions
   }
@@ -43,20 +64,43 @@ export class DiscordServerConfigService {
   private async _createCategoryIfNotExists(
     server: Guild,
     categoryName: string,
-  ): Promise<void> {
+  ) {
     const existingCategory = server.channels.cache.find(
       (c) => c.type === ChannelType.GuildCategory && c.name === categoryName,
     );
 
-    if (!existingCategory) {
-      const category = await server.channels.create({
-        name: categoryName,
-        type: ChannelType.GuildCategory,
-      });
-      this.logger.log(`Created category: ${category.name}`);
-    } else {
+    if (existingCategory) {
       this.logger.log(`Category already exists, skipping: "${categoryName}"`);
+      return existingCategory as CategoryChannel;
     }
+    const category = await server.channels.create({
+      name: categoryName,
+      type: ChannelType.GuildCategory,
+    });
+    this.logger.log(`Created category: ${category.name}`);
+    return category;
+  }
+
+  private async _createBotPromptSettingsChannelIfNotExists(
+    category: CategoryChannel,
+  ) {
+    const botChannelName =
+      this._contextPromptService.getDefaultBotChannelName();
+    const existingChannel = category.children.find(
+      (c) => c.name === botChannelName,
+    );
+
+    if (existingChannel) {
+      this.logger.log(
+        `Bot settings channel already exists, skipping: "${botChannelName}"`,
+      );
+      return existingChannel;
+    }
+    return await category.guild.channels.create({
+      name: botChannelName,
+      type: ChannelType.GuildText,
+      parent: category,
+    });
   }
 
   private async _configureRoles(
@@ -142,5 +186,21 @@ export class DiscordServerConfigService {
       new Error(`User not found: "${memberConfig.username}"`);
     }
     return guildMember;
+  }
+
+  private async _sendBotPromptSettingsMessage(
+    botPromptChannel: TextChannel,
+    categoryConfig: DiscordCategoryConfig,
+  ) {
+    for (const messageContent of categoryConfig.botPromptMessages) {
+      const promptMessages = await this._messageService.sendChunkedMessage(
+        botPromptChannel,
+        messageContent,
+      );
+      const promptMessage = promptMessages[promptMessages.length - 1];
+
+      this.logger.log(`Sent prompt message: "${messageContent}"`);
+      await promptMessage.react(this._contextPromptService.botPromptEmoji);
+    }
   }
 }
