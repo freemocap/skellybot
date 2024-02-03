@@ -1,0 +1,40 @@
+categories:
+  - name: WowCategory
+    permissionsOverwrites:
+      - roleName: "@Me"
+        allow:
+          - VIEW_CHANNEL
+          - SEND_MESSAGES
+          - READ_MESSAGE_HISTORY
+        deny:
+          - MANAGE_CHANNELS
+    position: -1
+    botPromptMessages:
+      - "Only say Wow (and variants) in this category!"
+      - "Wow!"
+
+roles:
+  - name: WowRoleWow
+    color: "#FF00FF"
+    syncPermissionsWithRole: "@Me"
+    hoist: true
+
+members:
+  - username: SkellyBot
+    nickname: coolSkellyBotWowo
+    roles:
+      - WowRoleWow
+
+channels:
+  - name: wow-channel
+    type: TEXT
+    permissionsOverwrites: []
+    parentCategory: WowCategory
+
+messages:
+  - name: welcome-message
+    content: "WoweeZee!"
+    channelName: wow-channel
+    reactions:
+      - "👋"
+      - "✨"

@@ -53,7 +53,8 @@
     "rxjs": "^7.8.1",
     "toml": "^3.0.0",
     "uuid": "^9.0.1",
-    "yaml": "^2.3.4"
+    "yaml": "^2.3.4",
+    "yml": "^1.0.0"
   },
   "devDependencies": {
     "@golevelup/nestjs-discovery": "^4.0.0",

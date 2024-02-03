@@ -5,7 +5,12 @@ import {
   MessageCommandContext,
   TargetMessage,
 } from 'necord';
-import { GuildMember, Message, PermissionsBitField } from 'discord.js';
+import {
+  Attachment,
+  GuildMember,
+  Message,
+  PermissionsBitField,
+} from 'discord.js';
 import * as path from 'path';
 import fs from 'fs';
 import axios from 'axios';
@@ -14,6 +19,8 @@ import {
   DiscordServerConfig,
   validateServerConfig,
 } from './server-config-schema';
+import * as TOML from 'toml';
+import * as YAML from 'yaml';
 
 @Injectable()
 export class DiscordConfigureServerCommand {
@@ -24,7 +31,7 @@ export class DiscordConfigureServerCommand {
   ) {}
 
   @MessageCommand({
-    name: 'Configure server from JSON',
+    name: 'Configure server from attachment',
   })
   public async onCommandInvoke(
     @Context() [interaction]: MessageCommandContext,
@@ -75,37 +82,60 @@ export class DiscordConfigureServerCommand {
   }
   private async _getServerConfigFromAttachment(message: Message<boolean>) {
     try {
-      await this._validateNumberOfAttachments(message);
-      const messageAttachment = message.attachments.first();
-
-      if (!messageAttachment || messageAttachment.name === null) {
-        new Error('No attachment found.');
-      }
-
-      const fileExtension = path.extname(messageAttachment.name).toLowerCase();
-      if (fileExtension !== '.json') {
-        new Error('The attachment must be a JSON file.');
-      }
-
-      const response = await axios.get(messageAttachment.url, {
-        responseType: 'arraybuffer',
-      });
-
-      const fileContent = response.data.toString('utf-8');
-      const valdationResponse = await validateServerConfig(
-        JSON.parse(fileContent),
-      );
-      if (!valdationResponse.isValid) {
+      const messageAttachment = await this._getConfigAttachement(message);
+      const serverConfig = await this._parseConfigAttachment(messageAttachment);
+      if (!serverConfig.isValid) {
         throw new Error(
-          `Invalid server configuration: ${valdationResponse.errors
+          `Invalid server configuration: ${serverConfig.errors
             .map((error) => error.toString())
             .join(', ')}`,
         );
       }
-      return valdationResponse.config;
+      return serverConfig.config;
     } catch (error) {
       throw new Error(`Error processing attachment: ${error.message || error}`);
     }
+  }
+
+  private async _parseConfigAttachment(messageAttachment: Attachment) {
+    const fileExtension = path.extname(messageAttachment.name).toLowerCase();
+    let parsedConfig: DiscordServerConfig;
+
+    const response = await axios.get(messageAttachment.url, {
+      responseType: 'arraybuffer',
+    });
+    const fileContent = response.data.toString('utf-8');
+
+    // Determine the file type and parse accordingly
+    switch (fileExtension) {
+      case '.json':
+        parsedConfig = JSON.parse(fileContent);
+        break;
+      case '.toml':
+        parsedConfig = TOML.parse(fileContent);
+        break;
+      case '.yaml':
+      case '.yml':
+        parsedConfig = YAML.parse(fileContent);
+        break;
+      default:
+        new Error(
+          'Unsupported file type. Only JSON, TOML, and YAML are supported.',
+        );
+    }
+
+    const valdationResponse = await validateServerConfig(parsedConfig);
+    return valdationResponse;
+  }
+
+  private async _getConfigAttachement(message: Message<boolean>) {
+    await this._validateNumberOfAttachments(message);
+    const messageAttachment = message.attachments.first();
+
+    if (!messageAttachment || messageAttachment.name === null) {
+      new Error('No attachment found.');
+    }
+    return messageAttachment;
   }
 
   private async _validateNumberOfAttachments(message: Message<boolean>) {

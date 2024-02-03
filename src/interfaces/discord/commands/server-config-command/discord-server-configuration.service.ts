@@ -4,7 +4,6 @@ import {
   ChannelType,
   Client,
   Guild,
-  GuildBasedChannel,
   GuildMember,
   TextChannel,
 } from 'discord.js';
