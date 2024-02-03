@@ -1,20 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
-import {
-  CategoryChannel,
-  ChannelType,
-  Client,
-  Guild,
-  GuildMember,
-  TextChannel,
-} from 'discord.js';
+import { Client, Guild, GuildMember, TextChannel } from 'discord.js';
 import {
   DiscordMemberConfig,
   DiscordRoleConfig,
   DiscordServerConfig,
-  DiscordTextChannelConfig,
 } from './server-config-schema';
 import { DiscordMessageService } from '../../services/discord-message.service';
 import { DiscordConfigureCategoryService } from './discord-configure-category.service';
+import { DiscordChannelCategoryService } from './discord-configure-channel.service';
 
 @Injectable()
 export class DiscordServerConfigService {
@@ -22,6 +15,7 @@ export class DiscordServerConfigService {
   constructor(
     private readonly client: Client,
     private readonly _configureCategoryService: DiscordConfigureCategoryService,
+    private readonly _configureChannelService: DiscordChannelCategoryService,
     private readonly _messageService: DiscordMessageService,
   ) {}
 
@@ -34,13 +28,14 @@ export class DiscordServerConfigService {
       JSON.stringify(serverConfig, null, 2),
     );
     const server = await this.client.guilds.fetch(serverID);
+    await this._configureRoles(server, serverConfig);
+    await this._configureMembers(server, serverConfig);
+
     await this._configureCategoryService.applyServerConfig(
       server,
       serverConfig,
     );
-    await this._configureRoles(server, serverConfig);
-    await this._configureMembers(server, serverConfig);
-    await this._configureChannels(server, serverConfig);
+    await this._configureChannelService.applyServerConfig(server, serverConfig);
     await this._configureMessages(server, serverConfig);
   }
 
@@ -92,7 +87,7 @@ export class DiscordServerConfigService {
 
       await guildMember.setNickname(memberConfig.nickname);
 
-      this.logger.log(`Fetched user: ${JSON.stringify(guildMember, null, 2)}`);
+      this.logger.log(`Fetched user: ${guildMember.user.username}`);
     }
   }
   private async _applyRoleToMember(
@@ -130,72 +125,6 @@ export class DiscordServerConfigService {
       new Error(`User not found: "${memberConfig.username}"`);
     }
     return guildMember;
-  }
-
-  private async _configureChannels(
-    server: Guild,
-    serverConfig: DiscordServerConfig,
-  ) {
-    this.logger.log('Configuring channels...');
-    for (const channelConfig of serverConfig.channels) {
-      await this._createChannelIfNotExists(server, channelConfig);
-    }
-  }
-
-  private async _createChannelIfNotExists(
-    server: Guild,
-    channelConfig: DiscordTextChannelConfig,
-  ) {
-    let existingChannel;
-    let createdChannel;
-    if (channelConfig.parentCategory) {
-      const parentCategory = server.channels.cache.find(
-        (c) => c.name === channelConfig.parentCategory,
-      ) as CategoryChannel;
-      if (!parentCategory) {
-        throw new Error(
-          `Specified parent category (${channelConfig.parentCategory})for channel ${channelConfig.name} not found in server: `,
-        );
-      }
-      existingChannel = parentCategory.children.cache.find(
-        (c) => c.name === channelConfig.name,
-      );
-      if (!existingChannel) {
-        createdChannel = (await parentCategory.children.create({
-          name: channelConfig.name,
-          type: ChannelType.GuildText, //TODO - support forum channels
-        })) as TextChannel;
-      } else {
-        this.logger.log(
-          `Channel already exists, skipping: "${channelConfig.name}"`,
-        );
-      }
-    } else {
-      existingChannel = server.channels.cache.find(
-        (c) => c.name === channelConfig.name,
-      );
-      if (!existingChannel) {
-        // const channelType = ChannelType.GuildForum
-        //   ? channelConfig.type === 'forum'
-        //   : ChannelType.GuildText;
-        createdChannel = (await server.channels.create({
-          name: channelConfig.name,
-          type: ChannelType.GuildText, //TODO - support forum channels
-        })) as TextChannel;
-      }
-    }
-
-    if (createdChannel) {
-      this.logger.log(`Created channel: ${createdChannel.name}`);
-      await createdChannel.setTopic(channelConfig.topic);
-      // await this._configurePermissions(createdChannel, channelConfig); // TODO - configure permissions
-      return createdChannel as TextChannel;
-    }
-
-    this.logger.log(
-      `Channel already exists, skipping: "${channelConfig.name}"`,
-    );
-    return existingChannel as TextChannel;
   }
 
   private async _configureMessages(

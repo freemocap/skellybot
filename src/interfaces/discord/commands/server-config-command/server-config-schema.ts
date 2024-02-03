@@ -78,6 +78,10 @@ export class DiscordTextChannelConfig {
   @IsString()
   @IsOptional()
   topic?: string;
+
+  @IsNumber()
+  @IsOptional()
+  position?: number;
 }
 
 export class DiscordMessageConfig {

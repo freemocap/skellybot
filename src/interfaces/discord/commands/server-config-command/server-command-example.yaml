@@ -27,17 +27,24 @@ categories:
 #          - READ_MESSAGE_HISTORY
 #        deny:
 #          - MANAGE_CHANNELS
-    position: 1
+    position: 0
 
 channels:
   - name: wow-channel
     type: text
     parentCategory: WowCategory
+    topic: "This is the wow channel! Woweeeeeeeeee4!"
 #    permissionsOverwrites: []
-    position: 1
+    position: 0
+
   - name: neato-channel
     type: text
+    topic: "This is the neato channel! Neatoooooooooo!"
     parentCategory: NeatoCategory
+
+  - name: additional-channel
+    type: text
+    topic: "This channel doesn't belong to any category!"
 
 messages:
   - content: "WoweeZoweeee!"
@@ -45,8 +52,14 @@ messages:
     reactions:
       - "👋"
       - "✨"
-  - content: "Neato!"
+  - content: "NeatoBEETON!"
     channelName: neato-channel
     reactions:
     - "🐕"
     - "🐈"
+  - content: "Lookit this msg!"
+    channelName: additional-channel
+    reactions:
+      - "👍"
+      - "👎"
+      - "🤔"

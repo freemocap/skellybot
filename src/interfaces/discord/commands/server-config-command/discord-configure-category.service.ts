@@ -25,6 +25,10 @@ export class DiscordConfigureCategoryService {
         server,
         categoryConfig.name,
       );
+
+      if (categoryConfig.position !== undefined) {
+        await this._setCategoryPosition(category, categoryConfig);
+      }
       const botPromptChannel =
         await this._contextPromptService.getOrCreatePromptChannel(
           server,
@@ -43,6 +47,18 @@ export class DiscordConfigureCategoryService {
       }
     }
     // TODO - configure permissions
+  }
+
+  private async _setCategoryPosition(
+    category: CategoryChannel,
+    categoryConfig: DiscordCategoryConfig,
+  ) {
+    try {
+      await category.setPosition(categoryConfig.position);
+    } catch (error) {
+      this.logger.error(`Failed to set category position: ${error.message}`);
+      throw error;
+    }
   }
 
   private async _createCategoryIfNotExists(

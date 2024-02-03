@@ -30,14 +30,14 @@ export class DiscordThreadService {
         threadAnchorMessage = await interaction.channel.parent.send({
           content: `Thread Created for user: ${userMention(
             interaction.user.id,
-          )} with starting text:\n\n> ${startingTextString}`,
+          )}`,
           embeds: [threadTitleEmbed],
         });
       } else {
         threadAnchorMessage = await interaction.channel.send({
           content: `Thread Created for user: ${userMention(
             interaction.user.id,
-          )} with starting text:\n\n> ${startingTextString}`,
+          )}`,
           embeds: [threadTitleEmbed],
         });
       }

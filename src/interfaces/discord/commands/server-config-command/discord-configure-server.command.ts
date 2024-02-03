@@ -74,7 +74,7 @@ export class DiscordConfigureServerCommand {
       );
     } catch (error) {
       const errorMessage = `Error Occurred: ${error.message || error}`;
-      this.logger.error(errorMessage);
+      this.logger.error(error.stack + '\n\n' + errorMessage);
       await interaction.editReply(errorMessage);
     } finally {
       try {

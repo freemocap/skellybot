@@ -22,6 +22,7 @@ import { DiscordThreadService } from './services/discord-thread.service';
 import { DiscordServerConfigService } from './commands/server-config-command/discord-server-configuration.service';
 import { DiscordContextPromptService } from './services/discord-context-prompt.service';
 import { DiscordConfigureCategoryService } from './commands/server-config-command/discord-configure-category.service';
+import { DiscordChannelCategoryService } from './commands/server-config-command/discord-configure-channel.service';
 
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import { DiscordConfigureCategoryService } from './commands/server-config-comman
     DiscordChatCommand,
     DiscordConfigureServerCommand,
     DiscordConfigureCategoryService,
+    DiscordChannelCategoryService,
     DiscordServerConfigService,
     DiscordStartUpService,
   ],
