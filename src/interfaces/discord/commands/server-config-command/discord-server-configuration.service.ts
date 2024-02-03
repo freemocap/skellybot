@@ -8,21 +8,21 @@ import {
   TextChannel,
 } from 'discord.js';
 import {
-  DiscordCategoryConfig,
   DiscordMemberConfig,
   DiscordRoleConfig,
   DiscordServerConfig,
+  DiscordTextChannelConfig,
 } from './server-config-schema';
 import { DiscordMessageService } from '../../services/discord-message.service';
-import { DiscordContextPromptService } from '../../services/discord-context-prompt.service';
+import { DiscordConfigureCategoryService } from './discord-configure-category.service';
 
 @Injectable()
 export class DiscordServerConfigService {
   private readonly logger = new Logger(DiscordServerConfigService.name);
   constructor(
     private readonly client: Client,
+    private readonly _configureCategoryService: DiscordConfigureCategoryService,
     private readonly _messageService: DiscordMessageService,
-    private readonly _contextPromptService: DiscordContextPromptService,
   ) {}
 
   public async configureServer(
@@ -34,53 +34,14 @@ export class DiscordServerConfigService {
       JSON.stringify(serverConfig, null, 2),
     );
     const server = await this.client.guilds.fetch(serverID);
-    await this._configureCategories(server, serverConfig);
+    await this._configureCategoryService.applyServerConfig(
+      server,
+      serverConfig,
+    );
     await this._configureRoles(server, serverConfig);
     await this._configureMembers(server, serverConfig);
-  }
-
-  private async _configureCategories(
-    server: Guild,
-    serverConfig: DiscordServerConfig,
-  ) {
-    this.logger.log('Configuring categories...');
-    for (const categoryConfig of serverConfig.categories) {
-      const category = await this._createCategoryIfNotExists(
-        server,
-        categoryConfig.name,
-      );
-      const botPromptChannel =
-        await this._contextPromptService.getOrCreatePromptChannel(
-          server,
-          category,
-        );
-
-      await this._sendBotPromptSettingsMessage(
-        botPromptChannel,
-        categoryConfig,
-      );
-    }
-    // TODO - configure permissions
-  }
-
-  private async _createCategoryIfNotExists(
-    server: Guild,
-    categoryName: string,
-  ) {
-    const existingCategory = server.channels.cache.find(
-      (c) => c.type === ChannelType.GuildCategory && c.name === categoryName,
-    );
-
-    if (existingCategory) {
-      this.logger.log(`Category already exists, skipping: "${categoryName}"`);
-      return existingCategory as CategoryChannel;
-    }
-    const category = await server.channels.create({
-      name: categoryName,
-      type: ChannelType.GuildCategory,
-    });
-    this.logger.log(`Created category: ${category.name}`);
-    return category;
+    await this._configureChannels(server, serverConfig);
+    await this._configureMessages(server, serverConfig);
   }
 
   private async _configureRoles(
@@ -134,7 +95,6 @@ export class DiscordServerConfigService {
       this.logger.log(`Fetched user: ${JSON.stringify(guildMember, null, 2)}`);
     }
   }
-
   private async _applyRoleToMember(
     memberConfig: DiscordMemberConfig,
     guildMember: GuildMember,
@@ -144,7 +104,11 @@ export class DiscordServerConfigService {
       const roleToAdd = server.roles.cache.find(
         (role) => role.name === roleName,
       );
-      if (roleToAdd && !guildMember.roles.cache.has(roleToAdd.id)) {
+      if (!roleToAdd) {
+        this.logger.error('Role not found:', roleName);
+        throw new Error(`Role not found: "${roleName}"`);
+      }
+      if (!guildMember.roles.cache.has(roleToAdd.id)) {
         await guildMember.roles.add(roleToAdd);
       } else {
         this.logger.log(
@@ -153,12 +117,12 @@ export class DiscordServerConfigService {
       }
     }
   }
+
   private async _getMember(server: Guild, memberConfig: DiscordMemberConfig) {
     const guildMember = await (async () => {
       const m = await server.members.fetch({
         query: memberConfig.username,
       });
-
       return m.first();
     })();
     if (!guildMember) {
@@ -168,19 +132,95 @@ export class DiscordServerConfigService {
     return guildMember;
   }
 
-  private async _sendBotPromptSettingsMessage(
-    botPromptChannel: TextChannel,
-    categoryConfig: DiscordCategoryConfig,
+  private async _configureChannels(
+    server: Guild,
+    serverConfig: DiscordServerConfig,
   ) {
-    for (const messageContent of categoryConfig.botPromptMessages) {
-      const promptMessages = await this._messageService.sendChunkedMessage(
-        botPromptChannel,
-        messageContent,
-      );
-      const promptMessage = promptMessages[promptMessages.length - 1];
+    this.logger.log('Configuring channels...');
+    for (const channelConfig of serverConfig.channels) {
+      await this._createChannelIfNotExists(server, channelConfig);
+    }
+  }
 
-      this.logger.log(`Sent prompt message: "${messageContent}"`);
-      await promptMessage.react(this._contextPromptService.botPromptEmoji);
+  private async _createChannelIfNotExists(
+    server: Guild,
+    channelConfig: DiscordTextChannelConfig,
+  ) {
+    let existingChannel;
+    let createdChannel;
+    if (channelConfig.parentCategory) {
+      const parentCategory = server.channels.cache.find(
+        (c) => c.name === channelConfig.parentCategory,
+      ) as CategoryChannel;
+      if (!parentCategory) {
+        throw new Error(
+          `Specified parent category (${channelConfig.parentCategory})for channel ${channelConfig.name} not found in server: `,
+        );
+      }
+      existingChannel = parentCategory.children.cache.find(
+        (c) => c.name === channelConfig.name,
+      );
+      if (!existingChannel) {
+        createdChannel = (await parentCategory.children.create({
+          name: channelConfig.name,
+          type: ChannelType.GuildText, //TODO - support forum channels
+        })) as TextChannel;
+      } else {
+        this.logger.log(
+          `Channel already exists, skipping: "${channelConfig.name}"`,
+        );
+      }
+    } else {
+      existingChannel = server.channels.cache.find(
+        (c) => c.name === channelConfig.name,
+      );
+      if (!existingChannel) {
+        const channelType = ChannelType.GuildForum
+          ? channelConfig.type === 'forum'
+          : ChannelType.GuildText;
+        createdChannel = (await server.channels.create({
+          name: channelConfig.name,
+          type: ChannelType.GuildText, //TODO - support forum channels
+        })) as TextChannel;
+      }
+    }
+
+    if (createdChannel) {
+      this.logger.log(`Created channel: ${createdChannel.name}`);
+      await createdChannel.setTopic(channelConfig.topic);
+      // await this._configurePermissions(createdChannel, channelConfig); // TODO - configure permissions
+      return createdChannel as TextChannel;
+    }
+
+    this.logger.log(
+      `Channel already exists, skipping: "${channelConfig.name}"`,
+    );
+    return existingChannel as TextChannel;
+  }
+
+  private async _configureMessages(
+    server: Guild,
+    serverConfig: DiscordServerConfig,
+  ) {
+    this.logger.log('Configuring messages...');
+    for (const messageConfig of serverConfig.messages) {
+      const channel = server.channels.cache.find(
+        (c) => c.name === messageConfig.channelName,
+      ) as TextChannel;
+      if (!channel) {
+        throw new Error(
+          `Channel not found: "${messageConfig.channelName}" for message: "${messageConfig.content}"`,
+        );
+      }
+      const messages = await this._messageService.sendChunkedMessage(
+        channel,
+        messageConfig.content,
+      );
+      if (messageConfig.reactions) {
+        for (const reaction of messageConfig.reactions) {
+          await messages[messages.length - 1].react(reaction);
+        }
+      }
     }
   }
 }

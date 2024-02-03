@@ -29,7 +29,9 @@ export class DiscordCategoryConfig {
 
   @ValidateNested({ each: true })
   @Type(() => DiscordPermissionsOverwrites)
-  permissionsOverwrites: DiscordPermissionsOverwrites[];
+  @IsArray()
+  @IsOptional()
+  permissionsOverwrites?: DiscordPermissionsOverwrites[];
 
   @IsNumber()
   @IsOptional()
@@ -37,8 +39,8 @@ export class DiscordCategoryConfig {
 
   @IsArray()
   @IsOptional()
-  @ValidateNested({ each: true })
-  botPromptMessages: string[];
+  @IsString({ each: true })
+  botPromptMessages?: string[];
 }
 
 export class DiscordRoleConfig {
@@ -46,25 +48,28 @@ export class DiscordRoleConfig {
   name: string;
 
   @IsString()
-  syncPermissionsWithRole: string;
+  @IsOptional()
+  syncPermissionsWithRole?: string;
 
   @IsOptional()
-  color: ColorResolvable;
+  color?: ColorResolvable;
 
   @IsBoolean()
-  hoist: boolean; // Display role members separately from online members
+  hoist: boolean = false;
 }
 
 export class DiscordTextChannelConfig {
   @IsString()
   name: string;
 
+  @IsString()
   type: 'text' | 'forum';
 
   @ValidateNested({ each: true })
   @Type(() => DiscordPermissionsOverwrites)
   @IsArray()
-  permissionsOverwrites: DiscordPermissionsOverwrites[];
+  @IsOptional()
+  permissionsOverwrites?: DiscordPermissionsOverwrites[];
 
   @IsString()
   @IsOptional()
@@ -77,9 +82,6 @@ export class DiscordTextChannelConfig {
 
 export class DiscordMessageConfig {
   @IsString()
-  name: string;
-
-  @IsString()
   content: string;
 
   @IsString()
@@ -88,7 +90,7 @@ export class DiscordMessageConfig {
   @IsArray()
   @IsOptional()
   @IsString({ each: true })
-  reactions: string[];
+  reactions?: string[];
 }
 
 export class DiscordMemberConfig {
@@ -98,7 +100,7 @@ export class DiscordMemberConfig {
   @IsArray()
   @IsOptional()
   @IsString({ each: true })
-  roles: string[];
+  roles?: string[];
 
   @IsString()
   @IsOptional()
@@ -108,23 +110,33 @@ export class DiscordMemberConfig {
 export class DiscordServerConfig {
   @ValidateNested({ each: true })
   @Type(() => DiscordCategoryConfig)
-  categories: DiscordCategoryConfig[];
+  @IsArray()
+  @IsOptional()
+  categories?: DiscordCategoryConfig[];
 
   @ValidateNested({ each: true })
   @Type(() => DiscordMemberConfig)
-  members: DiscordMemberConfig[];
+  @IsArray()
+  @IsOptional()
+  members?: DiscordMemberConfig[];
 
   @ValidateNested({ each: true })
   @Type(() => DiscordRoleConfig)
-  roles: DiscordRoleConfig[];
+  @IsArray()
+  @IsOptional()
+  roles?: DiscordRoleConfig[];
 
   @ValidateNested({ each: true })
   @Type(() => DiscordTextChannelConfig)
-  channels: DiscordTextChannelConfig[];
+  @IsArray()
+  @IsOptional()
+  channels?: DiscordTextChannelConfig[];
 
   @ValidateNested({ each: true })
   @Type(() => DiscordMessageConfig)
-  messages: DiscordMessageConfig[];
+  @IsArray()
+  @IsOptional()
+  messages?: DiscordMessageConfig[];
 }
 
 export async function validateServerConfig(configObjectFromJson: any) {

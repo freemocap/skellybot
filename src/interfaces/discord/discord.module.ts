@@ -21,6 +21,7 @@ import { DiscordConfigureServerCommand } from './commands/server-config-command/
 import { DiscordThreadService } from './services/discord-thread.service';
 import { DiscordServerConfigService } from './commands/server-config-command/discord-server-configuration.service';
 import { DiscordContextPromptService } from './services/discord-context-prompt.service';
+import { DiscordConfigureCategoryService } from './commands/server-config-command/discord-configure-category.service';
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { DiscordContextPromptService } from './services/discord-context-prompt.s
     DiscordPingWowCommand,
     DiscordChatCommand,
     DiscordConfigureServerCommand,
+    DiscordConfigureCategoryService,
     DiscordServerConfigService,
     DiscordStartUpService,
   ],

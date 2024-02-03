@@ -63,12 +63,14 @@ export class DiscordConfigureServerCommand {
         'Server config:\n\n',
         JSON.stringify(serverConfig, null, 2),
       );
-      const response = await this._serverConfigService.configureServer(
+
+      await this._serverConfigService.configureServer(
         interaction.guild.id,
         serverConfig,
       );
+
       await interaction.editReply(
-        `Server Config command returned: ${JSON.stringify(response)}`,
+        `Server Config from message ${message.url} has been applied.`,
       );
     } catch (error) {
       const errorMessage = `Error Occurred: ${error.message || error}`;

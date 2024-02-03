@@ -40,7 +40,9 @@ export class DiscordStartUpService {
       .fetch()
       .then((commands) => {
         this.logger.log(
-          `Registered commands: ${commands.map((cmd) => cmd.name).join(', ')}`,
+          `Registered commands: "${commands
+            .map((cmd) => cmd.name)
+            .join('", "')}"`,
         );
       })
       .catch((error) => {
