@@ -1,12 +1,17 @@
 import { Injectable, Logger } from '@nestjs/common';
 import {
+  AttachmentOption,
   Context,
   MessageCommand,
   MessageCommandContext,
+  Options,
+  SlashCommand,
+  SlashCommandContext,
   TargetMessage,
 } from 'necord';
 import {
   Attachment,
+  AttachmentBuilder,
   GuildMember,
   Message,
   PermissionsBitField,
@@ -22,6 +27,15 @@ import {
 import * as TOML from 'toml';
 import * as YAML from 'yaml';
 
+class ConfigAttachmentOption {
+  @AttachmentOption({
+    name: 'config-attachment',
+    description: 'The server configuration file (see discord-chat.command.ts)',
+    required: true,
+  })
+  public serverConfigAttachment: Attachment;
+}
+
 @Injectable()
 export class DiscordConfigureServerCommand {
   private readonly logger = new Logger(DiscordConfigureServerCommand.name);
@@ -30,10 +44,56 @@ export class DiscordConfigureServerCommand {
     private readonly _serverConfigService: DiscordServerConfigService,
   ) {}
 
+  @SlashCommand({
+    name: 'deploy',
+    description:
+      'Deploy the server configuration from the provided attachment.',
+  })
+  public async onSlashCommandInvoke(
+    @Context() [interaction]: SlashCommandContext,
+    @Options(ConfigAttachmentOption)
+    { serverConfigAttachment }: ConfigAttachmentOption,
+  ) {
+    const invokingMember = interaction.member as GuildMember;
+    if (
+      !invokingMember.permissions.has(PermissionsBitField.Flags.ManageChannels)
+    ) {
+      await interaction.editReply({
+        content:
+          'You need to have the "Manage Channels" permission to use this command.',
+      });
+      return;
+    }
+
+    await interaction.deferReply();
+    const serverConfig: DiscordServerConfig =
+      await this._getServerConfigFromAttachment(serverConfigAttachment);
+
+    this.logger.debug(
+      'Server config:\n\n',
+      JSON.stringify(serverConfig, null, 2),
+    );
+
+    await this._serverConfigService.configureServer(
+      interaction.guild.id,
+      serverConfig,
+    );
+    const attachment = new AttachmentBuilder(
+      Buffer.from(JSON.stringify(serverConfig, null, 2)),
+      {
+        name: `server-config.json`,
+      },
+    );
+    await interaction.editReply({
+      content: 'Server Config from attachment has been applied.',
+      files: [attachment],
+    });
+  }
+
   @MessageCommand({
     name: 'Configure server from attachment',
   })
-  public async onCommandInvoke(
+  public async onContextCommandInvoke(
     @Context() [interaction]: MessageCommandContext,
     @TargetMessage() message: Message,
   ) {
@@ -56,8 +116,9 @@ export class DiscordConfigureServerCommand {
 
     const tempFilePath = '';
     try {
+      const messageAttachment = await this._getConfigAttachement(message);
       const serverConfig: DiscordServerConfig =
-        await this._getServerConfigFromAttachment(message);
+        await this._getServerConfigFromAttachment(messageAttachment);
 
       this.logger.debug(
         'Server config:\n\n',
@@ -82,10 +143,9 @@ export class DiscordConfigureServerCommand {
       } catch {}
     }
   }
-  private async _getServerConfigFromAttachment(message: Message<boolean>) {
+  private async _getServerConfigFromAttachment(attachment: Attachment) {
     try {
-      const messageAttachment = await this._getConfigAttachement(message);
-      const serverConfig = await this._parseConfigAttachment(messageAttachment);
+      const serverConfig = await this._parseConfigAttachment(attachment);
       if (!serverConfig.isValid) {
         new Error(
           `Invalid server configuration: ${serverConfig.errors
