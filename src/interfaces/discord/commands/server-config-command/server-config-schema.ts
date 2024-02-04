@@ -8,7 +8,7 @@ import {
   validateOrReject,
 } from 'class-validator';
 import { Type, plainToInstance } from 'class-transformer';
-import { ColorResolvable } from 'discord.js';
+import { ColorResolvable, PermissionsBitField } from 'discord.js';
 
 export class DiscordPermissionsOverwrites {
   @IsString()
@@ -21,6 +21,69 @@ export class DiscordPermissionsOverwrites {
   @IsArray()
   @IsOptional()
   deny?: string[];
+
+  public permissionsAsBitFields() {
+    const allowBitFields: bigint[] = [];
+    const denyBitFields: bigint[] = [];
+
+    for (const permission of this.allow) {
+      switch (permission) {
+        case 'VIEW_CHANNEL':
+          allowBitFields.push(PermissionsBitField.Flags.ViewChannel);
+          break;
+        case 'SEND_MESSAGES':
+          allowBitFields.push(PermissionsBitField.Flags.SendMessages);
+          break;
+        case 'READ_MESSAGE_HISTORY':
+          allowBitFields.push(PermissionsBitField.Flags.ReadMessageHistory);
+          break;
+        case 'MANAGE_CHANNELS':
+          allowBitFields.push(PermissionsBitField.Flags.ManageChannels);
+          break;
+        case 'CREATE_PUBLIC_THREADS':
+          allowBitFields.push(PermissionsBitField.Flags.CreatePublicThreads);
+          break;
+        case 'SEND_MESSAGES_IN_THREADS':
+          allowBitFields.push(PermissionsBitField.Flags.SendMessagesInThreads);
+          break;
+        case 'SEND_VOICE_MESSAGES':
+          allowBitFields.push(PermissionsBitField.Flags.SendVoiceMessages);
+          break;
+        default:
+          throw new Error(`Unknown permission: ${permission}`);
+      }
+    }
+
+    for (const permission of this.deny) {
+      switch (permission) {
+        case 'VIEW_CHANNEL':
+          denyBitFields.push(PermissionsBitField.Flags.ViewChannel);
+          break;
+        case 'SEND_MESSAGES':
+          denyBitFields.push(PermissionsBitField.Flags.SendMessages);
+          break;
+        case 'READ_MESSAGE_HISTORY':
+          denyBitFields.push(PermissionsBitField.Flags.ReadMessageHistory);
+          break;
+        case 'MANAGE_CHANNELS':
+          denyBitFields.push(PermissionsBitField.Flags.ManageChannels);
+          break;
+        case 'CREATE_PUBLIC_THREADS':
+          denyBitFields.push(PermissionsBitField.Flags.CreatePublicThreads);
+          break;
+        case 'SEND_MESSAGES_IN_THREADS':
+          denyBitFields.push(PermissionsBitField.Flags.SendMessagesInThreads);
+          break;
+        case 'SEND_VOICE_MESSAGES':
+          denyBitFields.push(PermissionsBitField.Flags.SendVoiceMessages);
+          break;
+        default:
+          throw new Error(`Unknown permission: ${permission}`);
+      }
+    }
+
+    return { allow: allowBitFields, deny: denyBitFields };
+  }
 }
 
 export class DiscordCategoryConfig {

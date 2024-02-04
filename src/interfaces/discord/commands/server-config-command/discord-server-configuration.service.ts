@@ -28,6 +28,7 @@ export class DiscordServerConfigService {
       JSON.stringify(serverConfig, null, 2),
     );
     const server = await this.client.guilds.fetch(serverID);
+    // Order matters here, must go: roles -> members -> categories -> channels -> messages
     await this._configureRoles(server, serverConfig);
     await this._configureMembers(server, serverConfig);
 

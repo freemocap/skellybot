@@ -1,7 +1,7 @@
 roles:
   - name: WowRoleWow
     color: "#FF00FF"
-#    syncPermissionsWithRole: "@Me"
+    syncPermissionsWithRole: "Me"
     hoist: true
 
 members:
@@ -12,30 +12,44 @@ members:
 
 categories:
   - name: WowCategory
+    position: 0
     botPromptMessages:
       - "Only say Wow (and variants) in this category!"
       - "Wow!"
+
   - name: NeatoCategory
+    position: 0
     botPromptMessages:
       - "Only say Neato (and variants) in this category!"
       - "Neato!"
-#    permissionsOverwrites:
-#      - roleName: "@Me"
-#        allow:
-#          - VIEW_CHANNEL
-#          - SEND_MESSAGES
-#          - READ_MESSAGE_HISTORY
-#        deny:
-#          - MANAGE_CHANNELS
-    position: 0
+    permissionsOverwrites:
+      - roleName: "Me"
+        allow:
+          - "VIEW_CHANNEL"
+          - "SEND_MESSAGES"
+          - "READ_MESSAGE_HISTORY"
+        deny:
+          - "MANAGE_CHANNELS"
+      - roleName: "WowRoleWow"
+        allow:
+          - "VIEW_CHANNEL"
+          - "READ_MESSAGE_HISTORY"
+        deny:
+          - "MANAGE_CHANNELS"
 
 channels:
   - name: wow-channel
     type: text
     parentCategory: WowCategory
     topic: "This is the wow channel! Woweeeeeeeeee4!"
-#    permissionsOverwrites: []
-    position: 0
+    permissionsOverwrites:
+      - roleName: "WowRoleWow"
+        allow:
+          - "VIEW_CHANNEL"
+          - "SEND_MESSAGES"
+          - "READ_MESSAGE_HISTORY"
+        deny:
+          - "MANAGE_CHANNELS"
 
   - name: neato-channel
     type: text

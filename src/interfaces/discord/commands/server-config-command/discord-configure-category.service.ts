@@ -1,4 +1,10 @@
-import { CategoryChannel, ChannelType, Guild, TextChannel } from 'discord.js';
+import {
+  CategoryChannel,
+  ChannelType,
+  Guild,
+  PermissionsBitField,
+  TextChannel,
+} from 'discord.js';
 import {
   DiscordCategoryConfig,
   DiscordServerConfig,
@@ -45,8 +51,10 @@ export class DiscordConfigureCategoryService {
           `No bot prompt messages defined for category: "${categoryConfig.name}"`,
         );
       }
+      if (categoryConfig.permissionsOverwrites) {
+        await this._configurePermissions(category, categoryConfig);
+      }
     }
-    // TODO - configure permissions
   }
 
   private async _setCategoryPosition(
@@ -118,6 +126,36 @@ export class DiscordConfigureCategoryService {
           this._contextPromptService.botPromptEmoji,
         );
       }
+    }
+  }
+
+  private async _configurePermissions(
+    category: CategoryChannel,
+    categoryConfig: DiscordCategoryConfig,
+  ) {
+    const overwrites = [];
+    for (const permissionConfig of categoryConfig.permissionsOverwrites) {
+      const role = category.guild.roles.cache.find(
+        (r) => r.name === permissionConfig.roleName,
+      );
+      if (!role) {
+        this.logger.error('Role not found:', permissionConfig.roleName);
+        throw new Error(`Role not found: "${permissionConfig.roleName}"`);
+      }
+      this.logger.debug(
+        `Configuring Category "${category.name}" for role: "${role.name}"`,
+      );
+      const { allow, deny } = permissionConfig.permissionsAsBitFields();
+
+      overwrites.push({ id: role.id, allow, deny });
+    }
+    try {
+      await category.edit({ permissionOverwrites: overwrites });
+    } catch (error) {
+      this.logger.error(
+        `Failed to configure category permissions: ${error.message}`,
+      );
+      throw error;
     }
   }
 }

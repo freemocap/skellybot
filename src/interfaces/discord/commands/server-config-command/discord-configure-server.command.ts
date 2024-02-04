@@ -51,7 +51,7 @@ export class DiscordConfigureServerCommand {
     }
 
     this.logger.log(
-      `Received /deploy command in channel: name= ${interaction.channel.name}, id=${interaction.channel.id}`,
+      `Received "${interaction.command.name}" command in channel: name= ${interaction.channel.name}, id=${interaction.channel.id}`,
     );
 
     const tempFilePath = '';
@@ -87,7 +87,7 @@ export class DiscordConfigureServerCommand {
       const messageAttachment = await this._getConfigAttachement(message);
       const serverConfig = await this._parseConfigAttachment(messageAttachment);
       if (!serverConfig.isValid) {
-        throw new Error(
+        new Error(
           `Invalid server configuration: ${serverConfig.errors
             .map((error) => error.toString())
             .join(', ')}`,
@@ -95,39 +95,50 @@ export class DiscordConfigureServerCommand {
       }
       return serverConfig.config;
     } catch (error) {
-      throw new Error(`Error processing attachment: ${error.message || error}`);
+      throw new Error(
+        `Error processing attachment: ${error.stack} \n\n ${
+          error.message || error
+        }`,
+      );
     }
   }
 
   private async _parseConfigAttachment(messageAttachment: Attachment) {
-    const fileExtension = path.extname(messageAttachment.name).toLowerCase();
-    let parsedConfig: DiscordServerConfig;
+    try {
+      const fileExtension = path.extname(messageAttachment.name).toLowerCase();
+      let parsedConfig: DiscordServerConfig;
 
-    const response = await axios.get(messageAttachment.url, {
-      responseType: 'arraybuffer',
-    });
-    const fileContent = response.data.toString('utf-8');
+      const response = await axios.get(messageAttachment.url, {
+        responseType: 'arraybuffer',
+      });
+      const fileContent = response.data.toString('utf-8');
 
-    // Determine the file type and parse accordingly
-    switch (fileExtension) {
-      case '.json':
-        parsedConfig = JSON.parse(fileContent);
-        break;
-      case '.toml':
-        parsedConfig = TOML.parse(fileContent);
-        break;
-      case '.yaml':
-      case '.yml':
-        parsedConfig = YAML.parse(fileContent);
-        break;
-      default:
-        new Error(
-          'Unsupported file type. Only JSON, TOML, and YAML are supported.',
-        );
+      // Determine the file type and parse accordingly
+      switch (fileExtension) {
+        case '.json':
+          parsedConfig = JSON.parse(fileContent);
+          break;
+        case '.toml':
+          parsedConfig = TOML.parse(fileContent);
+          break;
+        case '.yaml':
+        case '.yml':
+          parsedConfig = YAML.parse(fileContent);
+          break;
+        default:
+          new Error(
+            'Unsupported file type. Only JSON, TOML, and YAML are supported.',
+          );
+      }
+
+      return await validateServerConfig(parsedConfig);
+    } catch (error) {
+      throw new Error(
+        `Error parsing attachment: ${error.stack} \n\n ${
+          error.message || error
+        }`,
+      );
     }
-
-    const valdationResponse = await validateServerConfig(parsedConfig);
-    return valdationResponse;
   }
 
   private async _getConfigAttachement(message: Message<boolean>) {
