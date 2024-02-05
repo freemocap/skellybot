@@ -5,7 +5,10 @@ import { DiscordMessageService } from './discord-message.service';
 import { AiChatDocument } from '../../../core/database/collections/ai-chats/ai-chat.schema';
 import { DiscordContextRouteService } from './discord-context-route.service';
 import { UsersService } from '../../../core/database/collections/users/users.service';
-import { OpenaiChatService } from '../../../core/ai/openai/openai-chat.service';
+import {
+  OpenAiChatConfig,
+  OpenaiChatService,
+} from '../../../core/ai/openai/openai-chat.service';
 import { DiscordContextPromptService } from './discord-context-prompt.service';
 
 @Injectable()
@@ -37,13 +40,14 @@ export class DiscordOnMessageService {
     const contextPrompt =
       await this._contextPromptService.getContextPromptFromMessage(message);
 
-    this._openaiChatService.createChat(aiChatId, contextPrompt, {
+    const chatConfig = {
       messages: [],
       model: 'gpt-4-1106-preview',
       temperature: 0.7,
       stream: true,
-    });
-    const aiChat = await this._aiChatsService.createAiChat({
+    } as OpenAiChatConfig;
+    this._openaiChatService.createChat(aiChatId, contextPrompt, chatConfig);
+    const aiChatDocument = await this._aiChatsService.createAiChat({
       aiChatId,
       ownerUser,
       contextRoute,
@@ -53,7 +57,7 @@ export class DiscordOnMessageService {
     });
 
     this.logger.debug(`Adding threadId ${aiChatId} to active listeners`);
-    this.allAiChatsById.set(aiChatId, aiChat);
+    this.allAiChatsById.set(aiChatId, aiChatDocument);
     this.activeChats.add(aiChatId);
   }
 

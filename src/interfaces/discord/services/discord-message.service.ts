@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { AttachmentBuilder, Message, TextBasedChannel } from 'discord.js';
-import { DiscordMongodbService } from './discord-mongodb.service';
+import { DiscordPersistenceService } from './discord-persistence.service';
 import { DiscordContextRouteService } from './discord-context-route.service';
 import { DiscordAttachmentService } from './discord-attachment.service';
 import { OpenaiChatService } from '../../../core/ai/openai/openai-chat.service';
@@ -10,7 +10,7 @@ export class DiscordMessageService {
   private readonly maxMessageLength = 2000 * 0.85; // discord max message length is 2000 characters (and * 0.85 to be safe)
   private readonly logger = new Logger(DiscordMessageService.name);
   constructor(
-    private readonly _persistenceService: DiscordMongodbService,
+    private readonly _persistenceService: DiscordPersistenceService,
     private readonly _contextService: DiscordContextRouteService,
     private readonly _discordAttachmentService: DiscordAttachmentService,
     private readonly _openaiChatService: OpenaiChatService,

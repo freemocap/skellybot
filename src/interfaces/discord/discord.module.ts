@@ -11,7 +11,7 @@ import { AiChatsModule } from '../../core/database/collections/ai-chats/ai-chats
 import { CoupletsModule } from '../../core/database/collections/couplets/couplets.module';
 import { MessagesModule } from '../../core/database/collections/messages/messages.module';
 import { DiscordContextRouteService } from './services/discord-context-route.service';
-import { DiscordMongodbService } from './services/discord-mongodb.service';
+import { DiscordPersistenceService } from './services/discord-persistence.service';
 import { DiscordMessageService } from './services/discord-message.service';
 import { OpenaiModule } from '../../core/ai/openai/openai.module';
 import { DiscordAttachmentService } from './services/discord-attachment.service';
@@ -45,7 +45,7 @@ import { DiscordConfigureChannelService } from './commands/server-config-command
     DiscordContextRouteService,
     DiscordContextPromptService,
     DiscordThreadService,
-    DiscordMongodbService,
+    DiscordPersistenceService,
     DiscordPingWowCommand,
     DiscordChatCommand,
     DiscordDeployServerCommand,
@@ -54,6 +54,6 @@ import { DiscordConfigureChannelService } from './commands/server-config-command
     DiscordServerConfigService,
     DiscordStartUpService,
   ],
-  exports: [DiscordMongodbService],
+  exports: [DiscordPersistenceService],
 })
 export class DiscordModule {}

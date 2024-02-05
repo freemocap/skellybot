@@ -16,7 +16,7 @@ import {
 export class DiscordContextPromptService {
   private readonly logger = new Logger(DiscordContextPromptService.name);
   oldInstructionsChannelPattern = new RegExp('.*bot-instructions.*', 'i');
-  instructionsChannelPattern = new RegExp('.*🤖-?prompt-?settings.*', 'i');
+  instructionsChannelPattern = new RegExp('.*?prompt-?settings.*', 'i');
   botPromptEmoji = '🤖';
 
   async getContextPromptFromMessage(message: Message) {
@@ -31,14 +31,15 @@ export class DiscordContextPromptService {
         channel = message.channel as TextChannel;
       }
       const server = await channel.client.guilds.fetch(channel.guildId);
-      const channelTopic = channel.topic || '';
+      const channelTopic =
+        `CHANNEL ${channel.name} TOPIC:\n\n${channel.topic}` || '';
       const channelPinnedInstructions =
         await this._getPinnedInstructions(channel);
-      const categoryInstructions = await this.getInstructions(
+      const categoryInstructions = await this.getCategoryInstructions(
         server,
         channel.parent as CategoryChannel,
       );
-      const serverInstructions = await this.getInstructions(server, null);
+      const serverInstructions = await this.getServerInstructions(server);
       return [
         serverInstructions,
         categoryInstructions,
@@ -53,9 +54,9 @@ export class DiscordContextPromptService {
     }
   }
 
-  private async getInstructions(
+  private async getCategoryInstructions(
     server: Guild,
-    category: CategoryChannel | null,
+    category: CategoryChannel,
   ): Promise<string> {
     if (!category) {
       this.logger.debug(
@@ -67,54 +68,110 @@ export class DiscordContextPromptService {
       );
     }
     try {
-      const botConfigChannel = (await this.getOrCreatePromptChannel(
+      const botConfigChannel = await this._getCategoryPromptChannel(
         server,
         category,
-      )) as TextChannel;
+      );
 
       if (!botConfigChannel) {
         return '';
       }
-      return await this._getBotReactionMessages(botConfigChannel);
+      const instructions = await this._getBotReactionMessages(botConfigChannel);
+      return `INSTRUCTIONS FOR CATEGORY: ${category.name}\n\n${instructions}`;
     } catch (error) {
       this.logger.error(`Failed to get instructions: ${error.message}`);
-      return ''; // In case of an error, return an empty string to keep the chatbot operational.
+      throw new Error(
+        `Failed to get instructions: ${error.message} ${error.stack}`,
+      );
     }
+  }
+
+  private async getServerInstructions(server: Guild): Promise<string> {
+    this.logger.debug(
+      `Gathering 'top-level'/'server-wide' bot-instructions for server: ${server.name}`,
+    );
+
+    try {
+      const botConfigChannel = await this._getServerPromptChannel(server);
+      if (!botConfigChannel) {
+        return '';
+      }
+      const instructions = await this._getBotReactionMessages(botConfigChannel);
+      return `SERVER-WIDE INSTRUCTIONS FOR SERVER ${server.name}\n\n${instructions}\n\n`;
+    } catch (error) {
+      this.logger.error(`Failed to get instructions: ${error.message}`);
+      throw new Error(
+        `Failed to get instructions: ${error.message} ${error.stack}`,
+      );
+    }
+  }
+
+  public async createPromptChannel(
+    category: CategoryChannel,
+  ): Promise<GuildBasedChannel> {
+    this.logger.debug(
+      `Creating bot-instructions channel in category: ${category?.name} ...`,
+    );
+    return await category.children.create({
+      name: this.getDefaultBotChannelName() as string,
+      topic: `Bot instructions for this category! Messages tagged with ${this.botPromptEmoji} will be used as context prompts for the chatbot.`,
+      position: 0,
+    });
   }
 
   public async getOrCreatePromptChannel(
     server: Guild,
+    category: CategoryChannel | null,
+  ): Promise<GuildBasedChannel> {
+    let botConfigChannel;
+    if (category) {
+      botConfigChannel = await this._getCategoryPromptChannel(server, category);
+    } else {
+      botConfigChannel = await this._getServerPromptChannel(server);
+    }
+
+    if (!botConfigChannel) {
+      this.logger.debug(
+        `No bot-instructions channel found in category: ${category?.name}`,
+      );
+      botConfigChannel = await this.createPromptChannel(category);
+    }
+
+    return botConfigChannel;
+  }
+
+  private async _getServerPromptChannel(server: Guild) {
+    const channels: Collection<string, GuildBasedChannel> =
+      await server.channels.fetch();
+
+    return channels.find(
+      (ch) =>
+        ch.parentId === null &&
+        (this.instructionsChannelPattern.test(ch.name) ||
+          this.oldInstructionsChannelPattern.test(ch.name)),
+    ) as TextChannel;
+  }
+
+  private async _getCategoryPromptChannel(
+    server: Guild,
     category: CategoryChannel,
   ) {
-    // @ts-expect-error
     const channels: Collection<string, GuildBasedChannel> =
-      await server.channels.fetch(null, {
-        force: true,
-      });
+      await server.channels.fetch();
 
-    // find channels that match the categoryID and either the old or new bot-instructions channel pattern
-    const botConfigChannel = channels.find(
+    return channels.find(
       (ch) =>
         ch.parentId === category.id &&
         (this.instructionsChannelPattern.test(ch.name) ||
           this.oldInstructionsChannelPattern.test(ch.name)),
-    );
-
-    if (!botConfigChannel) {
-      this.logger.debug(
-        `No bot-instructions channel found in category: ${category?.name} - creating one now...`,
-      );
-      return await category.children.create({
-        name: this.getDefaultBotChannelName() as string,
-        topic: `Bot instructions for this category! Messages tagged with ${this.botPromptEmoji} will be used as context prompts for the chatbot.`,
-        position: 0,
-      });
-    }
-    return botConfigChannel;
+    ) as TextChannel;
   }
 
-  private async _getBotReactionMessages(channel: TextChannel) {
-    const messages = await channel.messages.fetch();
+  private async _getBotReactionMessages(botConfigChannel: TextChannel) {
+    const messages = (await botConfigChannel.messages.fetch({
+      message: null,
+      force: true,
+    })) as unknown as Collection<string, Message>;
 
     const instructionMessages = messages.filter((message: Message) =>
       message.reactions.cache.some((reaction) =>
@@ -147,7 +204,8 @@ export class DiscordContextPromptService {
     if (pinnedMessages.size === 0) {
       return '';
     }
-    let pinnedMessagesContent = 'BEGIN PINNED MESSAGES\n\n';
+    let pinnedMessagesContent = `MESSAGES PINNED IN CHANNEL ${channel.name}:\n\n`;
+
     let pinnedMessageCount = 0;
     for (const message of pinnedMessages.values()) {
       pinnedMessagesContent += `Pinned message ${pinnedMessageCount++}:\n`;

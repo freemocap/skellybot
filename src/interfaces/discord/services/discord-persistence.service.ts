@@ -3,11 +3,17 @@ import { CoupletsService } from '../../../core/database/collections/couplets/cou
 import { MessagesService } from '../../../core/database/collections/messages/messages.service';
 import { ContextRoute } from '../../../core/database/collections/ai-chats/context-route.provider';
 import { AiChatsService } from '../../../core/database/collections/ai-chats/ai-chats.service';
-import { Message } from 'discord.js';
+import {
+  AttachmentBuilder,
+  Collection,
+  Message,
+  TextChannel,
+} from 'discord.js';
+import { AiChatDocument } from '../../../core/database/collections/ai-chats/ai-chat.schema';
 
 @Injectable()
-export class DiscordMongodbService {
-  private readonly logger = new Logger(DiscordMongodbService.name);
+export class DiscordPersistenceService {
+  private readonly logger = new Logger(DiscordPersistenceService.name);
   constructor(
     private readonly _coupletService: CoupletsService,
     private readonly _aiChatsService: AiChatsService,
@@ -67,8 +73,62 @@ export class DiscordMongodbService {
       });
 
       await this._aiChatsService.addCouplets(aiChatId, [couplet]);
+      await this.attachAiChatToOldestMessage(
+        aiChatId,
+        await this._aiChatsService.findOne(aiChatId),
+        discordMessage.channel as TextChannel,
+      );
     } catch (error) {
       this.logger.error(`Error persisting interaction: ${error}`);
     }
+  }
+
+  public async attachAiChatToOldestMessage(
+    aiChatId: string,
+    aiChatDocument: AiChatDocument,
+    channel: TextChannel,
+  ) {
+    this.logger.debug(
+      `Attaching chat document to oldest message in thread ${aiChatId}`,
+    );
+    // remove the _id field from the document
+    const aiChatAsJson = JSON.parse(JSON.stringify(aiChatDocument, null, 2));
+    delete aiChatAsJson._id;
+    delete aiChatAsJson.__v;
+
+    const oldestMessage = await this._findOldestMessage(channel);
+    const aiChatAttachmentName = `chat-${aiChatId}.json`;
+    const aiChatAttachment = new AttachmentBuilder(
+      Buffer.from(JSON.stringify(aiChatDocument, null, 2)),
+      { name: aiChatAttachmentName },
+    );
+
+    const existingAttachmentsCollection = oldestMessage.attachments.filter(
+      (attachment) => attachment.name !== aiChatAttachmentName,
+    );
+
+    const existingAttachments = Array.from(
+      existingAttachmentsCollection.values(),
+    );
+
+    await oldestMessage.edit({
+      content: oldestMessage.content,
+      files: [aiChatAttachment, ...existingAttachments],
+    });
+  }
+
+  private async _findOldestMessage(
+    channel: TextChannel,
+  ): Promise<Message | null> {
+    // Fetch the earliest message in the channel
+    const allMessages = (await channel.messages.fetch({
+      message: null,
+      force: true,
+    })) as unknown as Collection<string, Message>;
+
+    // The first message in the collection will be the oldest
+    const messages = allMessages.filter((msg) => !msg.system);
+    const oldestMessage = messages.last();
+    return oldestMessage;
   }
 }
