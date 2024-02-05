@@ -6,6 +6,7 @@ import {
 import { Injectable, Logger } from '@nestjs/common';
 import { DiscordContextPromptService } from '../../services/discord-context-prompt.service';
 import { DiscordMessageService } from '../../services/discord-message.service';
+import { DiscordConfigureChannelService } from './discord-configure-channel.service';
 
 @Injectable()
 export class DiscordConfigureCategoryService {
@@ -13,6 +14,7 @@ export class DiscordConfigureCategoryService {
   constructor(
     private readonly _messageService: DiscordMessageService,
     private readonly _contextPromptService: DiscordContextPromptService,
+    private readonly _configureChannelService: DiscordConfigureChannelService,
   ) {}
 
   public async applyServerConfig(
@@ -29,38 +31,55 @@ export class DiscordConfigureCategoryService {
       if (categoryConfig.position !== undefined) {
         await this._setCategoryPosition(category, categoryConfig);
       }
-      const botPromptChannel =
-        await this._contextPromptService.getOrCreatePromptChannel(
-          server,
-          category,
-        );
-      await this._createDefaultChatChannel(category, categoryConfig);
+      await this._createDefaultChannels(server, category, categoryConfig);
 
-      if (categoryConfig.botPromptMessages) {
-        await this._sendBotPromptSettingsMessage(
-          botPromptChannel,
-          categoryConfig,
-        );
-      } else {
-        this.logger.log(
-          `No bot prompt messages defined for category: "${categoryConfig.name}"`,
-        );
-      }
       if (categoryConfig.permissionsOverwrites) {
         await this._configurePermissions(category, categoryConfig);
       }
     }
   }
 
-  private async _createDefaultChatChannel(
+  private async _createDefaultChannels(
+    server: Guild,
     category: CategoryChannel,
     categoryConfig: DiscordCategoryConfig,
   ) {
-    await category.children.create({
+    await this._createBotPromptChannel(server, category, categoryConfig);
+    await this._createDefaultChatChannel(server, categoryConfig);
+  }
+
+  private async _createDefaultChatChannel(
+    server: Guild,
+    categoryConfig: DiscordCategoryConfig,
+  ) {
+    await this._configureChannelService.createChannelIfNotExists(server, {
       name: 'general-chat',
-      type: ChannelType.GuildText,
-      topic: `General chat for category: "${categoryConfig.name}"`,
+      topic: `This is the general chat channel for the ${categoryConfig.name} category.`,
+      parentCategory: categoryConfig.name,
+      type: 'text',
     });
+  }
+
+  private async _createBotPromptChannel(
+    server: Guild,
+    category: CategoryChannel,
+    categoryConfig: DiscordCategoryConfig,
+  ) {
+    const botPromptChannel =
+      await this._contextPromptService.getOrCreatePromptChannel(
+        server,
+        category,
+      );
+    if (categoryConfig.botPromptMessages) {
+      await this._sendBotPromptSettingsMessage(
+        botPromptChannel,
+        categoryConfig,
+      );
+    } else {
+      this.logger.log(
+        `No bot prompt messages defined for category: "${categoryConfig.name}"`,
+      );
+    }
   }
 
   private async _setCategoryPosition(

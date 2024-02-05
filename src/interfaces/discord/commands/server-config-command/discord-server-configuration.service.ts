@@ -7,7 +7,7 @@ import {
 } from './server-config-schema';
 import { DiscordMessageService } from '../../services/discord-message.service';
 import { DiscordConfigureCategoryService } from './discord-configure-category.service';
-import { DiscordChannelCategoryService } from './discord-configure-channel.service';
+import { DiscordConfigureChannelService } from './discord-configure-channel.service';
 
 @Injectable()
 export class DiscordServerConfigService {
@@ -15,7 +15,7 @@ export class DiscordServerConfigService {
   constructor(
     private readonly client: Client,
     private readonly _configureCategoryService: DiscordConfigureCategoryService,
-    private readonly _configureChannelService: DiscordChannelCategoryService,
+    private readonly _configureChannelService: DiscordConfigureChannelService,
     private readonly _messageService: DiscordMessageService,
   ) {}
 

@@ -2,8 +2,10 @@ import { Injectable, Logger } from '@nestjs/common';
 import {
   CategoryChannel,
   ChannelType,
+  Collection,
   DMChannel,
   Guild,
+  GuildBasedChannel,
   GuildEmoji,
   Message,
   ReactionEmoji,
@@ -84,14 +86,16 @@ export class DiscordContextPromptService {
     server: Guild,
     category: CategoryChannel,
   ) {
-    const channels = server.channels.cache.filter(
-      (ch) =>
-        ch.parent?.id === category?.id && ch.type === ChannelType.GuildText,
-    );
+    // @ts-ignore
+    const channels: Collection<string, GuildBasedChannel> =
+      await server.channels.fetch(null, {
+        force: true,
+      });
 
     const botConfigChannel = channels.find(
       (ch) =>
-        this.instructionsChannelPattern.test(ch.name) ||
+        (ch.parentId === category.id &&
+          this.instructionsChannelPattern.test(ch.name)) ||
         this.oldInstructionsChannelPattern.test(ch.name),
     ) as TextChannel | undefined;
 

@@ -1,4 +1,11 @@
-import { CategoryChannel, ChannelType, Guild, TextChannel } from 'discord.js';
+import {
+  CategoryChannel,
+  ChannelType,
+  Collection,
+  Guild,
+  GuildBasedChannel,
+  TextChannel,
+} from 'discord.js';
 import {
   DiscordServerConfig,
   DiscordTextChannelConfig,
@@ -6,8 +13,8 @@ import {
 import { Injectable, Logger } from '@nestjs/common';
 
 @Injectable()
-export class DiscordChannelCategoryService {
-  private readonly logger = new Logger(DiscordChannelCategoryService.name);
+export class DiscordConfigureChannelService {
+  private readonly logger = new Logger(DiscordConfigureChannelService.name);
 
   public async applyServerConfig(
     server: Guild,
@@ -15,7 +22,7 @@ export class DiscordChannelCategoryService {
   ) {
     this.logger.log('Configuring channels...');
     for (const channelConfig of serverConfig.channels) {
-      const channel = await this._createChannelIfNotExists(
+      const channel = await this.createChannelIfNotExists(
         server,
         channelConfig,
       );
@@ -31,18 +38,7 @@ export class DiscordChannelCategoryService {
       // await this._configurePermissions(channel, channelConfig); // TODO - configure permissions
     }
   }
-  private async _setChannelPosition(
-    channel: TextChannel,
-    channelConfig: DiscordTextChannelConfig,
-  ) {
-    try {
-      await channel.setPosition(channelConfig.position);
-    } catch (error) {
-      this.logger.error(`Failed to set channel position: ${error.message}`);
-      throw error;
-    }
-  }
-  private async _createChannelIfNotExists(
+  public async createChannelIfNotExists(
     server: Guild,
     channelConfig: DiscordTextChannelConfig,
   ): Promise<TextChannel> {
@@ -60,12 +56,29 @@ export class DiscordChannelCategoryService {
     return channel;
   }
 
+  private async _setChannelPosition(
+    channel: TextChannel,
+    channelConfig: DiscordTextChannelConfig,
+  ) {
+    try {
+      await channel.setPosition(channelConfig.position);
+    } catch (error) {
+      this.logger.error(`Failed to set channel position: ${error.message}`);
+      throw error;
+    }
+  }
+
   private async _findChannel(
     server: Guild,
     channelConfig: DiscordTextChannelConfig,
   ): Promise<TextChannel | undefined> {
     if (channelConfig.parentCategory) {
-      const parentCategory = server.channels.cache.find(
+      // @ts-ignore
+      const channels: Collection<string, GuildBasedChannel> =
+        await server.channels.fetch(null, {
+          force: true,
+        });
+      const parentCategory = channels.find(
         (c) =>
           c.name === channelConfig.parentCategory &&
           c.type === ChannelType.GuildCategory,
