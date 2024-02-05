@@ -32,7 +32,8 @@ export class DiscordContextPromptService {
       }
       const server = await channel.client.guilds.fetch(channel.guildId);
       const channelTopic = channel.topic || '';
-      const channelInstructions = await this._getBotReactionMessages(channel);
+      const channelPinnedInstructions =
+        await this._getPinnedInstructions(channel);
       const categoryInstructions = await this.getInstructions(
         server,
         channel.parent as CategoryChannel,
@@ -42,7 +43,7 @@ export class DiscordContextPromptService {
         serverInstructions,
         categoryInstructions,
         channelTopic,
-        channelInstructions,
+        channelPinnedInstructions,
       ].join('\n\n');
     } catch (error) {
       this.logger.error(
@@ -139,5 +140,20 @@ export class DiscordContextPromptService {
       );
     }
     return botChannelName;
+  }
+
+  private async _getPinnedInstructions(channel: TextChannel) {
+    const pinnedMessages = await channel.messages.fetchPinned();
+    if (pinnedMessages.size === 0) {
+      return '';
+    }
+    let pinnedMessagesContent = 'BEGIN PINNED MESSAGES\n\n';
+    let pinnedMessageCount = 0;
+    for (const message of pinnedMessages.values()) {
+      pinnedMessagesContent += `Pinned message ${pinnedMessageCount++}:\n`;
+      pinnedMessagesContent += message.content + '\n';
+    }
+    pinnedMessagesContent += '\nEND PINNED MESSAGES';
+    return pinnedMessagesContent;
   }
 }
