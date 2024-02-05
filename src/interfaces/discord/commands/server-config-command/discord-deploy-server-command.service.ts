@@ -113,7 +113,7 @@ export class DiscordDeployServerCommand {
   }
 
   private async _checkPermissions(invokingMember: GuildMember) {
-    let errorMessage = '';
+    let errorMessage = 'Permissions checks: \n\n';
     switch (true) {
       case !invokingMember.permissions.has(
         PermissionsBitField.Flags.ManageChannels,
@@ -129,19 +129,16 @@ export class DiscordDeployServerCommand {
       ):
         errorMessage +=
           'You need to have the "Manage Nicknames" permission.\n\n';
-
-        let allowed = true;
-        if (
-          errorMessage &&
-          !invokingMember.permissions.has(
-            PermissionsBitField.Flags.Administrator,
-          )
-        ) {
-          allowed = false;
-        }
-
-        return { allowed, errorMessage };
     }
+    let allowed = true;
+    if (
+      errorMessage &&
+      !invokingMember.permissions.has(PermissionsBitField.Flags.Administrator)
+    ) {
+      allowed = false;
+    }
+
+    return { allowed, errorMessage };
   }
 
   private async _getServerConfigFromAttachment(attachment: Attachment) {
