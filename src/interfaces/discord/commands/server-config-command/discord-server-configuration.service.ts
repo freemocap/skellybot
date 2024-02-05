@@ -100,6 +100,7 @@ export class DiscordServerConfigService {
     this.logger.log('Configuring members...');
     for (const memberConfig of serverConfig.members) {
       const guildMember = await this._getMember(server, memberConfig);
+
       await this._applyRoleToMember(memberConfig, guildMember, server);
 
       await guildMember.setNickname(memberConfig.nickname);
@@ -138,8 +139,9 @@ export class DiscordServerConfigService {
       return m.first();
     })();
     if (!guildMember) {
-      this.logger.error('User not found:', memberConfig.username);
-      new Error(`User not found: "${memberConfig.username}"`);
+      throw new Error(
+        `User "${memberConfig.username}" not found in server "${server.name}"`,
+      );
     }
     return guildMember;
   }

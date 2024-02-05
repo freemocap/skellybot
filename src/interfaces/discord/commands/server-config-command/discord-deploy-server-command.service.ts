@@ -96,10 +96,17 @@ export class DiscordDeployServerCommand {
       JSON.stringify(serverConfig, null, 2),
     );
 
-    await this._serverConfigService.configureServer(
-      interaction.guild.id,
-      serverConfig,
-    );
+    try {
+      await this._serverConfigService.configureServer(
+        interaction.guild.id,
+        serverConfig,
+      );
+    } catch (error) {
+      await interaction.editReply({
+        content: `Error configuring server: \n\n> ${error.message}`,
+      });
+      return;
+    }
     const attachment = new AttachmentBuilder(
       Buffer.from(JSON.stringify(serverConfig, null, 2)),
       {

@@ -10,7 +10,7 @@ roles:
     color: "#FF00FF"
 
 members:
-  - username: "jkl"
+  - username: "SkellyBot"
     nickname: "#FF00FF"
     roles:
       - "#FF00FF"
@@ -39,12 +39,7 @@ channels:
     topic: "This is the main channel to discuss the actual capstone document!"
     parentCategory: "#FF00FF"
 
-  - name: "progress-capture"
-    type: text
-    topic: "This is the main channel to capture progress on the capstone project!"
-    parentCategory: "#FF00FF"
-
   - name: "general-chat"
     type: text
-    topic: "This is a general purpose channel to discuss uncategorized topics"
+    topic: "A general chat channel for uncategorized discussions!"
     parentCategory: "#FF00FF"
