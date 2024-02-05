@@ -66,7 +66,7 @@ export class DiscordDeployServerCommand {
     @Context() [interaction]: MessageCommandContext,
     @TargetMessage() message: Message,
   ) {
-    const messageAttachment = await this._getConfigAttachement(message);
+    const messageAttachment = await this._getConfigAttachment(message);
     await this._deployServer(interaction, messageAttachment);
   }
 
@@ -202,7 +202,7 @@ export class DiscordDeployServerCommand {
     }
   }
 
-  private async _getConfigAttachement(message: Message<boolean>) {
+  private async _getConfigAttachment(message: Message<boolean>) {
     await this._validateNumberOfAttachments(message);
     const messageAttachment = message.attachments.first();
 
