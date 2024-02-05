@@ -1,7 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import {
   CategoryChannel,
-  ChannelType,
   Collection,
   DMChannel,
   Guild,
@@ -67,10 +66,10 @@ export class DiscordContextPromptService {
       );
     }
     try {
-      const botConfigChannel = await this.getOrCreatePromptChannel(
+      const botConfigChannel = (await this.getOrCreatePromptChannel(
         server,
         category,
-      );
+      )) as TextChannel;
 
       if (!botConfigChannel) {
         return '';
@@ -86,18 +85,19 @@ export class DiscordContextPromptService {
     server: Guild,
     category: CategoryChannel,
   ) {
-    // @ts-ignore
+    // @ts-expect-error
     const channels: Collection<string, GuildBasedChannel> =
       await server.channels.fetch(null, {
         force: true,
       });
 
+    // find channels that match the categoryID and either the old or new bot-instructions channel pattern
     const botConfigChannel = channels.find(
       (ch) =>
-        (ch.parentId === category.id &&
-          this.instructionsChannelPattern.test(ch.name)) ||
-        this.oldInstructionsChannelPattern.test(ch.name),
-    ) as TextChannel | undefined;
+        ch.parentId === category.id &&
+        (this.instructionsChannelPattern.test(ch.name) ||
+          this.oldInstructionsChannelPattern.test(ch.name)),
+    );
 
     if (!botConfigChannel) {
       this.logger.debug(
@@ -106,6 +106,7 @@ export class DiscordContextPromptService {
       return await category.children.create({
         name: this.getDefaultBotChannelName() as string,
         topic: `Bot instructions for this category! Messages tagged with ${this.botPromptEmoji} will be used as context prompts for the chatbot.`,
+        position: 0,
       });
     }
     return botConfigChannel;

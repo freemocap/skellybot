@@ -31,7 +31,7 @@ export class DiscordConfigureCategoryService {
       if (categoryConfig.position !== undefined) {
         await this._setCategoryPosition(category, categoryConfig);
       }
-      await this._createDefaultChannels(server, category, categoryConfig);
+      await this._setupDefaultChannels(server, category, categoryConfig);
 
       if (categoryConfig.permissionsOverwrites) {
         await this._configurePermissions(category, categoryConfig);
@@ -39,13 +39,36 @@ export class DiscordConfigureCategoryService {
     }
   }
 
-  private async _createDefaultChannels(
+  private async _setupDefaultChannels(
     server: Guild,
     category: CategoryChannel,
     categoryConfig: DiscordCategoryConfig,
   ) {
-    await this._createBotPromptChannel(server, category, categoryConfig);
+    await this._setupBotPromptsChannel(server, category, categoryConfig);
     await this._createDefaultChatChannel(server, categoryConfig);
+  }
+
+  private async _setupBotPromptsChannel(
+    server: Guild,
+    category: CategoryChannel,
+    categoryConfig: DiscordCategoryConfig,
+  ) {
+    const botPromptChannel =
+      (await this._contextPromptService.getOrCreatePromptChannel(
+        server,
+        category,
+      )) as TextChannel;
+
+    if (categoryConfig.botPromptMessages) {
+      await this._sendBotPromptSettingsMessage(
+        botPromptChannel,
+        categoryConfig,
+      );
+    } else {
+      this.logger.log(
+        `No bot prompt messages defined for category: "${categoryConfig.name}"`,
+      );
+    }
   }
 
   private async _createDefaultChatChannel(
@@ -57,29 +80,8 @@ export class DiscordConfigureCategoryService {
       topic: `This is the general chat channel for the ${categoryConfig.name} category.`,
       parentCategory: categoryConfig.name,
       type: 'text',
+      position: 1,
     });
-  }
-
-  private async _createBotPromptChannel(
-    server: Guild,
-    category: CategoryChannel,
-    categoryConfig: DiscordCategoryConfig,
-  ) {
-    const botPromptChannel =
-      await this._contextPromptService.getOrCreatePromptChannel(
-        server,
-        category,
-      );
-    if (categoryConfig.botPromptMessages) {
-      await this._sendBotPromptSettingsMessage(
-        botPromptChannel,
-        categoryConfig,
-      );
-    } else {
-      this.logger.log(
-        `No bot prompt messages defined for category: "${categoryConfig.name}"`,
-      );
-    }
   }
 
   private async _setCategoryPosition(
