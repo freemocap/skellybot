@@ -10,23 +10,10 @@ roles:
   - name: "{studentId}"
     hoist: false
     color: "{studentId}" # studentId is a hex color code
+    
   - name: "Student"
-    hoist: false
-    color: "BLUE"
-    permissions:
-      - "VIEW_CHANNEL"
-      - "READ_MESSAGE_HISTORY"
-      - "SEND_MESSAGES"
-      - "USE_PUBLIC_THREADS"
-      - "USE_PRIVATE_THREADS"
-      - "CREATE_INSTANT_INVITE"
-      - "CHANGE_NICKNAME"
-      - "USE_EXTERNAL_EMOJIS"
-      - "CONNECT"
-      - "SPEAK"
-      - "STREAM"
-      - "USE_SLASH_COMMANDS"
-      - "USE_APPLICATION_COMMANDS"
+    hoist: true
+
 
 members:
   - username: "{username}"
@@ -49,7 +36,7 @@ categories:
 
     botPromptMessages:
       - "This category is owned by the student with the id {studentId}"
-      - "I'm going to help them with their capstone project!"
+      - "They will add channels that will be configured to allow us to talk about different aspects of the capstone project"
 
 channels:
   - name: "capstone-document"
