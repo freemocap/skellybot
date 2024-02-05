@@ -1,80 +1,91 @@
 import * as fs from 'fs';
 
+import * as yaml from 'yaml';
+
 interface StudentInfo {
   username: string;
   studentId: string;
 }
 
-const template = `
-roles:
-  - name: "{studentId}"
-    hoist: false
-    color: "{studentId}" # studentId is a hex color code
-    
-  - name: "Student"
-    hoist: true
+// Define the structure for the combined YAML configuration
+interface CombinedConfig {
+  roles: any[];
+  members: any[];
+  categories: any[];
+  channels: any[];
+}
 
+// Initialize an empty combined config object
+const combinedConfig: CombinedConfig = {
+  roles: [],
+  members: [],
+  categories: [],
+  channels: [],
+};
 
-members:
-  - username: "{username}"
-    nickname: "{studentId}"
-    roles:
-      - "{studentId}"
-      - "Student"
-categories:
-  - name: "{studentId}"
-    position: 0
-    permissionsOverwrites:
-      - roleName: "{studentId}"
-        allow:
-          - "VIEW_CHANNEL"
-          - "SEND_MESSAGES"
-          - "READ_MESSAGE_HISTORY"
-      - roleName: "Student"
-        deny:
-          - "SEND_MESSAGES"
-
-    botPromptMessages:
-      - "This category is owned by the student with the id {studentId}"
-      - "They will add channels that will be configured to allow us to talk about different aspects of the capstone project"
-
-channels:
-  - name: "capstone-document"
-    type: text
-    topic: "This is the main channel to discuss the actual capstone document!"
-    parentCategory: "{studentId}"
-
-  - name: "progress-capture"
-    type: text
-    topic: "This is the main channel to capture progress on the capstone project!"
-    parentCategory: "{studentId}"
-
-  - name: "general-chat"
-    type: text
-    topic: "This is a general purpose channel to discuss uncategorized topics"
-    parentCategory: "{studentId}"
-`;
-
-// Function to replace placeholders in the template with actual student information.
-function generateYamlForStudent(student: StudentInfo): string {
-  return template
-    .replace(/\{username}/g, student.username)
-    .replace(/\{studentId}/g, student.studentId);
+// Function to add student data to the combined config
+function addStudentToConfig(student: StudentInfo, config: CombinedConfig) {
+  const studentIdColor = student.studentId; // Assuming studentId is a hex color code
+  // Add roles
+  config.roles.push(
+    { name: student.studentId, hoist: false, color: studentIdColor },
+    { name: 'Student', hoist: true },
+  );
+  // Add members
+  config.members.push({
+    username: student.username,
+    nickname: student.studentId,
+    roles: [student.studentId, 'Student'],
+  });
+  // Add categories
+  config.categories.push({
+    name: student.studentId,
+    position: 0,
+    permissionsOverwrites: [
+      {
+        roleName: student.studentId,
+        allow: ['VIEW_CHANNEL', 'SEND_MESSAGES', 'READ_MESSAGE_HISTORY'],
+      },
+      { roleName: 'Student', deny: ['SEND_MESSAGES'] },
+    ],
+    botPromptMessages: [
+      `This category is owned by the student with the id ${student.studentId}`,
+      'They will add channels that will be configured to allow us to talk about different aspects of the capstone project',
+    ],
+  });
+  // Add channels associated with this student
+  const channelNames = [
+    'capstone-document',
+    'progress-capture',
+    'general-chat',
+  ];
+  channelNames.forEach((channelName) => {
+    config.channels.push({
+      name: channelName,
+      type: 'text',
+      topic: `This is the main channel to ${channelName.replace('-', ' ')}`,
+      parentCategory: student.studentId,
+    });
+  });
 }
 
 // Example student mapping.
 const students: StudentInfo[] = [
-  { username: 'jonmatthis', studentId: '#FF00FF' },
-  // Add more student mappings here...
+  { username: 'jkl', studentId: '#008F00' },
+  { username: 'SkellyBot', studentId: '#0080FF' },
+  { username: 'SkellyBot-jon', studentId: '#FF8800' },
 ];
 
-// Generate and save YAML configuration for each student.
+// Add each student to the combined YAML configuration
 students.forEach((student) => {
-  const studentYaml = generateYamlForStudent(student);
-  const outputPath = `./student-categories-config.yaml`;
-  fs.mkdirSync('./output', { recursive: true });
-  fs.writeFileSync(outputPath, studentYaml, 'utf8');
-  console.log(`Generated YAML config for ${student.username}`);
+  addStudentToConfig(student, combinedConfig);
+  console.log(`Added ${student.username} to combined YAML config`);
 });
 
-console.log('All YAML configurations have been generated.');
+console.log('All student configurations have been added to combined YAML.');
+const combinedYaml = yaml.stringify(combinedConfig);
+
+// Save the combined YAML configuration to a file
+const outputPath = './category-per-student-config.yaml';
+fs.mkdirSync('./output', { recursive: true });
+fs.writeFileSync(outputPath, combinedYaml, 'utf8');

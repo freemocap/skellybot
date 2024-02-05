@@ -1,0 +1,100 @@
+roles:
+  - name: "#008F00"
+    hoist: false
+    color: "#008F00"
+  - name: Student
+    hoist: true
+  - name: "#0080FF"
+    hoist: false
+    color: "#0080FF"
+  - name: Student
+    hoist: true
+  - name: "#FF8800"
+    hoist: false
+    color: "#FF8800"
+  - name: Student
+    hoist: true
+members:
+  - username: jkl
+    nickname: ""
+    roles:
+      - "#008F00"
+      - Student
+  - username: SkellyBot
+    nickname: "#0080FF"
+    roles:
+      - "#0080FF"
+      - Student
+  - username: SkellyBot-jon
+    nickname: "#FF8800"
+    roles:
+      - "#FF8800"
+      - Student
+categories:
+  - name: "#008F00"
+    permissionsOverwrites:
+      - roleName: "#008F00"
+        allow:
+          - VIEW_CHANNEL
+          - SEND_MESSAGES
+          - READ_MESSAGE_HISTORY
+      - roleName: Student
+        deny:
+          - SEND_MESSAGES
+    botPromptMessages:
+      - "This category is owned by the student with the id #008F00"
+      - They will add channels that will be configured to allow us to talk about
+        different aspects of the capstone project
+  - name: "#0080FF"
+    permissionsOverwrites:
+      - roleName: "#0080FF"
+        allow:
+          - VIEW_CHANNEL
+          - SEND_MESSAGES
+          - READ_MESSAGE_HISTORY
+      - roleName: Student
+        deny:
+          - SEND_MESSAGES
+    botPromptMessages:
+      - "This category is owned by the student with the id #0080FF"
+      - They will add channels that will be configured to allow us to talk about
+        different aspects of the capstone project
+  - name: "#FF8800"
+    permissionsOverwrites:
+      - roleName: "#FF8800"
+        allow:
+          - VIEW_CHANNEL
+          - SEND_MESSAGES
+          - READ_MESSAGE_HISTORY
+      - roleName: Student
+        deny:
+          - SEND_MESSAGES
+    botPromptMessages:
+      - "This category is owned by the student with the id #FF8800"
+      - They will add channels that will be configured to allow us to talk about
+        different aspects of the capstone project
+channels:
+  - name: capstone-document
+    type: text
+    topic: This is the main channel to capstone document
+    parentCategory: "#008F00"
+  - name: general-chat
+    type: text
+    topic: This is the main channel to general chat
+    parentCategory: "#008F00"
+  - name: capstone-document
+    type: text
+    topic: This is the main channel to capstone document
+    parentCategory: "#0080FF"
+  - name: general-chat
+    type: text
+    topic: This is the main channel to general chat
+    parentCategory: "#0080FF"
+  - name: capstone-document
+    type: text
+    topic: This is the main channel to capstone document
+    parentCategory: "#FF8800"
+  - name: general-chat
+    type: text
+    topic: This is the main channel to general chat
+    parentCategory: "#FF8800"

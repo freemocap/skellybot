@@ -48,7 +48,7 @@ export class DiscordContextPromptService {
       ].join('\n\n');
     } catch (error) {
       this.logger.error(
-        `Failed to get context instructions: ${error.message} - returning empty string!`,
+        `Failed to get context instructions with error: ${error}`,
       );
       throw error;
     }

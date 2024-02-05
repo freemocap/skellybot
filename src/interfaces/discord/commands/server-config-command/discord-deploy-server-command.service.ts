@@ -56,7 +56,14 @@ export class DiscordDeployServerCommand {
     @Options(ConfigAttachmentOption)
     { serverConfigAttachment }: ConfigAttachmentOption,
   ) {
-    await this._deployServer(interaction, serverConfigAttachment);
+    try {
+      await this._deployServer(interaction, serverConfigAttachment);
+    } catch (error) {
+      this.logger.error(`Error deploying server: ${error.stack}`);
+      await interaction.reply({
+        content: `Error deploying server: \n\n> ${error.message}`,
+      });
+    }
   }
 
   @MessageCommand({
@@ -66,8 +73,15 @@ export class DiscordDeployServerCommand {
     @Context() [interaction]: MessageCommandContext,
     @TargetMessage() message: Message,
   ) {
-    const messageAttachment = await this._getConfigAttachment(message);
-    await this._deployServer(interaction, messageAttachment);
+    try {
+      const messageAttachment = await this._getConfigAttachment(message);
+      await this._deployServer(interaction, messageAttachment);
+    } catch (error) {
+      this.logger.error(`Error deploying server: ${error.stack}`);
+      await interaction.reply({
+        content: `Error deploying server: \n\n> ${error.message}`,
+      });
+    }
   }
 
   private async _deployServer(
@@ -121,25 +135,28 @@ export class DiscordDeployServerCommand {
 
   private async _checkPermissions(invokingMember: GuildMember) {
     let errorMessage = 'Permissions checks: \n\n';
+    let memberIsMissingPermissions = false;
     switch (true) {
       case !invokingMember.permissions.has(
         PermissionsBitField.Flags.ManageChannels,
       ):
-        errorMessage +=
-          'You need to have the "Manage Channels" permission.\n\n';
+        errorMessage += `Error - Invoking user - ${invokingMember.user} - does not have "Manage Channels" permission.`;
+        memberIsMissingPermissions = true;
       case !invokingMember.permissions.has(
         PermissionsBitField.Flags.ManageRoles,
       ):
-        errorMessage += 'You need to have the "Manage Roles" permission.\n\n';
+        errorMessage += `Error - Invoking user - ${invokingMember.user} - does not have "Manage Roles" permission.`;
+        memberIsMissingPermissions = true;
       case !invokingMember.permissions.has(
         PermissionsBitField.Flags.ManageNicknames,
       ):
-        errorMessage +=
-          'You need to have the "Manage Nicknames" permission.\n\n';
+        errorMessage += `Error - Invoking user - ${invokingMember.user} - does not have "Manage Nicknames" permission.`;
+        memberIsMissingPermissions = true;
     }
     let allowed = true;
     if (
-      errorMessage &&
+      // if "error" is not in errorMessage.lower
+      memberIsMissingPermissions &&
       !invokingMember.permissions.has(PermissionsBitField.Flags.Administrator)
     ) {
       allowed = false;

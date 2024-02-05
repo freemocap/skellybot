@@ -69,6 +69,7 @@ export class DiscordChatCommand {
       );
     } catch (error) {
       this.logger.error(`Caught error: ${error}`);
+      await interaction.editReply(`Error opening chat thread: ${error}`);
     }
   }
 
@@ -107,6 +108,7 @@ export class DiscordChatCommand {
       );
     } catch (error) {
       this.logger.error(`Caught error: ${error}`);
+      await interaction.editReply(`Error opening chat thread: ${error}`);
     }
   }
 }

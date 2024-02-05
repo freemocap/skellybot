@@ -1,20 +1,28 @@
 roles:
   - name: "Prof"
     hoist: true
-    color: "BLUE"
+    color: "#0099FF"
   - name: "Student"
     hoist: true
-    color: "GREEN"
+    color: "#9900FF"
 
 categories:
-  - name: "| Tools & Resources |"
+  - name: "| Course Materials |"
     position: 0
     botPromptMessages:
-      - "This category will contain channels dedicated to the various tools and resources that will be used in this course"
+      - "This category will contain channels dedicated to the course materials associated with this class."
+      - "Its also fine if the students want to talk about other things"
+
+  - name: "| Tools |"
+    position: 1
+    botPromptMessages:
+      - "This category will contain channels dedicated to the various tools and technology we will use in this class"
+      - "Its also fine if the students want to talk about other things"
 
 channels:
-  - name: "Syllabus"
+  - name: "syllabus"
     type: text
+    parentCategory: "| Course Materials |"
     topic: |
       This channel is for questions about the syllabus and general course information. 
       
@@ -22,9 +30,9 @@ channels:
       
       If they ask a question that is NOT in the syllabus, the bot will truthfully say that it does not know, and ask the professor for information by including the tag the prof by including @Prof in the message.
 
-    parentCategory: "| Tools & Resources |"
 
-  - name: "Capstone Project"
+  - name: "capstone-project"
+    parentCategory: "| Course Materials |"
     type: text
     topic: |
       This channel is for questions about the capstone project. 
@@ -32,9 +40,9 @@ channels:
       In this channel, the bot will reference the a document defining capstone project (in a pinned message) to answer students' questions. 
       
       If the student asks a question that is NOT defined in the capstone project document, the bot will truthfully say that it does not know, and ask the professor for information by including the tag the prof by including @Prof in the message.
-    parentCategory: "| Tools & Resources |"
 
-  - name: "HowToClassBot"
+  - name: "classbot-help"
+    parentCategory: "| Tools |"
     type: text
     topic: |
       This channel is for questions about how to use the bot. 
@@ -42,3 +50,22 @@ channels:
       In this channel, the bot will answer questions about how to use the bot. 
       
       If the bot does not know the answer, it will truthfully say that it does not know, and ask the professor for information by including the tag the prof by including @Prof in the message.
+
+  - name: "zotero-help"
+    parentCategory: "| Tools |"
+    type: text
+    topic: |
+      This channel is for questions about how to use Zotero, a reference management software. It's a free, easy-to-use tool to help you collect, organize, cite, and share research.
+      
+      It's also fine to use other reference management software (e.g. EndNote, Mendeley, RefWorks, etc.) if you are already using it. The bot will happily answer questions about those tools as well.
+           
+
+  - name: "markdown-help"
+    parentCategory: "| Tools |"
+    type: text
+    topic: |
+      This channel is for questions about how to use Markdown, a lightweight markup language with plain-text-formatting syntax. 
+      
+      Using Markdown will make easier for students to incorporate text from Discord into more formal documents because it will make possible to copy-paste while preserving the formatting.
+      
+      If students don't want to use Markdown, they can use other softwares (e.g. Microsoft Word, Google Docs, etc.) if they prefer. 

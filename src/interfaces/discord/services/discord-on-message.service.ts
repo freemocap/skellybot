@@ -26,39 +26,48 @@ export class DiscordOnMessageService {
     private readonly _openaiChatService: OpenaiChatService,
   ) {}
   public async addActiveChat(message: Message) {
-    this.logger.debug(`Adding threadId ${message.channel.id} to active chats`);
-    const aiChatId = message.channel.id;
-    if (this.activeChats.has(aiChatId)) {
-      throw new Error(`Chat ${aiChatId} already exists in active chats!`);
+    try {
+      this.logger.debug(
+        `Adding threadId ${message.channel.id} to active chats`,
+      );
+      const aiChatId = message.channel.id;
+      if (this.activeChats.has(aiChatId)) {
+        throw new Error(`Chat ${aiChatId} already exists in active chats!`);
+      }
+      this.logger.debug(
+        `Adding threadId ${message.channel.id} to active chats`,
+      );
+
+      const ownerUser = await this._getOwnerUser(message);
+
+      const contextRoute = this._contextRouteService.getContextRoute(message);
+
+      const contextPrompt =
+        await this._contextPromptService.getContextPromptFromMessage(message);
+
+      const chatConfig = {
+        messages: [],
+        model: 'gpt-4-1106-preview',
+        temperature: 0.7,
+        stream: true,
+      } as OpenAiChatConfig;
+      this._openaiChatService.createChat(aiChatId, contextPrompt, chatConfig);
+      const aiChatDocument = await this._aiChatsService.createAiChat({
+        aiChatId,
+        ownerUser,
+        contextRoute,
+        contextInstructions: contextPrompt,
+        couplets: [],
+        modelName: 'gpt-4-1106-preview',
+      });
+
+      this.logger.debug(`Adding threadId ${aiChatId} to active listeners`);
+      this.allAiChatsById.set(aiChatId, aiChatDocument);
+      this.activeChats.add(aiChatId);
+    } catch (error) {
+      this.logger.error(`Error in addActiveChat: ${error}`);
+      throw error;
     }
-    this.logger.debug(`Adding threadId ${message.channel.id} to active chats`);
-
-    const ownerUser = await this._getOwnerUser(message);
-
-    const contextRoute = this._contextRouteService.getContextRoute(message);
-
-    const contextPrompt =
-      await this._contextPromptService.getContextPromptFromMessage(message);
-
-    const chatConfig = {
-      messages: [],
-      model: 'gpt-4-1106-preview',
-      temperature: 0.7,
-      stream: true,
-    } as OpenAiChatConfig;
-    this._openaiChatService.createChat(aiChatId, contextPrompt, chatConfig);
-    const aiChatDocument = await this._aiChatsService.createAiChat({
-      aiChatId,
-      ownerUser,
-      contextRoute,
-      contextInstructions: contextPrompt,
-      couplets: [],
-      modelName: 'gpt-4-1106-preview',
-    });
-
-    this.logger.debug(`Adding threadId ${aiChatId} to active listeners`);
-    this.allAiChatsById.set(aiChatId, aiChatDocument);
-    this.activeChats.add(aiChatId);
   }
 
   private _shouldRespondToMessage(message: Message<boolean>): boolean {
