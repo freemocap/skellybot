@@ -1,45 +1,44 @@
 roles:
   - name: "Prof"
-    hoist: false
-    color: "#FF0000"
+    hoist: true
+    color: "BLUE"
   - name: "Student"
-    hoist: false
-    color: "#0000FF"
-  - name: "#FF00FF"
-    hoist: false
-    color: "#FF00FF"
-
-members:
-  - username: "SkellyBot"
-    nickname: "#FF00FF"
-    roles:
-      - "#FF00FF"
-      - "Prof"
+    hoist: true
+    color: "GREEN"
 
 categories:
-  - name: "#FF00FF"
+  - name: "| Tools & Resources |"
     position: 0
-    permissionsOverwrites:
-      - roleName: "#FF00FF"
-        allow:
-          - "VIEW_CHANNEL"
-          - "SEND_MESSAGES"
-          - "READ_MESSAGE_HISTORY"
-      - roleName: "Student"
-        deny:
-          - "SEND_MESSAGES"
-
     botPromptMessages:
-      - "This category is owned by the student with the id #FF00FF"
-      - "I'm going to help them with their capstone project!"
+      - "This category will contain channels dedicated to the various tools and resources that will be used in this course"
 
 channels:
-  - name: "capstone-document"
+  - name: "Syllabus"
     type: text
-    topic: "This is the main channel to discuss the actual capstone document!"
-    parentCategory: "#FF00FF"
+    topic: |
+      This channel is for questions about the syllabus and general course information. 
+      
+      In this channel, the bot will reference the syllabus (in a pinned message) to answer students' questions. 
+      
+      If they ask a question that is NOT in the syllabus, the bot will truthfully say that it does not know, and ask the professor for information by including the tag the prof by including @Prof in the message.
 
-  - name: "general-chat"
+    parentCategory: "| Tools & Resources |"
+
+  - name: "Capstone Project"
     type: text
-    topic: "A general chat channel for uncategorized discussions!"
-    parentCategory: "#FF00FF"
+    topic: |
+      This channel is for questions about the capstone project. 
+      
+      In this channel, the bot will reference the a document defining capstone project (in a pinned message) to answer students' questions. 
+      
+      If the student asks a question that is NOT defined in the capstone project document, the bot will truthfully say that it does not know, and ask the professor for information by including the tag the prof by including @Prof in the message.
+    parentCategory: "| Tools & Resources |"
+
+  - name: "HowToClassBot"
+    type: text
+    topic: |
+      This channel is for questions about how to use the bot. 
+      
+      In this channel, the bot will answer questions about how to use the bot. 
+      
+      If the bot does not know the answer, it will truthfully say that it does not know, and ask the professor for information by including the tag the prof by including @Prof in the message.

@@ -71,7 +71,7 @@ const students: StudentInfo[] = [
 // Generate and save YAML configuration for each student.
 students.forEach((student) => {
   const studentYaml = generateYamlForStudent(student);
-  const outputPath = `./output/${student.username}-config.yaml`;
+  const outputPath = `./student-categories-config.yaml`;
   fs.mkdirSync('./output', { recursive: true });
   fs.writeFileSync(outputPath, studentYaml, 'utf8');
   console.log(`Generated YAML config for ${student.username}`);
