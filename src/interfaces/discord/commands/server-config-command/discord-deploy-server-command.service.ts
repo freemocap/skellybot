@@ -12,12 +12,14 @@ import {
 import {
   Attachment,
   AttachmentBuilder,
+  CacheType,
+  ChatInputCommandInteraction,
   GuildMember,
   Message,
+  MessageContextMenuCommandInteraction,
   PermissionsBitField,
 } from 'discord.js';
 import * as path from 'path';
-import fs from 'fs';
 import axios from 'axios';
 import { DiscordServerConfigService } from './discord-server-configuration.service';
 import {
@@ -37,8 +39,8 @@ class ConfigAttachmentOption {
 }
 
 @Injectable()
-export class DiscordConfigureServerCommand {
-  private readonly logger = new Logger(DiscordConfigureServerCommand.name);
+export class DiscordDeployServerCommand {
+  private readonly logger = new Logger(DiscordDeployServerCommand.name);
 
   constructor(
     private readonly _serverConfigService: DiscordServerConfigService,
@@ -54,18 +56,38 @@ export class DiscordConfigureServerCommand {
     @Options(ConfigAttachmentOption)
     { serverConfigAttachment }: ConfigAttachmentOption,
   ) {
+    await this._deployServer(interaction, serverConfigAttachment);
+  }
+
+  @MessageCommand({
+    name: 'Deploy server from attachment',
+  })
+  public async onContextCommandInvoke(
+    @Context() [interaction]: MessageCommandContext,
+    @TargetMessage() message: Message,
+  ) {
+    const messageAttachment = await this._getConfigAttachement(message);
+    await this._deployServer(interaction, messageAttachment);
+  }
+
+  private async _deployServer(
+    interaction:
+      | ChatInputCommandInteraction<CacheType>
+      | MessageContextMenuCommandInteraction<CacheType>,
+    serverConfigAttachment: Attachment,
+  ) {
     const invokingMember = interaction.member as GuildMember;
-    if (
-      !invokingMember.permissions.has(PermissionsBitField.Flags.ManageChannels)
-    ) {
+    await interaction.deferReply();
+
+    const { allowed, errorMessage } =
+      await this._checkPermissions(invokingMember);
+    if (!allowed) {
       await interaction.editReply({
-        content:
-          'You need to have the "Manage Channels" permission to use this command.',
+        content: errorMessage,
       });
       return;
     }
 
-    await interaction.deferReply();
     const serverConfig: DiscordServerConfig =
       await this._getServerConfigFromAttachment(serverConfigAttachment);
 
@@ -90,59 +112,38 @@ export class DiscordConfigureServerCommand {
     });
   }
 
-  @MessageCommand({
-    name: 'Configure server from attachment',
-  })
-  public async onContextCommandInvoke(
-    @Context() [interaction]: MessageCommandContext,
-    @TargetMessage() message: Message,
-  ) {
-    await interaction.deferReply({ ephemeral: true });
+  private async _checkPermissions(invokingMember: GuildMember) {
+    let errorMessage = '';
+    switch (true) {
+      case !invokingMember.permissions.has(
+        PermissionsBitField.Flags.ManageChannels,
+      ):
+        errorMessage +=
+          'You need to have the "Manage Channels" permission.\n\n';
+      case !invokingMember.permissions.has(
+        PermissionsBitField.Flags.ManageRoles,
+      ):
+        errorMessage += 'You need to have the "Manage Roles" permission.\n\n';
+      case !invokingMember.permissions.has(
+        PermissionsBitField.Flags.ManageNicknames,
+      ):
+        errorMessage +=
+          'You need to have the "Manage Nicknames" permission.\n\n';
 
-    const invokingMember = interaction.member as GuildMember;
-    if (
-      !invokingMember.permissions.has(PermissionsBitField.Flags.ManageChannels)
-    ) {
-      await interaction.editReply({
-        content:
-          'You need to have the "Manage Channels" permission to use this command.',
-      });
-      return;
-    }
+        let allowed = true;
+        if (
+          errorMessage &&
+          !invokingMember.permissions.has(
+            PermissionsBitField.Flags.Administrator,
+          )
+        ) {
+          allowed = false;
+        }
 
-    this.logger.log(
-      `Received "${interaction.command.name}" command in channel: name= ${interaction.channel.name}, id=${interaction.channel.id}`,
-    );
-
-    const tempFilePath = '';
-    try {
-      const messageAttachment = await this._getConfigAttachement(message);
-      const serverConfig: DiscordServerConfig =
-        await this._getServerConfigFromAttachment(messageAttachment);
-
-      this.logger.debug(
-        'Server config:\n\n',
-        JSON.stringify(serverConfig, null, 2),
-      );
-
-      await this._serverConfigService.configureServer(
-        interaction.guild.id,
-        serverConfig,
-      );
-
-      await interaction.editReply(
-        `Server Config from message ${message.url} has been applied.`,
-      );
-    } catch (error) {
-      const errorMessage = `Error Occurred: ${error.message || error}`;
-      this.logger.error(error.stack + '\n\n' + errorMessage);
-      await interaction.editReply(errorMessage);
-    } finally {
-      try {
-        await fs.promises.unlink(tempFilePath);
-      } catch {}
+        return { allowed, errorMessage };
     }
   }
+
   private async _getServerConfigFromAttachment(attachment: Attachment) {
     try {
       const serverConfig = await this._parseConfigAttachment(attachment);
