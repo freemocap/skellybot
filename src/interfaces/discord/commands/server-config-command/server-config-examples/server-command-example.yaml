@@ -3,6 +3,9 @@ roles:
     color: "#FF00FF"
     syncPermissionsWithRole: "Me"
     hoist: true
+  - name: Me
+    color: "#00FF00"
+    hoist: false
 
 members:
   - username: SkellyBot

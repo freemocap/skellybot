@@ -1,10 +1,4 @@
-import {
-  CategoryChannel,
-  ChannelType,
-  Guild,
-  PermissionsBitField,
-  TextChannel,
-} from 'discord.js';
+import { CategoryChannel, ChannelType, Guild, TextChannel } from 'discord.js';
 import {
   DiscordCategoryConfig,
   DiscordServerConfig,
@@ -40,6 +34,12 @@ export class DiscordConfigureCategoryService {
           server,
           category,
         );
+
+      await category.children.create({
+        name: 'general-chat',
+        type: ChannelType.GuildText,
+        topic: `General chat for category: "${categoryConfig.name}"`,
+      });
 
       if (categoryConfig.botPromptMessages) {
         await this._sendBotPromptSettingsMessage(

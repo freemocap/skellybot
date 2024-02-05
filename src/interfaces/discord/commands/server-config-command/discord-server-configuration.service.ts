@@ -29,15 +29,31 @@ export class DiscordServerConfigService {
     );
     const server = await this.client.guilds.fetch(serverID);
     // Order matters here, must go: roles -> members -> categories -> channels -> messages
-    await this._configureRoles(server, serverConfig);
-    await this._configureMembers(server, serverConfig);
+    if (serverConfig.roles) {
+      await this._configureRoles(server, serverConfig);
+    }
 
-    await this._configureCategoryService.applyServerConfig(
-      server,
-      serverConfig,
-    );
-    await this._configureChannelService.applyServerConfig(server, serverConfig);
-    await this._configureMessages(server, serverConfig);
+    if (serverConfig.members) {
+      await this._configureMembers(server, serverConfig);
+    }
+
+    if (serverConfig.categories) {
+      await this._configureCategoryService.applyServerConfig(
+        server,
+        serverConfig,
+      );
+    }
+
+    if (serverConfig.channels) {
+      await this._configureChannelService.applyServerConfig(
+        server,
+        serverConfig,
+      );
+    }
+
+    if (serverConfig.messages) {
+      await this._configureMessages(server, serverConfig);
+    }
   }
 
   private async _configureRoles(
