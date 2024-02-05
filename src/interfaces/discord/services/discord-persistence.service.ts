@@ -128,7 +128,6 @@ export class DiscordPersistenceService {
 
     // The first message in the collection will be the oldest
     const messages = allMessages.filter((msg) => !msg.system);
-    const oldestMessage = messages.last();
-    return oldestMessage;
+    return messages.last();
   }
 }
