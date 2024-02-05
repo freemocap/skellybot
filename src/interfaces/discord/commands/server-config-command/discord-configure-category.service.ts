@@ -34,12 +34,7 @@ export class DiscordConfigureCategoryService {
           server,
           category,
         );
-
-      await category.children.create({
-        name: 'general-chat',
-        type: ChannelType.GuildText,
-        topic: `General chat for category: "${categoryConfig.name}"`,
-      });
+      await this._createDefaultChatChannel(category, categoryConfig);
 
       if (categoryConfig.botPromptMessages) {
         await this._sendBotPromptSettingsMessage(
@@ -55,6 +50,17 @@ export class DiscordConfigureCategoryService {
         await this._configurePermissions(category, categoryConfig);
       }
     }
+  }
+
+  private async _createDefaultChatChannel(
+    category: CategoryChannel,
+    categoryConfig: DiscordCategoryConfig,
+  ) {
+    await category.children.create({
+      name: 'general-chat',
+      type: ChannelType.GuildText,
+      topic: `General chat for category: "${categoryConfig.name}"`,
+    });
   }
 
   private async _setCategoryPosition(
