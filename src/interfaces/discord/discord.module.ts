@@ -54,6 +54,5 @@ import { DiscordConfigureChannelService } from './commands/server-config-command
     DiscordServerConfigService,
     DiscordStartUpService,
   ],
-  exports: [DiscordPersistenceService],
 })
 export class DiscordModule {}
