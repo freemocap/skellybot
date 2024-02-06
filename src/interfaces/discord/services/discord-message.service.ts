@@ -21,15 +21,23 @@ export class DiscordMessageService {
     respondToChannelOrMessage: Message<boolean> | TextBasedChannel,
     humanUserId: string,
     isFirstExchange: boolean = false,
+    textToRespondTo?: string,
   ) {
     await discordMessage.channel.sendTyping();
     this.logger.log(`Responding to message id ${discordMessage.id}`);
     try {
-      const { humanInputText, attachmentText } =
-        await this.extractMessageContent(
+      let humanInputText = '';
+      let attachmentText = '';
+      if (!textToRespondTo) {
+        ({ humanInputText, attachmentText } = await this.extractMessageContent(
           discordMessage,
           respondToChannelOrMessage,
-        );
+        ));
+      } else {
+        humanInputText = textToRespondTo;
+        attachmentText = '';
+      }
+
       this.logger.log(
         `Received message with${
           discordMessage.attachments.size > 0 ? ' ' : 'out '
