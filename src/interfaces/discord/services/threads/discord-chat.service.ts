@@ -82,11 +82,16 @@ export class DiscordChatService {
         interaction,
       );
 
-      const firstThreadMessage = await thread.send(
-        `Starting new chat with initial message:\n\n> ${
-          humanInputText + attachmentText
-        }`,
+      const firstMessageContent = `Starting new chat with initial message:\n\n> ${
+        humanInputText + attachmentText
+      }`;
+
+      const firstThreadMessages = await this._messageService.sendChunkedMessage(
+        thread,
+        firstMessageContent,
       );
+
+      const firstThreadMessage = firstThreadMessages[0];
 
       await this._onMessageService.addActiveChat(firstThreadMessage);
       await this._messageService.respondToMessage(
@@ -94,6 +99,7 @@ export class DiscordChatService {
         thread,
         interaction.user.id,
         true,
+        firstMessageContent,
       );
     } catch (error) {
       this.logger.error(`Caught error: ${error}`);
@@ -125,14 +131,14 @@ export class DiscordChatService {
         threadAnchorMessage = await interaction.channel.parent.send({
           content: `Thread Created for user: ${userMention(
             interaction.user.id,
-          )} with starting text:\n\n> ${startingTextString}`,
+          )}`,
           embeds: [threadTitleEmbed],
         });
       } else {
         threadAnchorMessage = await interaction.channel.send({
           content: `Thread Created for user: ${userMention(
             interaction.user.id,
-          )} with starting text:\n\n> ${startingTextString}`,
+          )}`,
           embeds: [threadTitleEmbed],
         });
       }
