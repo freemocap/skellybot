@@ -58,9 +58,19 @@ categories:
 channels:
   - name: general-chat
     type: text
-    topic: "This is the general-chat channel for the student with the id #BEEFED"
+    topic: 'This is the "general-chat" channel for the student with the id #BEEFED'
+    parentCategory: "#BEEFED"
+  - name: 🤖-prompt-settings
+    type: text
+    topic: 'This is the "🤖-prompt-settings" channel for the student with the id
+      #BEEFED'
     parentCategory: "#BEEFED"
   - name: general-chat
     type: text
-    topic: "This is the general-chat channel for the student with the id #FF9900"
+    topic: 'This is the "general-chat" channel for the student with the id #FF9900'
+    parentCategory: "#FF9900"
+  - name: 🤖-prompt-settings
+    type: text
+    topic: 'This is the "🤖-prompt-settings" channel for the student with the id
+      #FF9900'
     parentCategory: "#FF9900"

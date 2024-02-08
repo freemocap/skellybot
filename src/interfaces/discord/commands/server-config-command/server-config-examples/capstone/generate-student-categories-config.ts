@@ -69,12 +69,12 @@ function addStudentToConfig(student: StudentInfo, config: CombinedConfig) {
     ],
   });
   // Add channels associated with this student
-  const channelNames = ['general-chat'];
+  const channelNames = ['general-chat', '🤖-prompt-settings'];
   channelNames.forEach((channelName) => {
     config.channels.push({
       name: channelName,
       type: 'text',
-      topic: `This is the general-chat channel for the student with the id ${student.studentId}`,
+      topic: `This is the "#${channelName}" channel for the student with the id ${student.studentId}`,
       parentCategory: student.studentId,
     });
   });
