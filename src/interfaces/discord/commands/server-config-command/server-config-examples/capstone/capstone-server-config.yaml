@@ -64,8 +64,8 @@ channels:
     parentCategory: "| Tools |"
     type: text
     topic: |
-      This channel is for questions about how to use Markdown, a lightweight markup language with plain-text-formatting syntax. 
+      This channel is for questions about how to use Markdown, a lightweight markup language with plain-text-formatting syntax. Many of these student will have zero XP experience with programming or markdown or anything like that, so a lot of this might be unfamiliar to them.
       
-      Using Markdown will make easier for students to incorporate text from Discord into more formal documents because it will make possible to copy-paste while preserving the formatting.
+      If students don't want to use Markdown, they can use other softwares (e.g. Microsoft Word, Google Docs, etc.) if they prefer - However Using Markdown will make easier for students to incorporate text from Discord into more formal documents because it will make possible to copy-paste while preserving the formatting.
       
-      If students don't want to use Markdown, they can use other softwares (e.g. Microsoft Word, Google Docs, etc.) if they prefer. 
+       

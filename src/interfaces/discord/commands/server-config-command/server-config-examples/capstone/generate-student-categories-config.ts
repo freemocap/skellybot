@@ -27,10 +27,11 @@ const combinedConfig: CombinedConfig = {
 function addStudentToConfig(student: StudentInfo, config: CombinedConfig) {
   const studentIdColor = student.studentId; // Assuming studentId is a hex color code
   // Add roles
-  config.roles.push(
-    { name: student.studentId, hoist: false, color: studentIdColor },
-    { name: 'Student', hoist: true },
-  );
+  config.roles.push({
+    name: student.studentId,
+    hoist: false,
+    color: studentIdColor,
+  });
   // Add members
   config.members.push({
     username: student.username,
@@ -40,13 +41,27 @@ function addStudentToConfig(student: StudentInfo, config: CombinedConfig) {
   // Add categories
   config.categories.push({
     name: student.studentId,
-    position: 0,
+    // position: 0,
     permissionsOverwrites: [
       {
         roleName: student.studentId,
-        allow: ['VIEW_CHANNEL', 'SEND_MESSAGES', 'READ_MESSAGE_HISTORY'],
+        allow: [
+          'VIEW_CHANNEL',
+          'SEND_MESSAGES',
+          'READ_MESSAGE_HISTORY',
+          'MANAGE_CHANNELS',
+          'CREATE_PUBLIC_THREADS',
+          'SEND_MESSAGES_IN_THREADS',
+        ],
       },
-      { roleName: 'Student', deny: ['SEND_MESSAGES'] },
+      {
+        roleName: 'Student',
+        deny: [
+          'SEND_MESSAGES',
+          'CREATE_PUBLIC_THREADS',
+          'SEND_MESSAGES_IN_THREADS',
+        ],
+      },
     ],
     botPromptMessages: [
       `This category is owned by the student with the id ${student.studentId}`,
@@ -54,16 +69,12 @@ function addStudentToConfig(student: StudentInfo, config: CombinedConfig) {
     ],
   });
   // Add channels associated with this student
-  const channelNames = [
-    'capstone-document',
-    'progress-capture',
-    'general-chat',
-  ];
+  const channelNames = ['general-chat'];
   channelNames.forEach((channelName) => {
     config.channels.push({
       name: channelName,
       type: 'text',
-      topic: `This is the main channel to ${channelName.replace('-', ' ')}`,
+      topic: `This is the general-chat channel for the student with the id ${student.studentId}`,
       parentCategory: student.studentId,
     });
   });
@@ -71,9 +82,8 @@ function addStudentToConfig(student: StudentInfo, config: CombinedConfig) {
 
 // Example student mapping.
 const students: StudentInfo[] = [
-  { username: 'jkl', studentId: '#008F00' },
-  { username: 'SkellyBot', studentId: '#0080FF' },
-  { username: 'SkellyBot-jon', studentId: '#FF8800' },
+  { username: 'jkl', studentId: '#BEEFED' },
+  { username: 'SkellyBot', studentId: '#FF9900' },
 ];
 
 // Add each student to the combined YAML configuration
