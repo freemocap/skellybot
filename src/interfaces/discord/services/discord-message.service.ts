@@ -1,17 +1,17 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { AttachmentBuilder, Message, TextBasedChannel } from 'discord.js';
-import { DiscordMongodbService } from '../discord-mongodb.service';
-import { DiscordContextService } from './discord-context.service';
+import { DiscordPersistenceService } from './discord-persistence.service';
+import { DiscordContextRouteService } from './discord-context-route.service';
 import { DiscordAttachmentService } from './discord-attachment.service';
-import { OpenaiChatService } from '../../../../core/ai/openai/openai-chat.service';
+import { OpenaiChatService } from '../../../core/ai/openai/openai-chat.service';
 
 @Injectable()
 export class DiscordMessageService {
   private readonly maxMessageLength = 2000 * 0.85; // discord max message length is 2000 characters (and * 0.85 to be safe)
   private readonly logger = new Logger(DiscordMessageService.name);
   constructor(
-    private readonly _persistenceService: DiscordMongodbService,
-    private readonly _contextService: DiscordContextService,
+    private readonly _persistenceService: DiscordPersistenceService,
+    private readonly _contextService: DiscordContextRouteService,
     private readonly _discordAttachmentService: DiscordAttachmentService,
     private readonly _openaiChatService: OpenaiChatService,
   ) {}
@@ -21,15 +21,23 @@ export class DiscordMessageService {
     respondToChannelOrMessage: Message<boolean> | TextBasedChannel,
     humanUserId: string,
     isFirstExchange: boolean = false,
+    textToRespondTo?: string,
   ) {
     await discordMessage.channel.sendTyping();
     this.logger.log(`Responding to message id ${discordMessage.id}`);
     try {
-      const { humanInputText, attachmentText } =
-        await this.extractMessageContent(
+      let humanInputText = '';
+      let attachmentText = '';
+      if (!textToRespondTo) {
+        ({ humanInputText, attachmentText } = await this.extractMessageContent(
           discordMessage,
           respondToChannelOrMessage,
-        );
+        ));
+      } else {
+        humanInputText = textToRespondTo;
+        attachmentText = '';
+      }
+
       this.logger.log(
         `Received message with${
           discordMessage.attachments.size > 0 ? ' ' : 'out '

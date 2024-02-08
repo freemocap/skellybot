@@ -4,8 +4,8 @@ import { DiscordOnMessageService } from './discord-on-message.service';
 import { RateLimitData } from 'discord.js';
 
 @Injectable()
-export class DiscordEventService {
-  private readonly logger = new Logger(DiscordEventService.name);
+export class DiscordStartUpService {
+  private readonly logger = new Logger(DiscordStartUpService.name);
 
   public constructor(
     private readonly _onMessageService: DiscordOnMessageService,
@@ -19,6 +19,8 @@ export class DiscordEventService {
         `Rate limit hit: ${rateLimitInfo.method} ${rateLimitInfo.route}`,
       );
     });
+    this.logger.log(`Logged in as ${client.user.tag}!`);
+    this._logRegisteredCommands(client);
   }
 
   @On('warn')
@@ -31,5 +33,20 @@ export class DiscordEventService {
     @Context() [message]: ContextOf<'messageCreate'>,
   ) {
     await this._onMessageService.handleMessageCreation(message);
+  }
+
+  private _logRegisteredCommands(client: ContextOf<'ready'>[0]) {
+    client.application.commands
+      .fetch()
+      .then((commands) => {
+        this.logger.log(
+          `Registered commands: "${commands
+            .map((cmd) => cmd.name)
+            .join('", "')}"`,
+        );
+      })
+      .catch((error) => {
+        this.logger.error('Error fetching registered commands:', error);
+      });
   }
 }

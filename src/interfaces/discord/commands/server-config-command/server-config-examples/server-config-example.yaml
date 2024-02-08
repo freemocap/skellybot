@@ -1,0 +1,82 @@
+roles:
+  - name: WowRoleWow
+    color: "#FF00FF"
+    syncPermissionsWithRole: "Me"
+    hoist: true
+  - name: Me
+    color: "#00FF00"
+    hoist: false
+
+members:
+  - username: SkellyBot
+    nickname: coolSkellyBotWowo
+    roles:
+      - WowRoleWow
+
+categories:
+  - name: WowCategory
+    position: 0
+    botPromptMessages:
+      - "Only say Wow (and variants) in this category!"
+      - "Wow!"
+
+  - name: NeatoCategory
+    position: 0
+    botPromptMessages:
+      - "Only say Neato (and variants) in this category!"
+      - "Neato!"
+    permissionsOverwrites:
+      - roleName: "Me"
+        allow:
+          - "VIEW_CHANNEL"
+          - "SEND_MESSAGES"
+          - "READ_MESSAGE_HISTORY"
+        deny:
+          - "MANAGE_CHANNELS"
+      - roleName: "WowRoleWow"
+        allow:
+          - "VIEW_CHANNEL"
+          - "READ_MESSAGE_HISTORY"
+        deny:
+          - "MANAGE_CHANNELS"
+
+channels:
+  - name: wow-channel
+    type: text
+    parentCategory: WowCategory
+    topic: "This is the wow channel! Woweeeeeeeeee4!"
+    permissionsOverwrites:
+      - roleName: "WowRoleWow"
+        allow:
+          - "VIEW_CHANNEL"
+          - "SEND_MESSAGES"
+          - "READ_MESSAGE_HISTORY"
+        deny:
+          - "MANAGE_CHANNELS"
+
+  - name: neato-channel
+    type: text
+    topic: "This is the neato channel! Neatoooooooooo!"
+    parentCategory: NeatoCategory
+
+  - name: additional-channel
+    type: text
+    topic: "This channel doesn't belong to any category!"
+
+messages:
+  - content: "WoweeZoweeee!"
+    channelName: wow-channel
+    reactions:
+      - "👋"
+      - "✨"
+  - content: "NeatoBEETON!"
+    channelName: neato-channel
+    reactions:
+    - "🐕"
+    - "🐈"
+  - content: "Lookit this msg!"
+    channelName: additional-channel
+    reactions:
+      - "👍"
+      - "👎"
+      - "🤔"

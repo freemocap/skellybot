@@ -1,0 +1,76 @@
+roles:
+  - name: "#BEEFED"
+    hoist: false
+    color: "#BEEFED"
+  - name: "#FF9900"
+    hoist: false
+    color: "#FF9900"
+members:
+  - username: jkl
+    nickname: "#BEEFED"
+    roles:
+      - "#BEEFED"
+      - Student
+  - username: SkellyBot
+    nickname: "#FF9900"
+    roles:
+      - "#FF9900"
+      - Student
+categories:
+  - name: "#BEEFED"
+    permissionsOverwrites:
+      - roleName: "#BEEFED"
+        allow:
+          - VIEW_CHANNEL
+          - SEND_MESSAGES
+          - READ_MESSAGE_HISTORY
+          - MANAGE_CHANNELS
+          - CREATE_PUBLIC_THREADS
+          - SEND_MESSAGES_IN_THREADS
+      - roleName: Student
+        deny:
+          - SEND_MESSAGES
+          - CREATE_PUBLIC_THREADS
+          - SEND_MESSAGES_IN_THREADS
+    botPromptMessages:
+      - "This category is owned by the student with the id #BEEFED"
+      - They will add channels that will be configured to allow us to talk about
+        different aspects of the capstone project
+  - name: "#FF9900"
+    permissionsOverwrites:
+      - roleName: "#FF9900"
+        allow:
+          - VIEW_CHANNEL
+          - SEND_MESSAGES
+          - READ_MESSAGE_HISTORY
+          - MANAGE_CHANNELS
+          - CREATE_PUBLIC_THREADS
+          - SEND_MESSAGES_IN_THREADS
+      - roleName: Student
+        deny:
+          - SEND_MESSAGES
+          - CREATE_PUBLIC_THREADS
+          - SEND_MESSAGES_IN_THREADS
+    botPromptMessages:
+      - "This category is owned by the student with the id #FF9900"
+      - They will add channels that will be configured to allow us to talk about
+        different aspects of the capstone project
+channels:
+  - name: general-chat
+    type: text
+    topic: 'This is the "general-chat" channel for the student with the id #BEEFED'
+    parentCategory: "#BEEFED"
+  - name: 🤖-prompt-settings
+    type: text
+    topic: 'This is the "🤖-prompt-settings" channel for the student with the id
+      #BEEFED'
+    parentCategory: "#BEEFED"
+  - name: general-chat
+    type: text
+    topic: 'This is the "general-chat" channel for the student with the id #FF9900'
+    parentCategory: "#FF9900"
+  - name: 🤖-prompt-settings
+    type: text
+    topic: 'This is the "🤖-prompt-settings" channel for the student with the id
+      #FF9900'
+    parentCategory: "#FF9900"

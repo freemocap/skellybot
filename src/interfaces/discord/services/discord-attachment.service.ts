@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Attachment } from 'discord.js';
-import { OpenaiAudioService } from '../../../../core/ai/openai/openai-audio.service';
+import { OpenaiAudioService } from '../../../core/ai/openai/openai-audio.service';
 import axios from 'axios';
 import * as mime from 'mime-types'; // Ensure to import mime-types
 import * as path from 'path';
@@ -50,7 +50,7 @@ export class DiscordAttachmentService {
     this.logger.log('Handling attachment:', attachment.name);
     const tempFilePath = '';
     try {
-      const tempFilePath = await this._downloadAttachment(attachment);
+      const tempFilePath = await this.downloadAttachment(attachment);
       const fileExtension = path.extname(attachment.name).toLowerCase();
 
       const handler =
@@ -165,7 +165,7 @@ export class DiscordAttachmentService {
     };
   }
 
-  private async _downloadAttachment(attachment: Attachment): Promise<string> {
+  public async downloadAttachment(attachment: Attachment): Promise<string> {
     this.logger.log('Downloading attachment:', attachment.name);
     try {
       const tempDirectoryPath = path.join(__dirname, 'temp');

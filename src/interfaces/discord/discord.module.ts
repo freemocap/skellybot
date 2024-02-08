@@ -1,22 +1,28 @@
-import { Logger, Module } from '@nestjs/common';
-import { DiscordPingService } from './services/discord-ping.service';
+import { Module } from '@nestjs/common';
+import { DiscordPingWowCommand } from './commands/discord-ping-wow.command';
 import { NecordModule } from 'necord';
 
 import { DiscordConfigService } from './services/discord-config.service';
-import { DiscordEventService } from './services/events/discord-event.service';
-import { DiscordChatService } from './services/chats/discord-chat.service';
+import { DiscordStartUpService } from './services/discord-start-up.service';
 import { GcpModule } from '../../core/gcp/gcp.module';
 import { UsersModule } from '../../core/database/collections/users/users.module';
 import { ChatbotModule } from '../../core/chatbot/chatbot.module';
 import { AiChatsModule } from '../../core/database/collections/ai-chats/ai-chats.module';
 import { CoupletsModule } from '../../core/database/collections/couplets/couplets.module';
 import { MessagesModule } from '../../core/database/collections/messages/messages.module';
-import { DiscordContextService } from './services/chats/discord-context.service';
-import { DiscordMongodbService } from './services/discord-mongodb.service';
-import { DiscordMessageService } from './services/chats/discord-message.service';
+import { DiscordContextRouteService } from './services/discord-context-route.service';
+import { DiscordPersistenceService } from './services/discord-persistence.service';
+import { DiscordMessageService } from './services/discord-message.service';
 import { OpenaiModule } from '../../core/ai/openai/openai.module';
-import { DiscordAttachmentService } from './services/chats/discord-attachment.service';
-import { DiscordOnMessageService } from './services/events/discord-on-message.service';
+import { DiscordAttachmentService } from './services/discord-attachment.service';
+import { DiscordOnMessageService } from './services/discord-on-message.service';
+import { DiscordChatCommand } from './commands/discord-chat.command';
+import { DiscordDeployServerCommand } from './commands/server-config-command/discord-deploy-server-command.service';
+import { DiscordThreadService } from './services/discord-thread.service';
+import { DiscordServerConfigService } from './commands/server-config-command/discord-server-configuration.service';
+import { DiscordContextPromptService } from './services/discord-context-prompt.service';
+import { DiscordConfigureCategoryService } from './commands/server-config-command/discord-configure-category.service';
+import { DiscordConfigureChannelService } from './commands/server-config-command/discord-configure-channel.service';
 
 @Module({
   imports: [
@@ -34,14 +40,19 @@ import { DiscordOnMessageService } from './services/events/discord-on-message.se
   ],
   providers: [
     DiscordOnMessageService,
-    DiscordEventService,
-    DiscordPingService,
-    DiscordChatService,
     DiscordMessageService,
     DiscordAttachmentService,
-    DiscordContextService,
-    DiscordMongodbService,
-    Logger,
+    DiscordContextRouteService,
+    DiscordContextPromptService,
+    DiscordThreadService,
+    DiscordPersistenceService,
+    DiscordPingWowCommand,
+    DiscordChatCommand,
+    DiscordDeployServerCommand,
+    DiscordConfigureCategoryService,
+    DiscordConfigureChannelService,
+    DiscordServerConfigService,
+    DiscordStartUpService,
   ],
 })
 export class DiscordModule {}
