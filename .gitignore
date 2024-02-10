@@ -37,3 +37,6 @@ lerna-debug.log*
 .env.slack
 .env.discord
 /.env.openai
+/src/interfaces/discord/commands/server-config-command/server-config-examples/capstone/2024-capstone-category-per-student-config.yaml
+/src/interfaces/discord/commands/server-config-command/server-config-examples/capstone/2024-capstone-category-per-student-config-CHANGE_NICKNAMES.yaml
+/src/interfaces/discord/commands/server-config-command/server-config-examples/capstone/student-identifiers.ts
