@@ -82,19 +82,19 @@ export class DiscordChatCommand {
   ) {
     await interaction.deferReply();
     try {
-      const { humanInputText, attachmentText } =
+      const { humanInputText, additionalContent } =
         await this._messageService.extractMessageContent(message);
 
       this.logger.log(
         `Received 'message context menu' command for Message: ${message.id} in channel: name= ${interaction.channel.name}, id=${message.channel.id} `,
       );
       const thread = await this._threadService.createNewThread(
-        humanInputText + attachmentText,
+        humanInputText + additionalContent,
         interaction,
       );
 
       const firstMessageContent = `Starting new chat with initial message:\n\n> ${
-        humanInputText + attachmentText
+        humanInputText + additionalContent
       }`;
 
       const firstThreadMessages = await this._messageService.sendChunkedMessage(

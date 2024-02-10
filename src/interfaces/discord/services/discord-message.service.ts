@@ -27,15 +27,16 @@ export class DiscordMessageService {
     this.logger.log(`Responding to message id ${discordMessage.id}`);
     try {
       let humanInputText = '';
-      let attachmentText = '';
+      let additionalContent = '';
       if (!textToRespondTo) {
-        ({ humanInputText, attachmentText } = await this.extractMessageContent(
-          discordMessage,
-          respondToChannelOrMessage,
-        ));
+        ({ humanInputText, additionalContent } =
+          await this.extractMessageContent(
+            discordMessage,
+            respondToChannelOrMessage,
+          ));
       } else {
         humanInputText = textToRespondTo;
-        attachmentText = '';
+        additionalContent = '';
       }
 
       this.logger.log(
@@ -47,7 +48,7 @@ export class DiscordMessageService {
       await this._handleResponseStream(
         humanUserId,
         humanInputText,
-        attachmentText,
+        additionalContent,
         discordMessage,
         isFirstExchange,
         respondToChannelOrMessage,
@@ -191,6 +192,21 @@ export class DiscordMessageService {
     respondToChannelOrMessage?: Message<boolean> | TextBasedChannel,
   ) {
     let humanInputText = discordMessage.content;
+
+    let referencedMessagesContent = 'BEGIN TEXT FROM REFERENCED MESSAGES:\n\n';
+    if (discordMessage.reference && discordMessage.reference.messageId) {
+      this.logger.debug(
+        'Message is a reply - extract content from referenced message (recursively)',
+      );
+      const referencedMessage = await discordMessage.channel.messages.fetch(
+        discordMessage.reference.messageId,
+      );
+      const { humanInputText, additionalContent } =
+        await this.extractMessageContent(referencedMessage);
+      referencedMessagesContent += humanInputText + additionalContent + '\n\n';
+    }
+    referencedMessagesContent += 'END TEXT FROM REFERENCED MESSAGES';
+
     let attachmentText = '';
     if (discordMessage.attachments.size > 0) {
       if (humanInputText.length > 0) {
@@ -229,7 +245,8 @@ export class DiscordMessageService {
         attachmentText += 'END TEXT FROM ATTACHMENTS';
       }
     }
-    return { humanInputText, attachmentText };
+    const additionalContent = referencedMessagesContent + attachmentText;
+    return { humanInputText, additionalContent };
   }
 
   private async _sendFullResponseAsAttachment(

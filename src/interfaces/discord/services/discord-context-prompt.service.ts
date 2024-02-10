@@ -210,10 +210,10 @@ export class DiscordContextPromptService {
 
     let pinnedMessageCount = 0;
     for (const message of pinnedMessages.values()) {
-      const { humanInputText, attachmentText } =
+      const { humanInputText, additionalContent } =
         await this._discordMessageService.extractMessageContent(message);
       pinnedMessagesContent += `Pinned message ${pinnedMessageCount++}:\n`;
-      pinnedMessagesContent += humanInputText + attachmentText + '\n\n';
+      pinnedMessagesContent += humanInputText + additionalContent + '\n\n';
     }
     pinnedMessagesContent += '\nEND PINNED MESSAGES';
     return pinnedMessagesContent;
