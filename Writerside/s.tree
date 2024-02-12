@@ -109,4 +109,12 @@
         <toc-element topic="FileSystem.md"/>
         <toc-element topic="TimedEvents.md"/>
     </toc-element>
+    <toc-element topic="User-Guides.md">
+        <toc-element topic="Discord-Server-User-Reference.md">
+            <toc-element topic="Server-Structure.md"/>
+            <toc-element topic="Discord-Actions.md"/>
+            <toc-element topic="AI-Bot-Interactions.md"/>
+            <toc-element topic="AI-s-Context-Window.md"/>
+        </toc-element>
+    </toc-element>
 </instance-profile>
