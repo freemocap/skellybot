@@ -89,6 +89,71 @@ export class DiscordMessageService {
     return replyMessages;
   }
 
+  public async extractMessageContent(
+    discordMessage: Message<boolean>,
+    respondToChannelOrMessage?: Message<boolean> | TextBasedChannel,
+  ) {
+    let humanInputText = discordMessage.content;
+
+    let referencedMessagesContent = '';
+
+    if (discordMessage.reference && discordMessage.reference.messageId) {
+      referencedMessagesContent += 'BEGIN TEXT FROM REFERENCED MESSAGES:\n\n';
+      this.logger.debug(
+        'Message is a reply - extract content from referenced message (recursively)',
+      );
+      const referencedMessage = await discordMessage.channel.messages.fetch(
+        discordMessage.reference.messageId,
+      );
+      const { humanInputText, additionalContent } =
+        await this.extractMessageContent(referencedMessage);
+      referencedMessagesContent +=
+        humanInputText + '\n\n' + additionalContent + '\n\n';
+      referencedMessagesContent += 'END TEXT FROM REFERENCED MESSAGES';
+    }
+
+    let attachmentText = '';
+    if (discordMessage.attachments.size > 0) {
+      if (humanInputText.length > 0) {
+        humanInputText =
+          'BEGIN TEXT FROM HUMAN INPUT:\n\n' +
+          humanInputText +
+          '\n\nEND TEXT FROM HUMAN INPUT\n\n';
+      }
+      attachmentText = 'BEGIN TEXT FROM ATTACHMENTS:\n\n';
+      for (const [, attachment] of discordMessage.attachments) {
+        const attachmentResponse =
+          await this._discordAttachmentService.handleAttachment(attachment);
+        attachmentText += attachmentResponse.text;
+        if (
+          respondToChannelOrMessage &&
+          attachmentResponse.type === 'transcript'
+        ) {
+          const replyMessages = await this.sendChunkedMessage(
+            respondToChannelOrMessage,
+            attachmentText,
+          );
+          const verboseJsonBuffer = Buffer.from(
+            JSON.stringify(attachmentResponse.verboseOutput, null, 4),
+            'utf-8',
+          );
+          await replyMessages[replyMessages.length - 1].edit({
+            content: replyMessages[replyMessages.length - 1].content,
+            files: [
+              {
+                attachment: verboseJsonBuffer,
+                name: `message-${discordMessage.id}-transcription.json`,
+              },
+            ],
+          });
+        }
+        attachmentText += 'END TEXT FROM ATTACHMENTS';
+      }
+    }
+    const additionalContent = referencedMessagesContent + attachmentText;
+    return { humanInputText, additionalContent };
+  }
+
   private _getChunks(text: string, maxChunkSize: number): string[] {
     const chunks = [];
     while (text.length) {
@@ -99,7 +164,6 @@ export class DiscordMessageService {
     }
     return chunks;
   }
-
   private async _handleResponseStream(
     humanUserId: string,
     inputMessageText: string,
@@ -185,68 +249,6 @@ export class DiscordMessageService {
     } catch (error) {
       this.logger.error(`Error in _handleStream: ${error}`);
     }
-  }
-
-  public async extractMessageContent(
-    discordMessage: Message<boolean>,
-    respondToChannelOrMessage?: Message<boolean> | TextBasedChannel,
-  ) {
-    let humanInputText = discordMessage.content;
-
-    let referencedMessagesContent = 'BEGIN TEXT FROM REFERENCED MESSAGES:\n\n';
-    if (discordMessage.reference && discordMessage.reference.messageId) {
-      this.logger.debug(
-        'Message is a reply - extract content from referenced message (recursively)',
-      );
-      const referencedMessage = await discordMessage.channel.messages.fetch(
-        discordMessage.reference.messageId,
-      );
-      const { humanInputText, additionalContent } =
-        await this.extractMessageContent(referencedMessage);
-      referencedMessagesContent += humanInputText + additionalContent + '\n\n';
-    }
-    referencedMessagesContent += 'END TEXT FROM REFERENCED MESSAGES';
-
-    let attachmentText = '';
-    if (discordMessage.attachments.size > 0) {
-      if (humanInputText.length > 0) {
-        humanInputText =
-          'BEGIN TEXT FROM HUMAN INPUT:\n\n' +
-          humanInputText +
-          '\n\nEND TEXT FROM HUMAN INPUT\n\n';
-      }
-      attachmentText = 'BEGIN TEXT FROM ATTACHMENTS:\n\n';
-      for (const [, attachment] of discordMessage.attachments) {
-        const attachmentResponse =
-          await this._discordAttachmentService.handleAttachment(attachment);
-        attachmentText += attachmentResponse.text;
-        if (
-          respondToChannelOrMessage &&
-          attachmentResponse.type === 'transcript'
-        ) {
-          const replyMessages = await this.sendChunkedMessage(
-            respondToChannelOrMessage,
-            attachmentText,
-          );
-          const verboseJsonBuffer = Buffer.from(
-            JSON.stringify(attachmentResponse.verboseOutput, null, 4),
-            'utf-8',
-          );
-          await replyMessages[replyMessages.length - 1].edit({
-            content: replyMessages[replyMessages.length - 1].content,
-            files: [
-              {
-                attachment: verboseJsonBuffer,
-                name: `message-${discordMessage.id}-transcription.json`,
-              },
-            ],
-          });
-        }
-        attachmentText += 'END TEXT FROM ATTACHMENTS';
-      }
-    }
-    const additionalContent = referencedMessagesContent + attachmentText;
-    return { humanInputText, additionalContent };
   }
 
   private async _sendFullResponseAsAttachment(
