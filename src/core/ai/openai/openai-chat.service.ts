@@ -62,10 +62,19 @@ export class OpenaiChatService implements OnModuleInit {
     this._storeConfig(chatId, config);
   }
 
-  public getAiResponseStream(chatId: string, humanMessage: string) {
+  public getAiResponseStream(
+    chatId: string,
+    humanMessage: string,
+    imageURLs: string[],
+  ) {
     this.logger.debug(`Getting AI response stream for chatId: ${chatId}`);
     const config = this._getConfigOrThrow(chatId);
-    config.messages.push({ role: 'user', content: humanMessage });
+    const messageContent: any[] = [{ type: 'text', text: humanMessage }];
+    for (const imageURL in imageURLs) {
+      messageContent.push({ type: 'image_url', image_url: imageURL });
+    }
+
+    config.messages.push({ role: 'user', content: messageContent });
 
     return this.streamResponse(config);
   }
@@ -119,7 +128,7 @@ export class OpenaiChatService implements OnModuleInit {
   private _defaultChatConfig() {
     return {
       messages: [],
-      model: 'gpt-4-1106-preview',
+      model: 'gpt-4-vision-preview',
       temperature: 0.7,
       stream: true,
     } as OpenAiChatConfig;

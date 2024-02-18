@@ -112,6 +112,32 @@ export class DiscordAttachmentService {
     }
   }
 
+  async getImageDataFromURL(url: string) {
+    try {
+      this.logger.log(`getting Image from URL: ${url}`);
+
+      // Fetching the image data as a stream
+      const response = await axios({
+        method: 'get',
+        url: url,
+        responseType: 'arraybuffer',
+      });
+      // Converting the image data to base64
+      const imageBase64 = Buffer.from(response.data, 'binary').toString(
+        'base64',
+      );
+
+      // Getting the content type of the image
+      const contentType = response.headers['content-type'];
+
+      // Combining content type and base64 encoding for complete image data
+      return `data:${contentType};base64,${imageBase64}`;
+    } catch (error) {
+      this.logger.error(`Error getting image data from URL: ${error}`);
+      throw error;
+    }
+  }
+
   private async handleTextAttachment(
     tempFilePath: string,
     attachment: Attachment,
