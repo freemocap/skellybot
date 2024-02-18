@@ -208,7 +208,7 @@ export class DiscordMessageService {
       for (const [, attachment] of discordMessage.attachments) {
         if (attachment.contentType.split('/')[0] == 'image') {
           imageURLs.push(
-            this._discordAttachmentService.getImageDataFromURL(
+            await this._discordAttachmentService.getImageDataFromURL(
               attachment.url, //.split('?')[0]
             ),
           );

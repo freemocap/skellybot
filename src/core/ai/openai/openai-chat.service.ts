@@ -70,7 +70,7 @@ export class OpenaiChatService implements OnModuleInit {
     this.logger.debug(`Getting AI response stream for chatId: ${chatId}`);
     const config = this._getConfigOrThrow(chatId);
     const messageContent: any[] = [{ type: 'text', text: humanMessage }];
-    for (const imageURL in imageURLs) {
+    for (const imageURL of imageURLs) {
       messageContent.push({ type: 'image_url', image_url: imageURL });
     }
 
