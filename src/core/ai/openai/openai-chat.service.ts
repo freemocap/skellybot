@@ -15,6 +15,7 @@ export interface OpenAiChatConfig {
     | 'gpt-3.5-turbo-16k';
   temperature: number;
   stream: boolean;
+  max_tokens: number;
 }
 
 @Injectable()
@@ -94,14 +95,15 @@ export class OpenaiChatService implements OnModuleInit {
     // @ts-ignore
     for await (const newChunk of chatStream) {
       allStreamedChunks.push(newChunk);
-      fullAiResponseText += newChunk.choices[0].delta.content;
-      const chunkText = newChunk.choices[0].delta.content;
+      fullAiResponseText += newChunk.choices[0].delta.content || '';
+      const chunkText = newChunk.choices[0].delta.content || '';
       if (chunkText) {
         chunkToYield += chunkText;
       }
       if (
         chunkToYield.length >= yieldAtLength ||
-        newChunk.choices[0].finish_reason === 'stop'
+        newChunk.choices[0].finish_reason === 'stop' ||
+        newChunk.choices[0].finish_reason === 'length'
       ) {
         this.logger.debug(`Streaming text chunk: ${chunkToYield}`);
         yield chunkToYield;
@@ -131,6 +133,7 @@ export class OpenaiChatService implements OnModuleInit {
       model: 'gpt-4-vision-preview',
       temperature: 0.7,
       stream: true,
+      max_tokens: 4096,
     } as OpenAiChatConfig;
   }
   private _reloadMessageHistoryFromAiChatDocument(aiChat: AiChatDocument) {
