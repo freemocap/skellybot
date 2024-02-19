@@ -1,8 +1,7 @@
 import * as ytdl from 'ytdl-core';
 import * as os from 'os';
 import * as fs from 'fs';
-import * as ffmpeg from 'fluent-ffmpeg';
-import * as path from 'path';
+import { convertToMp3 } from './convert-to.mp3';
 
 // const youtubeUrl = 'https://www.youtube.com/watch?v=GxKmyKdnTy0';
 // const outputFilename = `2022-11-rough-cut-freemocap-tutorial-video-from-youtube.mp4`;
@@ -42,39 +41,6 @@ const downloadYouTubeVideo = async (
   }
 };
 
-const convertToMp3 = async (
-  inputFilePath: string,
-  outputFilePath: string,
-  targetSizeInMB: number,
-) => {
-  console.log(`Converting '${inputFilePath}' to mp3...`);
-  const durationInSeconds = await getVideoDuration(inputFilePath);
-  const bitrate = (targetSizeInMB * 8 * 1024) / durationInSeconds;
-  ffmpeg(inputFilePath)
-    .audioCodec('libmp3lame')
-    .audioBitrate(bitrate)
-    .toFormat('mp3')
-    .on('end', function () {
-      console.log('Conversion to mp3 finished.');
-    })
-    .on('error', function (err: Error) {
-      console.log('Error converting to mp3:', err.message);
-    })
-    .saveToFile(outputFilePath);
-};
-
-const getVideoDuration = (filePath: string): Promise<number> => {
-  return new Promise((resolve, reject) => {
-    ffmpeg.ffprobe(filePath, (err, metadata) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(metadata.format.duration);
-      }
-    });
-  });
-};
-
 downloadYouTubeVideo(youtubeUrl, outputFileAbsolutePath)
   .then(() => {
     console.log('Download complete.');
@@ -88,19 +54,4 @@ downloadYouTubeVideo(youtubeUrl, outputFileAbsolutePath)
     console.error('Error:', error);
   });
 
-import chokidar from 'chokidar';
-
-const folderPath: string = '/path/to/your/folder';
-
-const watcher = chokidar.watch(folderPath, {
-  ignored: /(^|[\/\\])\../, // ignore dotfiles
-  persistent: true,
-});
-
-watcher.on('add', (path: string) => {
-  if (path.endsWith('.mp4')) {
-    console.log(`File added: ${path}`);
-    // Trigger your event here
-  }
-});
 console.log('Script completed');
