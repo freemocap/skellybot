@@ -47,9 +47,10 @@ export class DiscordOnMessageService {
 
       const chatConfig = {
         messages: [],
-        model: 'gpt-4-1106-preview',
+        model: 'gpt-4-vision-preview',
         temperature: 0.7,
         stream: true,
+        max_tokens: 4096,
       } as OpenAiChatConfig;
       this._openaiChatService.createChat(aiChatId, contextPrompt, chatConfig);
       const aiChatDocument = await this._aiChatsService.createAiChat({
@@ -58,7 +59,7 @@ export class DiscordOnMessageService {
         contextRoute,
         contextInstructions: contextPrompt,
         couplets: [],
-        modelName: 'gpt-4-1106-preview',
+        modelName: 'gpt-4-vision-preview',
       });
 
       this.logger.debug(`Adding threadId ${aiChatId} to active listeners`);
@@ -122,7 +123,7 @@ export class DiscordOnMessageService {
         contextInstructions:
           await this._contextPromptService.getContextPromptFromMessage(message),
         couplets: [],
-        modelName: 'gpt-4-1106-preview',
+        modelName: 'gpt-4-vision-preview',
       },
       populateCouplets,
     );

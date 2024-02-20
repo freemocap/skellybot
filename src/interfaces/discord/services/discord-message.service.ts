@@ -28,11 +28,13 @@ export class DiscordMessageService {
     try {
       let humanInputText = '';
       let attachmentText = '';
+      let imageURLs: string[] = [];
       if (!textToRespondTo) {
-        ({ humanInputText, attachmentText } = await this.extractMessageContent(
-          discordMessage,
-          respondToChannelOrMessage,
-        ));
+        ({ humanInputText, attachmentText, imageURLs } =
+          await this.extractMessageContent(
+            discordMessage,
+            respondToChannelOrMessage,
+          ));
       } else {
         humanInputText = textToRespondTo;
         attachmentText = '';
@@ -48,6 +50,7 @@ export class DiscordMessageService {
         humanUserId,
         humanInputText,
         attachmentText,
+        imageURLs,
         discordMessage,
         isFirstExchange,
         respondToChannelOrMessage,
@@ -103,6 +106,7 @@ export class DiscordMessageService {
     humanUserId: string,
     inputMessageText: string,
     attachmentText: string,
+    imageURLs: string[],
     discordMessage: Message<boolean>,
     isFirstExchange: boolean = false,
     respondToChannelOrMessage: Message<boolean> | TextBasedChannel,
@@ -114,6 +118,7 @@ export class DiscordMessageService {
       const aiResponseStream = this._openaiChatService.getAiResponseStream(
         discordMessage.channel.id,
         inputMessageText + attachmentText,
+        imageURLs,
       );
       const maxMessageLength = 2000 * 0.9; // discord max message length is 2000 characters (and *0.9 to be safe)
 
@@ -182,7 +187,7 @@ export class DiscordMessageService {
         isFirstExchange,
       );
     } catch (error) {
-      this.logger.error(`Error in _handleStream: ${error}`);
+      this.logger.error(`${error}`);
     }
   }
 
@@ -192,6 +197,7 @@ export class DiscordMessageService {
   ) {
     let humanInputText = discordMessage.content;
     let attachmentText = '';
+    const imageURLs = [];
     if (discordMessage.attachments.size > 0) {
       if (humanInputText.length > 0) {
         humanInputText =
@@ -199,8 +205,19 @@ export class DiscordMessageService {
           humanInputText +
           '\n\nEND TEXT FROM HUMAN INPUT\n\n';
       }
-      attachmentText = 'BEGIN TEXT FROM ATTACHMENTS:\n\n';
       for (const [, attachment] of discordMessage.attachments) {
+        if (attachment.contentType.split('/')[0] == 'image') {
+          imageURLs.push(
+            await this._discordAttachmentService.getImageDataFromURL(
+              attachment.url, //.split('?')[0]
+            ),
+          );
+          this.logger.debug('pushed img url to attachmentURLs');
+          continue;
+        }
+        if (!attachmentText) {
+          attachmentText = 'BEGIN TEXT FROM ATTACHMENTS:\n\n';
+        }
         const attachmentResponse =
           await this._discordAttachmentService.handleAttachment(attachment);
         attachmentText += attachmentResponse.text;
@@ -229,7 +246,7 @@ export class DiscordMessageService {
         attachmentText += 'END TEXT FROM ATTACHMENTS';
       }
     }
-    return { humanInputText, attachmentText };
+    return { humanInputText, attachmentText, imageURLs };
   }
 
   private async _sendFullResponseAsAttachment(
