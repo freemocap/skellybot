@@ -1,8 +1,8 @@
 import * as chokidar from 'chokidar';
 import * as fs from 'fs';
 
-import { convertToMp3 } from './convert-to-mp3';
 import { promisify } from 'util';
+import { convertToMp3 } from './convert-to-mp3';
 
 const watchThisFolderForNewVideoFolders = 'D:/videos/obs-recordings';
 

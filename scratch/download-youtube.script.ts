@@ -1,7 +1,7 @@
 import * as ytdl from 'ytdl-core';
 import * as os from 'os';
 import * as fs from 'fs';
-import { convertToMp3 } from './convert-to.mp3';
+import { convertToMp3 } from './convert-to-mp3';
 
 // const youtubeUrl = 'https://www.youtube.com/watch?v=GxKmyKdnTy0';
 // const outputFilename = `2022-11-rough-cut-freemocap-tutorial-video-from-youtube.mp4`;
