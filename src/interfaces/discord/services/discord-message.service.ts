@@ -27,9 +27,10 @@ export class DiscordMessageService {
     this.logger.log(`Responding to message id ${discordMessage.id}`);
     try {
       let humanInputText = '';
-      let additionalContent = '';
+      let attachmentText = '';
+      let imageURLs: string[] = [];
       if (!textToRespondTo) {
-        ({ humanInputText, additionalContent } =
+        ({ humanInputText, attachmentText, imageURLs } =
           await this.extractMessageContent(
             discordMessage,
             respondToChannelOrMessage,
@@ -48,7 +49,8 @@ export class DiscordMessageService {
       await this._handleResponseStream(
         humanUserId,
         humanInputText,
-        additionalContent,
+        attachmentText,
+        imageURLs,
         discordMessage,
         isFirstExchange,
         respondToChannelOrMessage,
@@ -168,6 +170,7 @@ export class DiscordMessageService {
     humanUserId: string,
     inputMessageText: string,
     attachmentText: string,
+    imageURLs: string[],
     discordMessage: Message<boolean>,
     isFirstExchange: boolean = false,
     respondToChannelOrMessage: Message<boolean> | TextBasedChannel,
@@ -179,6 +182,7 @@ export class DiscordMessageService {
       const aiResponseStream = this._openaiChatService.getAiResponseStream(
         discordMessage.channel.id,
         inputMessageText + attachmentText,
+        imageURLs,
       );
       const maxMessageLength = 2000 * 0.9; // discord max message length is 2000 characters (and *0.9 to be safe)
 
@@ -247,8 +251,67 @@ export class DiscordMessageService {
         isFirstExchange,
       );
     } catch (error) {
-      this.logger.error(`Error in _handleStream: ${error}`);
+      this.logger.error(`${error}`);
     }
+  }
+
+
+  public async extractMessageContent(
+    discordMessage: Message<boolean>,
+    respondToChannelOrMessage?: Message<boolean> | TextBasedChannel,
+  ) {
+    let humanInputText = discordMessage.content;
+    let attachmentText = '';
+    const imageURLs = [];
+    if (discordMessage.attachments.size > 0) {
+      if (humanInputText.length > 0) {
+        humanInputText =
+          'BEGIN TEXT FROM HUMAN INPUT:\n\n' +
+          humanInputText +
+          '\n\nEND TEXT FROM HUMAN INPUT\n\n';
+      }
+      for (const [, attachment] of discordMessage.attachments) {
+        if (attachment.contentType.split('/')[0] == 'image') {
+          imageURLs.push(
+            await this._discordAttachmentService.getImageDataFromURL(
+              attachment.url, //.split('?')[0]
+            ),
+          );
+          this.logger.debug('pushed img url to attachmentURLs');
+          continue;
+        }
+        if (!attachmentText) {
+          attachmentText = 'BEGIN TEXT FROM ATTACHMENTS:\n\n';
+        }
+        const attachmentResponse =
+          await this._discordAttachmentService.handleAttachment(attachment);
+        attachmentText += attachmentResponse.text;
+        if (
+          respondToChannelOrMessage &&
+          attachmentResponse.type === 'transcript'
+        ) {
+          const replyMessages = await this.sendChunkedMessage(
+            respondToChannelOrMessage,
+            attachmentText,
+          );
+          const verboseJsonBuffer = Buffer.from(
+            JSON.stringify(attachmentResponse.verboseOutput, null, 4),
+            'utf-8',
+          );
+          await replyMessages[replyMessages.length - 1].edit({
+            content: replyMessages[replyMessages.length - 1].content,
+            files: [
+              {
+                attachment: verboseJsonBuffer,
+                name: `message-${discordMessage.id}-transcription.json`,
+              },
+            ],
+          });
+        }
+        attachmentText += 'END TEXT FROM ATTACHMENTS';
+      }
+    }
+    return { humanInputText, attachmentText, imageURLs };
   }
 
   private async _sendFullResponseAsAttachment(
