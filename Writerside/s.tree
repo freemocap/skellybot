@@ -6,15 +6,54 @@
                   name="SkellyBot" start-page="Overview.md">
 
     <toc-element topic="Overview.md">
+    </toc-element>
+    <toc-element topic="User-Guides.md">
         <toc-element topic="SkellyBot-Server-Setup-Guide.md"/>
-        <toc-element topic="Development.md">
-            <toc-element topic="ProjectNotes.md"/>
-            <toc-element topic="Onboarding.md"/>
-            <toc-element topic="Environment-Setup.md"/>
+        <toc-element topic="Discord-Server-User-Reference.md">
+            <toc-element topic="Server-Structure.md"/>
+            <toc-element topic="Discord-Actions.md"/>
+            <toc-element topic="AI-Bot-Interactions.md"/>
+            <toc-element topic="AI-s-Context-Window.md"/>
         </toc-element>
-        <toc-element topic="2024-02-12-JSM-Notes.md"/>
     </toc-element>
     <toc-element topic="Concepts.md">
+        <toc-element topic="Chatbot.md">
+            <toc-element topic="User-Interface.md"/>
+            <toc-element topic="AI.md">
+                <toc-element topic="Tools.md">
+                    <toc-element topic="Chroma.md"/>
+                    <toc-element topic="Foam.md"/>
+                    <toc-element topic="ContinueDev.md"/>
+                    <toc-element topic="OpenAI.md"/>
+                    <toc-element topic="LangChain.md"/>
+                </toc-element>
+                <toc-element topic="Audio.md">
+                    <toc-element topic="Whisper.md"/>
+                </toc-element>
+                <toc-element topic="Language.md">
+                    <toc-element topic="Retrieval-Augmented-Generation.md"/>
+                    <toc-element topic="Agent.md">
+                        <toc-element topic="LLMChain.md">
+                            <toc-element topic="LargeLanguageModel-LLM.md">
+                                <toc-element topic="Gpt-4-turbo.md"/>
+                            </toc-element>
+                            <toc-element topic="SystemPrompt.md"/>
+                        </toc-element>
+                        <toc-element topic="ConversationMemory.md"/>
+                        <toc-element topic="LongTermMemory.md">
+                            <toc-element topic="VectorStore.md"/>
+                        </toc-element>
+                        <toc-element topic="AgentTools.md"/>
+                    </toc-element>
+                </toc-element>
+                <toc-element topic="Images.md">
+                    <toc-element topic="StableDiffusion.md"/>
+                    <toc-element topic="Dalle3.md"/>
+                </toc-element>
+            </toc-element>
+            <toc-element topic="FileSystem.md"/>
+            <toc-element topic="TimedEvents.md"/>
+        </toc-element>
         <toc-element topic="SkellyBot.md">
             <toc-element topic="JonBot.md">
                 <toc-element topic="ClassBot.md">
@@ -74,49 +113,10 @@
             </toc-element>
         </toc-element>
     </toc-element>
-    <toc-element topic="Chatbot.md">
-        <toc-element topic="User-Interface.md"/>
-        <toc-element topic="AI.md">
-            <toc-element topic="Tools.md">
-                <toc-element topic="Chroma.md"/>
-                <toc-element topic="Foam.md"/>
-                <toc-element topic="ContinueDev.md"/>
-                <toc-element topic="OpenAI.md"/>
-                <toc-element topic="LangChain.md"/>
-            </toc-element>
-            <toc-element topic="Audio.md">
-                <toc-element topic="Whisper.md"/>
-            </toc-element>
-            <toc-element topic="Language.md">
-                <toc-element topic="Retrieval-Augmented-Generation.md"/>
-                <toc-element topic="Agent.md">
-                    <toc-element topic="LLMChain.md">
-                        <toc-element topic="LargeLanguageModel-LLM.md">
-                            <toc-element topic="Gpt-4-turbo.md"/>
-                        </toc-element>
-                        <toc-element topic="SystemPrompt.md"/>
-                    </toc-element>
-                    <toc-element topic="ConversationMemory.md"/>
-                    <toc-element topic="LongTermMemory.md">
-                        <toc-element topic="VectorStore.md"/>
-                    </toc-element>
-                    <toc-element topic="AgentTools.md"/>
-                </toc-element>
-            </toc-element>
-            <toc-element topic="Images.md">
-                <toc-element topic="StableDiffusion.md"/>
-                <toc-element topic="Dalle3.md"/>
-            </toc-element>
-        </toc-element>
-        <toc-element topic="FileSystem.md"/>
-        <toc-element topic="TimedEvents.md"/>
-    </toc-element>
-    <toc-element topic="User-Guides.md">
-        <toc-element topic="Discord-Server-User-Reference.md">
-            <toc-element topic="Server-Structure.md"/>
-            <toc-element topic="Discord-Actions.md"/>
-            <toc-element topic="AI-Bot-Interactions.md"/>
-            <toc-element topic="AI-s-Context-Window.md"/>
-        </toc-element>
+    <toc-element topic="Development.md">
+        <toc-element topic="2024-02-12-JSM-Notes.md"/>
+        <toc-element topic="ProjectNotes.md"/>
+        <toc-element topic="Onboarding.md"/>
+        <toc-element topic="Environment-Setup.md"/>
     </toc-element>
 </instance-profile>

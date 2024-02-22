@@ -1,3 +1,3 @@
-# Discord Project Server User Reference
+# Setting up your SkellyBot discord server
 
 Start typing here...
