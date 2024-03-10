@@ -1,26 +1,51 @@
 import { MongoClient } from 'mongodb';
-
-import { MongoClient } from 'mongodb';
 import * as dotenv from 'dotenv';
+import * as fs from 'fs';
 
-// Specify the path to your custom env file
-dotenv.config({ path: './mongo-cloud.env' });
+console.log(`Starting up - running from ${__dirname}`);
 
-const uri = process.env.MONGO_URI;
+const envFilePath = '../../.env.mongo';
 
-// Create a new MongoClient
+//make sure the .env file exists
+if (!fs.existsSync(envFilePath)) {
+  console.log(`Failed to find the .env file at ${envFilePath}`);
+  throw Error();
+}
+
+dotenv.config({ path: envFilePath });
+const uri = process.env.MONGODB_URI;
+if (uri) {
+  console.log('Environment data loaded correctly.');
+} else {
+  console.log('Failed to load environment data.');
+  throw Error();
+}
+
+const databaseName = 'skellybot-local';
+
 const client = new MongoClient(uri);
 
 async function runAggregationPipeline() {
   try {
-    // Connect to the MongoDB client
     await client.connect();
+    console.log('Successfully connected to the MongoDB database.');
 
     // Specify the database and collections
-    const database = client.db('your_database_name');
+    const database = client.db(databaseName);
     const usersCollection = database.collection('users');
     const coupletsCollection = database.collection('couplets');
-    const chatsCollection = database.collection('chats');
+    const chatsCollection = database.collection('aichats');
+
+    // print the number of documents in each collection
+    console.log(
+      `Found ${await usersCollection.countDocuments()} user documents.`,
+    );
+    console.log(
+      `Found ${await coupletsCollection.countDocuments()} couplet documents.`,
+    );
+    console.log(
+      `Found ${await chatsCollection.countDocuments()} chat documents.`,
+    );
 
     // Aggregation pipeline - replace with your actual aggregation stages
     const pipeline = [
