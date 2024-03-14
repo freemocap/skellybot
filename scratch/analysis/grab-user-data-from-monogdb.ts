@@ -1,68 +1,57 @@
-import { MongoClient } from 'mongodb';
-import * as dotenv from 'dotenv';
-import * as fs from 'fs';
+import { getMongoCloudClient } from './get-mongo-cloud-client';
 
 console.log(`Starting up - running from ${__dirname}`);
 
-const envFilePath = '../../.env.mongo';
+const databaseName = 'skellybot-prod';
 
-//make sure the .env file exists
-if (!fs.existsSync(envFilePath)) {
-  console.log(`Failed to find the .env file at ${envFilePath}`);
-  throw Error();
-}
-
-dotenv.config({ path: envFilePath });
-const uri = process.env.MONGODB_URI;
-if (uri) {
-  console.log('Environment data loaded correctly.');
-} else {
-  console.log('Failed to load environment data.');
-  throw Error();
-}
-
-const databaseName = 'skellybot-local';
-
-const client = new MongoClient(uri);
+const CAPSTONE_SERVER_ID = '1194766712680222800';
 
 async function runAggregationPipeline() {
-  try {
-    await client.connect();
-    console.log('Successfully connected to the MongoDB database.');
+  const client = await getMongoCloudClient();
+  await client.connect();
+  console.log('Successfully connected to the MongoDB client.');
 
+  try {
     // Specify the database and collections
     const database = client.db(databaseName);
     const usersCollection = database.collection('users');
+    const messagesCollection = database.collection('messages');
     const coupletsCollection = database.collection('couplets');
     const chatsCollection = database.collection('aichats');
 
-    // print the number of documents in each collection
-    console.log(
-      `Found ${await usersCollection.countDocuments()} user documents.`,
-    );
-    console.log(
-      `Found ${await coupletsCollection.countDocuments()} couplet documents.`,
-    );
-    console.log(
-      `Found ${await chatsCollection.countDocuments()} chat documents.`,
-    );
+    const collectionCounts = {
+      users: await usersCollection.countDocuments(),
+      messages: await messagesCollection.countDocuments(),
+      couplets: await coupletsCollection.countDocuments(),
+      chats: await chatsCollection.countDocuments(),
+    };
+
+    let output = `The '${databaseName}' database contains ['database collection':'document-count']: \n{ \n`;
+
+    for (const [key, value] of Object.entries(collectionCounts)) {
+      output += `${key}: ${value},\n`;
+    }
+
+    output += '}';
+
+    console.log(output);
 
     // Aggregation pipeline - replace with your actual aggregation stages
     const pipeline = [
       // Match the user documents (You will replace this with your actual condition)
       {
         $match: {
-          /* condition */
+          'contextRoute.identifiers.contextId': CAPSTONE_SERVER_ID,
         },
       },
 
       // Lookup (join) couplets
       {
         $lookup: {
-          from: coupletsCollection.collectionName,
-          localField: 'user_id', // Replace with your actual field name
-          foreignField: '_id', // Replace with your actual field name
-          as: 'couplets',
+          from: usersCollection.collectionName,
+          localField: 'ownerUser',
+          foreignField: '_id',
+          as: 'ownerUser',
         },
       },
 
@@ -72,10 +61,8 @@ async function runAggregationPipeline() {
     // Run the aggregation
     const cursor = usersCollection.aggregate(pipeline);
 
-    // Iterate over the cursor and output the documents
-    await cursor.forEach((doc) => {
-      console.log(doc);
-    });
+    const results = await cursor.toArray();
+    console.log('Results:', results);
   } finally {
     // Ensures that the client will close when you finish/error
     await client.close();
