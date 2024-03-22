@@ -5,6 +5,7 @@ import {
   GatewayIntentBits,
   GuildBasedChannel,
 } from 'discord.js';
+import * as fs from 'fs';
 
 console.log(`Starting the bot, running from ${__dirname}`);
 const envPath = '../../.env.discord';
@@ -111,5 +112,81 @@ const saveData = async (data: any, saveDirectory: string = '.') => {
 
   console.log(`Data saved to:  ${saveDirectory}`);
 };
+
+const saveDataToMarkdown = async (data: any, saveDirectory: string = '.') => {
+  console.log('Starting Markdown formatting...');
+
+  for (const category in data) {
+    const categoryPath = `${saveDirectory}/${sanitizeFilename(category)}`;
+    createDirectory(categoryPath);
+
+    for (const channel in data[category]) {
+      const channelPath = `${categoryPath}/${sanitizeFilename(channel)}`;
+      createDirectory(channelPath);
+
+      for (const messageData of data[category][channel]) {
+        if (messageData.messageId) {
+          // Ensure it's a message object
+          const messagePath = `${channelPath}/${sanitizeFilename(
+            messageData.messageId,
+          )}.md`;
+          const markdownContent = formatMessageToMarkdown(messageData);
+
+          await fs.promises.writeFile(messagePath, markdownContent, 'utf8');
+          console.log(
+            `Saved message ${messageData.messageId} to ${messagePath}`,
+          );
+        }
+      }
+    }
+  }
+
+  console.log('Markdown formatting completed.');
+};
+
+const sanitizeFilename = (name: string) => {
+  return name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+};
+
+const createDirectory = (path: string) => {
+  if (!fs.existsSync(path)) {
+    fs.mkdirSync(path, { recursive: true });
+    console.log(`Created directory: ${path}`);
+  }
+};
+
+const formatMessageToMarkdown = (messageData: any) => {
+  let markdownContent = `**${messageData.speaker}:** ${messageData.content}\n\n`;
+
+  // Handle attachments
+  messageData.attachments.forEach(async (attachmentUrl: string) => {
+    const attachmentName = getFileNameFromUrl(attachmentUrl);
+    const localPath = `./attachments/${sanitizeFilename(attachmentName)}`;
+    markdownContent += `![${attachmentName}](${localPath})\n`;
+  });
+
+  return markdownContent;
+};
+
+const getFileNameFromUrl = (url: string) => {
+  return url.split('/').pop();
+};
+
+// Dummy data for demonstration purposes
+const dummyServerData = {
+  General: {
+    welcome: [
+      {
+        messageId: '123456',
+        content: 'Hello, world!',
+        speaker: 'User1',
+        attachments: ['http://example.com/image.png'],
+      },
+    ],
+  },
+};
+
+// Call the function with dummy data to test
+saveDataToMarkdown(dummyServerData, './output');
 
 client.login(process.env.DISCORD_BOT_TOKEN);
