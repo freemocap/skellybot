@@ -35,8 +35,12 @@
 
 
 ---
+## (Sloppy) Documentation 
+  https://freemocap.github.io/skellybot/overview.html
+  
+---
 
-## Description
+## NestJS boilerplate below
 
 [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
 
