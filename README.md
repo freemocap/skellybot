@@ -34,9 +34,13 @@
 [//]: # (  [![Sponsors on Open Collective]&#40;https://opencollective.com/nest/sponsors/badge.svg&#41;]&#40;https://opencollective.com/nest#sponsor&#41;-->)
 
 
+---
+## (Sloppy) Documentation 
+  https://freemocap.github.io/skellybot/overview.html
+  
+---
 
-# 👇 (everything below this line is generic boilerplate) 👇
-## Description
+## NestJS boilerplate below
 
 [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
 
