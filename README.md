@@ -34,8 +34,8 @@
 [//]: # (  [![Sponsors on Open Collective]&#40;https://opencollective.com/nest/sponsors/badge.svg&#41;]&#40;https://opencollective.com/nest#sponsor&#41;-->)
 
 
+---
 
-# 👇 (everything below this line is generic boilerplate) 👇
 ## Description
 
 [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
