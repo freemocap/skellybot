@@ -1,7 +1,11 @@
-import { AnyThreadChannel, Client, Guild, TextChannel } from 'discord.js';
-import * as path from 'path';
-import * as fs from 'fs';
-import { saveJSONData } from './fileService';
+import {
+  AnyThreadChannel,
+  ChannelType,
+  Client,
+  Guild,
+  TextChannel,
+} from 'discord.js';
+import { saveJSONData } from './jsonFileService';
 
 export const scrapeServer = async (
   client: Client,
@@ -12,31 +16,38 @@ export const scrapeServer = async (
   if (!server) {
     throw new Error('Could not find the target server');
   }
-  console.log(`Scraping server: ${server.name}`);
 
-  const serverData = {};
-  serverData['serverName'] = server.name;
-  serverData['categories'] = [];
+  console.log(`Scraping server: ${server.name}...`);
+
+  const serverData = {
+    serverName: server.name,
+    categories: [],
+    topLevelChannels: [],
+  };
   const { categoryChannels, textChannels } = await getChannels(server);
 
-  serverData['categories']['top-level-channels'] = [];
   for (const categoryChannel of categoryChannels.values()) {
-    serverData['categories'].push({ name: categoryChannel.name, data: {} });
+    serverData.categories.push({ name: categoryChannel.name, channels: [] });
   }
 
   for (const textChannel of textChannels.values()) {
-    const channelData = await processChannel(textChannel as TextChannel);
+    const channelData = await processTextChannel(textChannel as TextChannel);
     if (!textChannel.parent) {
       console.log(`||Processing channel: ${textChannel.name}`);
-      serverData['categories']['top-level-channels'].push({
+      serverData.topLevelChannels.push({
         name: textChannel.name,
         data: channelData,
       });
     } else {
-      serverData['categories'][textChannel.parent.name].push({
-        name: textChannel.name,
-        data: channelData,
-      });
+      const category = serverData.categories.find(
+        (category) => category.name === textChannel.parent.name,
+      );
+      if (category) {
+        category.channels.push({
+          name: textChannel.name,
+          data: channelData,
+        });
+      }
     }
   }
 
@@ -47,28 +58,28 @@ export const scrapeServer = async (
 async function getChannels(server: Guild) {
   const allChannels = await server.channels.fetch();
   const categoryChannels = allChannels.filter(
-    // @ts-ignore
-    (channel) => channel.type === 'GUILD_CATEGORY',
+    (channel) => channel.type === ChannelType.GuildCategory,
   );
   const textChannels = allChannels.filter(
-    // @ts-ignore
-    (channel) => channel.type === 'GUILD_TEXT',
+    (channel) => channel.type === ChannelType.GuildText,
   );
   return { categoryChannels, textChannels };
 }
 
-const processChannel = async (channel: TextChannel) => {
-  const channelData = {};
-  channelData['name'] = channel.name;
-  channelData['threads'] = [];
+const processTextChannel = async (channel: TextChannel) => {
+  const channelData = {
+    name: channel.name,
+    threads: [],
+  };
   const threads = await channel.threads.fetch();
   for (const thread of threads.threads.values()) {
     console.log(`||----Processing thread: ${thread.name}`);
     const threadData = await processThread(thread);
     if (threadData) {
-      channelData['threads'].push(threadData);
+      channelData.threads.push(threadData);
     }
   }
+  return channelData;
 };
 
 const processThread = async (thread: AnyThreadChannel) => {
@@ -80,26 +91,19 @@ const processThread = async (thread: AnyThreadChannel) => {
   console.log(
     `||------Processing ${messages.size} messages from thread:  ${thread.name}`,
   );
-  const threadData = {};
-  threadData['name'] = thread.name;
-  threadData['messages'] = [];
-  for (const message of messages.values()) {
-    const attachments = message.attachments.map((attachment) => {
-      return {
-        name: attachment.name,
-        url: attachment.url,
-      };
-    });
-
-    const messageData = {
+  const threadData = {
+    name: thread.name,
+    messages: messages.map((message) => ({
       speakerName: message.author.username,
       speakerId: message.author.id,
       content: message.content,
       timestamp: message.createdTimestamp,
       jumpUrl: message.url,
-      attachments,
-    };
-    threadData['messages'].push(messageData);
-  }
+      attachments: message.attachments.map((attachment) => ({
+        name: attachment.name,
+        url: attachment.url,
+      })),
+    })),
+  };
   return threadData;
 };

@@ -1,8 +1,4 @@
-import {
-  loadEnvironmentVariables,
-  validateEnvironmentVariables,
-} from './services/envService';
-import { createOutputDirectory } from './services/fileService';
+import { loadEnvironmentVariables } from './services/envService';
 import { startBot } from './services/botService';
 
 const analysisMain = async () => {
@@ -10,15 +6,10 @@ const analysisMain = async () => {
 
   const envVariables = loadEnvironmentVariables('../../.env.discord');
 
-  const outputDirectory = createOutputDirectory(
-    envVariables.OUTPUT_DIRECTORY,
-    envVariables.HOME,
-  );
-
   await startBot(
     envVariables.DISCORD_BOT_TOKEN,
     envVariables.TARGET_SERVER_ID,
-    outputDirectory,
+    envVariables.OUTPUT_DIRECTORY,
   );
 };
 

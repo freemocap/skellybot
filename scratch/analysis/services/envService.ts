@@ -3,7 +3,6 @@ interface EnvironmentVariables {
   DISCORD_BOT_TOKEN: string | undefined;
   TARGET_SERVER_ID: string | undefined;
   OUTPUT_DIRECTORY: string | undefined;
-  HOME: string | undefined;
 }
 
 export const loadEnvironmentVariables = (
@@ -16,8 +15,11 @@ export const loadEnvironmentVariables = (
     DISCORD_BOT_TOKEN: process.env.DISCORD_BOT_TOKEN,
     TARGET_SERVER_ID: process.env.TARGET_SERVER_ID,
     OUTPUT_DIRECTORY: process.env.OUTPUT_DIRECTORY,
-    HOME: process.env.HOME,
   };
+
+  const cleanTimestamp = new Date().toISOString().replace(/:/g, '-');
+  envVariables.OUTPUT_DIRECTORY += '/' + cleanTimestamp + '/';
+
   validateEnvironmentVariables(envVariables);
   return envVariables;
 };
