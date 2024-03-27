@@ -54,12 +54,36 @@ const writeMarkdownFile = (filePath: string, content: string) => {
   console.log(`Markdown file created: ${filePath}`);
 };
 const sanitizeFileName = (input: string): string => {
-  return input.replace(/[<>:"/\\|?*]+/g, '-');
+  return input
+    .replace(/ /g, '-') // Replace spaces with hyphens
+    .replace(/--+/g, '-') // Replace multiple hyphens with a single one
+    .replace(/[<>:"/\\|?*]+/g, ''); // Remove illegal characters
+};
+
+const removeEmptyDirectories = (dirPath: string) => {
+  // Read all files and directories within the directory
+  const entries = fs.readdirSync(dirPath, { withFileTypes: true });
+
+  // Iterate over each entry within the directory
+  for (const entry of entries) {
+    const fullPath = path.join(dirPath, entry.name);
+    // If the entry is a directory, recurse into it
+    if (entry.isDirectory()) {
+      removeEmptyDirectories(fullPath);
+    }
+  }
+
+  // Re-check the directory to see if it's empty after potentially removing subdirectories
+  if (fs.readdirSync(dirPath).length === 0) {
+    fs.rmdirSync(dirPath);
+    console.log(`Removed empty directory: ${dirPath}`);
+  }
 };
 
 // Function to format message into markdown
 const formatMessageToMarkdown = (message: Message): string => {
-  let markdownContent = `**${message.speakerName}**: ${message.content}\n\n`;
+  const urlString = `[message link](${message.jumpUrl})`;
+  let markdownContent = `## **${message.speakerName}**:\n\n ${urlString} \n\n ${message.content}\n\n`;
   if (message.attachments.length > 0) {
     message.attachments.forEach((attachment) => {
       markdownContent += `![${attachment.name}](${attachment.url})\n\n`;
@@ -69,16 +93,25 @@ const formatMessageToMarkdown = (message: Message): string => {
 };
 
 // Main function to process JSON data and create markdown files
-const processDiscordData = (jsonData: Server) => {
-  const serverDirectory = path.join(__dirname, jsonData.serverName);
+const processDiscordData = (jsonData: Server, rootDir: string) => {
+  const serverDirectory = path.join(
+    rootDir,
+    sanitizeFileName(jsonData.serverName),
+  );
   createDirectory(serverDirectory);
 
   jsonData.categories.forEach((category) => {
-    const categoryDirectory = path.join(serverDirectory, category.name);
+    const categoryDirectory = path.join(
+      serverDirectory,
+      sanitizeFileName(category.name),
+    );
     createDirectory(categoryDirectory);
 
     category.channels.forEach((channel) => {
-      const channelDirectory = path.join(categoryDirectory, channel.name);
+      const channelDirectory = path.join(
+        categoryDirectory,
+        sanitizeFileName(channel.name),
+      );
       createDirectory(channelDirectory);
       channel.data.threads.forEach((thread) => {
         const sanitizedThreadName = sanitizeFileName(thread.name);
@@ -99,7 +132,7 @@ const processDiscordData = (jsonData: Server) => {
 };
 
 // Function to read JSON file and start processing
-const convertJsonToMarkdown = (jsonFilePath: string) => {
+export const convertJsonToMarkdown = (jsonFilePath: string) => {
   //verify file exist
   if (!fs.existsSync(jsonFilePath)) {
     console.error(`Error: JSON file does not exist: ${jsonFilePath}`);
@@ -113,13 +146,14 @@ const convertJsonToMarkdown = (jsonFilePath: string) => {
     }
     console.log(`JSON file read successfully: ${jsonFilePath}`);
     const jsonData: Server = JSON.parse(data);
-    processDiscordData(jsonData);
+    const markdownRootPath = path.dirname(jsonFilePath);
+    processDiscordData(jsonData, markdownRootPath);
+    removeEmptyDirectories(markdownRootPath);
   });
 };
 
-// Replace 'jsonFilePath' with the path to your JSON file
-const jsonFilePath =
-  '/Users/jon/Sync/skellybot-data/2024-03-22T22-35-22.104Z/jonmatthis_s_server-2024-03-22T22-35-59.945Z.json';
-
-// Start processing JSON file
-convertJsonToMarkdown(jsonFilePath);
+// // Replace 'jsonFilePath' with the path to your JSON file
+// const jsonFilePath =
+//   'C:/Users/jonma/Sync/skellybot-data/2024-NEU-Capstone/2024-03-27/2024_NEU_Capstone-2024-03-27.json';
+// // Start processing JSON file
+// convertJsonToMarkdown(jsonFilePath);

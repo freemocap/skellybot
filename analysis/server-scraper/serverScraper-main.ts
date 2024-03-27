@@ -1,10 +1,10 @@
 import { loadEnvironmentVariables } from './services/envService';
 import { startBot } from './services/botService';
 
-const analysisMain = async () => {
+const serverScraperMain = async () => {
   console.log(`Starting the bot, running from ${__dirname}`);
 
-  const envVariables = loadEnvironmentVariables('../../.env.discord');
+  const envVariables = loadEnvironmentVariables('../.env.discord');
 
   await startBot(
     envVariables.DISCORD_BOT_TOKEN,
@@ -13,7 +13,7 @@ const analysisMain = async () => {
   );
 };
 
-analysisMain().catch((error) => {
+serverScraperMain().catch((error) => {
   console.error('An error occurred:', error);
   process.exit(1);
 });

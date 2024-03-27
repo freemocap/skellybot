@@ -17,9 +17,6 @@ export const loadEnvironmentVariables = (
     OUTPUT_DIRECTORY: process.env.OUTPUT_DIRECTORY,
   };
 
-  const cleanTimestamp = new Date().toISOString().replace(/:/g, '-');
-  envVariables.OUTPUT_DIRECTORY += '/' + cleanTimestamp + '/';
-
   validateEnvironmentVariables(envVariables);
   return envVariables;
 };

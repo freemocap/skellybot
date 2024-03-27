@@ -6,6 +6,7 @@ import {
   TextChannel,
 } from 'discord.js';
 import { saveJSONData } from './jsonFileService';
+import { convertJsonToMarkdown } from '../../json-to-md-directory';
 
 export const scrapeServer = async (
   client: Client,
@@ -16,6 +17,8 @@ export const scrapeServer = async (
   if (!server) {
     throw new Error('Could not find the target server');
   }
+
+  const saveDirectory = `${outputDirectory}/${server.name.replace(/ /g, '-')}`;
 
   console.log(`Scraping server: ${server.name}...`);
 
@@ -33,16 +36,12 @@ export const scrapeServer = async (
   for (const textChannel of textChannels.values()) {
     const channelData = await processTextChannel(textChannel as TextChannel);
     if (!textChannel.parent) {
-      console.log(`||Processing channel: ${textChannel.name}`);
-      serverData.topLevelChannels.push({
-        name: textChannel.name,
-        data: channelData,
-      });
+      null;
     } else {
       const category = serverData.categories.find(
         (category) => category.name === textChannel.parent.name,
       );
-      if (category) {
+      if (category && category.name.startsWith('#')) {
         category.channels.push({
           name: textChannel.name,
           data: channelData,
@@ -51,8 +50,33 @@ export const scrapeServer = async (
     }
   }
 
-  await saveJSONData(serverData, outputDirectory);
+  // print number of categories, channels, and threads
+  console.log(
+    `\n\n---------------\n\nTotal categories: ${serverData.categories.length}`,
+  );
+  let totalChannels = 0;
+  let totalThreads = 0;
+  let totalMessages = 0;
+  for (const category of serverData.categories) {
+    totalChannels += category.channels.length;
+    for (const channel of category.channels) {
+      if (channel.data.threads.length > 0) {
+        totalThreads += channel.data.threads.length;
+        for (const thread of channel.threads) {
+          totalMessages += thread.data.messages.length();
+        }
+      }
+    }
+  }
+  console.log(`Total channels: ${totalChannels}`);
+  console.log(`Total threads: ${totalThreads});
+  console.log('Total messages: ${totalMessages};
+  \n\n------------------\n\n`);
+
+  const jsonSavePath = await saveJSONData(serverData, saveDirectory);
   console.log('Finished scraping server!');
+  convertJsonToMarkdown(jsonSavePath);
+  console.log('Saved to markdown files ');
 };
 
 async function getChannels(server: Guild) {
