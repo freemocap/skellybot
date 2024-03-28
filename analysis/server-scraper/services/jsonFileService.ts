@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import { createDirectory } from '../../json-to-md-directory';
 
 export function getDateString() {
   const currentDate = new Date();
@@ -21,6 +22,10 @@ export const saveJSONData = async (
   const dateSting = getDateString();
 
   const saveDirectoryWithDate = saveDirectory + '/' + dateSting + '/';
+  // make dir if it doesn;t exist
+
+  createDirectory(saveDirectoryWithDate);
+
   const filenameWithDate = path.join(
     saveDirectoryWithDate,
     sanitizeFilename(serverData['serverName']) + '-' + dateSting + '.json',

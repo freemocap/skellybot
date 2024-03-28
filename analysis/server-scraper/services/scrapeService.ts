@@ -7,6 +7,7 @@ import {
 } from 'discord.js';
 import { saveJSONData } from './jsonFileService';
 import { convertJsonToMarkdown } from '../../json-to-md-directory';
+import * as path from 'path';
 
 export const scrapeServer = async (
   client: Client,
@@ -30,7 +31,9 @@ export const scrapeServer = async (
   const { categoryChannels, textChannels } = await getChannels(server);
 
   for (const categoryChannel of categoryChannels.values()) {
-    serverData.categories.push({ name: categoryChannel.name, channels: [] });
+    if (categoryChannel.name.startsWith('#')) {
+      serverData.categories.push({ name: categoryChannel.name, channels: [] });
+    }
   }
 
   for (const textChannel of textChannels.values()) {
@@ -41,7 +44,7 @@ export const scrapeServer = async (
       const category = serverData.categories.find(
         (category) => category.name === textChannel.parent.name,
       );
-      if (category && category.name.startsWith('#')) {
+      if (category) {
         category.channels.push({
           name: textChannel.name,
           data: channelData,
@@ -62,18 +65,20 @@ export const scrapeServer = async (
     for (const channel of category.channels) {
       if (channel.data.threads.length > 0) {
         totalThreads += channel.data.threads.length;
-        for (const thread of channel.threads) {
-          totalMessages += thread.data.messages.length();
+        for (const thread of channel.data.threads) {
+          totalMessages += thread.messages.length;
         }
       }
     }
   }
   console.log(`Total channels: ${totalChannels}`);
-  console.log(`Total threads: ${totalThreads});
-  console.log('Total messages: ${totalMessages};
-  \n\n------------------\n\n`);
+  console.log(`Total threads: ${totalThreads}`);
+  console.log(`Total messages: ${totalMessages}\n\n---------------------`);
 
-  const jsonSavePath = await saveJSONData(serverData, saveDirectory);
+  const jsonSavePath = await saveJSONData(
+    serverData,
+    path.dirname(saveDirectory),
+  );
   console.log('Finished scraping server!');
   convertJsonToMarkdown(jsonSavePath);
   console.log('Saved to markdown files ');

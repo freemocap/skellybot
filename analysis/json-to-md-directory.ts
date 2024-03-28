@@ -41,7 +41,7 @@ type Server = {
 };
 
 // Utility function to create a directory if it doesn't exist
-const createDirectory = (dirPath: string) => {
+export const createDirectory = (dirPath: string) => {
   if (!fs.existsSync(dirPath)) {
     fs.mkdirSync(dirPath, { recursive: true });
     console.log(`Created directory: ${dirPath}`);
@@ -68,7 +68,7 @@ const removeEmptyDirectories = (dirPath: string) => {
   for (const entry of entries) {
     const fullPath = path.join(dirPath, entry.name);
     // If the entry is a directory, recurse into it
-    if (entry.isDirectory()) {
+    if (entry.isDirectory() && !entry.name.startsWith('#')) {
       removeEmptyDirectories(fullPath);
     }
   }
