@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { createDirectory } from '../../json-to-md-directory';
+import { createDirectory } from './json-to-md-directory';
 
 export function getDateString() {
   const currentDate = new Date();

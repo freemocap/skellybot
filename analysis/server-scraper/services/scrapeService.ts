@@ -6,7 +6,7 @@ import {
   TextChannel,
 } from 'discord.js';
 import { saveJSONData } from './jsonFileService';
-import { convertJsonToMarkdown } from '../../json-to-md-directory';
+import { convertJsonToMarkdown } from './json-to-md-directory';
 import * as path from 'path';
 
 export const scrapeServer = async (

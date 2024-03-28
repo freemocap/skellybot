@@ -4,10 +4,10 @@ import { startBot } from './services/botService';
 const serverScraperMain = async () => {
   console.log(`Starting the bot, running from ${__dirname}`);
 
-  const envVariables = loadEnvironmentVariables('../.env.discord');
+  const envVariables = loadEnvironmentVariables('.env.analysis');
 
   await startBot(
-    envVariables.DISCORD_BOT_TOKEN,
+    envVariables.DISCORD_DEV_BOT_TOKEN,
     envVariables.TARGET_SERVER_ID,
     envVariables.OUTPUT_DIRECTORY,
   );
