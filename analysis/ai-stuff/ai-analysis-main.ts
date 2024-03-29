@@ -1,32 +1,11 @@
-import { loadEnvironmentVariables } from '../server-scraper/services/envService';
+import {
+  EnvironmentVariables,
+  loadEnvironmentVariables,
+} from '../server-scraper/services/envService';
 
 import * as fs from 'fs';
 import * as path from 'path';
-
-function getEnvironmentInfo() {
-  const envVariables = loadEnvironmentVariables('../env.analysis');
-
-  const studentIdentifiersPath = envVariables.STUDENT_IDENTIFIERS_JSON;
-  const markdownDirectory = envVariables.MARKDOWN_DIRECTORY;
-  if (!fs.existsSync(markdownDirectory)) {
-    console.error(`Error: Directory does not exist: ${markdownDirectory}`);
-    process.exit(1);
-  }
-
-  if (!fs.existsSync(studentIdentifiersPath)) {
-    console.error(`Error: JSON file does not exist: ${studentIdentifiersPath}`);
-    process.exit(1);
-  }
-  console.log(`Reading student identifiers from ${studentIdentifiersPath}`);
-  // Read the student identifiers JSON file
-  const studentIdentifiers = JSON.parse(
-    fs.readFileSync(studentIdentifiersPath, 'utf8'),
-  );
-  console.log(
-    `Student identifiers read successfully from ${studentIdentifiersPath}`,
-  );
-  return { studentIdentifiers, markdownDirectory };
-}
+import Anthropic from '@anthropic-ai/sdk';
 
 function loadTextDataFromMarkdownFiles(dir: string): Record<string, string> {
   let dataTree: Record<string, string> = {};
@@ -34,39 +13,187 @@ function loadTextDataFromMarkdownFiles(dir: string): Record<string, string> {
 
   for (const file of files) {
     const fullPath = path.join(dir, file);
-    const stat = fs.statSync(fullPath);
+    let stat;
+    try {
+      stat = fs.statSync(fullPath);
+    } catch (error) {
+      console.error(`Error reading file stats: ${fullPath}`, error);
+      continue;
+    }
 
     if (stat.isDirectory()) {
-      // Combine the dataTree with results from the subdirectory
-      dataTree = { ...dataTree, ...loadTextDataFromMarkdownFiles(fullPath) };
+      try {
+        const subdirectoryData = loadTextDataFromMarkdownFiles(fullPath);
+        dataTree = { ...dataTree, ...subdirectoryData };
+      } catch (error) {
+        console.error(`Error reading directory: ${fullPath}`, error);
+      }
     } else if (path.extname(file).toLowerCase() === '.md') {
-      console.log(`Reading markdown file: ${fullPath}`);
-      dataTree[fullPath] = fs.readFileSync(fullPath, 'utf8');
+      try {
+        // console.log(`Reading markdown file: ${fullPath}`);
+        dataTree[fullPath] = fs.readFileSync(fullPath, 'utf8');
+      } catch (error) {
+        console.error(`Error reading markdown file: ${fullPath}`, error);
+      }
     }
   }
-  console.log('Markdown file data successfully loaded.');
-  console.log(`Total markdown files found: ${Object.keys(dataTree).length}`);
-  const printLength = 100;
-  console.log(`Markdown file paths and their first ${printLength} characters:`);
-
-  for (const [filePath, content] of Object.entries(dataTree)) {
-    console.log(`${filePath}: ${content.substring(0, printLength)}...`);
-  }
-
   return dataTree;
 }
 
-function aiAnalyzeTextTree(
+export interface AnthropicRequest {
+  apiKey: string;
+  model: string;
+  maxTokens: number;
+  temperature: number;
+  system: string;
+  messageString: string;
+}
+
+export async function getAnthropicTextResponse(request: AnthropicRequest) {
+  console.log('Getting AI response from request: ${JSON.stringify(request)}');
+  const anthropic = new Anthropic({ apiKey: request.apiKey });
+
+  const aiResponse = await anthropic.messages.create({
+    model: request.model,
+    max_tokens: request.maxTokens,
+    temperature: request.temperature,
+    system: request.system,
+    messages: [
+      {
+        role: 'user',
+        content: [
+          {
+            type: 'text',
+            text: request.messageString,
+          },
+        ],
+      },
+    ],
+  });
+
+  console.log(JSON.stringify(aiResponse, null, 2));
+  return aiResponse;
+}
+
+function getProcessedDataDirectory(environmentVariables: EnvironmentVariables) {
+  const processedDataDirectory = path.join(
+    environmentVariables.MARKDOWN_DIRECTORY,
+    'processed',
+  );
+  // Create the processed data directory if it doesn't exist
+  if (!fs.existsSync(processedDataDirectory)) {
+    fs.mkdirSync(processedDataDirectory, { recursive: true });
+  }
+  return processedDataDirectory;
+}
+
+function getAnthropicTextRequestConfig(
+  environmentVariables: EnvironmentVariables,
+  textContent: string,
+) {
+  const aiSummarizationRequest = {
+    apiKey: environmentVariables.ANTHROPIC_API_KEY,
+    model: 'claude-3-opus-20240229',
+    system:
+      'Summarize this text. Provide your response in markdown format with a #H1 heading for the title, and ##H2 headings and bullet points for the main points...',
+    messageString: textContent,
+    maxTokens: 4000,
+    temperature: 0,
+  };
+  return aiSummarizationRequest;
+}
+
+async function aiAnalyzeTextTree(
   textDataTree: Record<string, string>,
   environmentVariables: EnvironmentVariables,
+  processedDataDirectory: string,
 ) {
-  // AI analysis code goes here
+  // walk through the textDataTree and analyze the text
+  // for each text file, send a request to the AI model
+  // and then extract the relevant information from the response, and save it out as markdown
+  if (!textDataTree) {
+    throw new Error('No text data to analyze!');
+  }
+  if (Object.keys(textDataTree).length === 0) {
+    throw new Error('No text data to analyze!');
+  }
+
+  if (!fs.existsSync(processedDataDirectory)) {
+    fs.mkdirSync(processedDataDirectory, { recursive: true });
+  }
+
+  // Iterate over each markdown file in the textDataTree
+  for (const [filePath, textContent] of Object.entries(textDataTree)) {
+    const aiSummarizationRequestConfig = getAnthropicTextRequestConfig(
+      environmentVariables,
+      textContent,
+    );
+
+    // Send request to the AI model for each text file
+    try {
+      const aiSummarizationResponse = await getAnthropicTextResponse(
+        aiSummarizationRequestConfig,
+      );
+
+      // Process the response and save the new markdown file
+      const newFilePath = processAiResponse(
+        aiSummarizationResponse,
+        filePath,
+        processedDataDirectory,
+      );
+      console.log(`Processed file saved: ${newFilePath}`);
+    } catch (error) {
+      console.error(`Error processing markdown file: ${filePath}`, error);
+    }
+  }
+
   console.log('AI analysis complete!');
 }
-const output = function () {
-  const { studentIdentifiers, markdownDirectory } = getEnvironmentInfo();
-  const textDataTree = loadTextDataFromMarkdownFiles(markdownDirectory);
+
+// Helper to process the AI response and format it into markdown content
+function processAiResponse(
+  aiResponse,
+  originalFilePath: string,
+  processedDataDirectory: string,
+): string {
+  // Extract the text content from the AI response
+  const textContent = aiResponse.content[0].text;
+
+  // Define the new file path by replacing 'raw' with 'processed' in the original file path
+  const newFilePath = originalFilePath.replace('raw', 'processed');
+
+  // Write the text content to the new file path
+  fs.writeFileSync(
+    path.join(processedDataDirectory, newFilePath),
+    textContent,
+    'utf8',
+  );
+
+  // Return the path for confirmation or logging
+  return newFilePath;
+}
+
+async function main() {
+  const environmentVariables = loadEnvironmentVariables('../env.analysis');
+  const rawDataDirectory = path.join(
+    environmentVariables.MARKDOWN_DIRECTORY,
+    'raw',
+  );
+  const processedDataDirectory = path.join(
+    environmentVariables.MARKDOWN_DIRECTORY,
+    'processed',
+  );
+
+  const textDataTree = loadTextDataFromMarkdownFiles(rawDataDirectory);
   console.log('Finished loading markdown data');
-  aiAnalyzeTextTree(textDataTree, { studentIdentifiers, markdownDirectory });
+  await aiAnalyzeTextTree(
+    textDataTree,
+    environmentVariables,
+    processedDataDirectory,
+  );
   console.log('AI analysis complete!');
-};
+}
+
+main().catch((error) => {
+  console.error('An error occurred during the AI analysis:', error);
+});
