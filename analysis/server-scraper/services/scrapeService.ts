@@ -7,7 +7,6 @@ import {
 } from 'discord.js';
 import { saveJSONData } from './jsonFileService';
 import { convertJsonToMarkdown } from './json-to-md-directory';
-import * as path from 'path';
 
 export const scrapeServer = async (
   client: Client,
@@ -19,9 +18,7 @@ export const scrapeServer = async (
     throw new Error('Could not find the target server');
   }
 
-  const saveDirectory = `${outputDirectory}/${server.name.replace(/ /g, '-')}`;
-
-  console.log(`Scraping server: ${server.name}...`);
+  console.log(`🏰 Scraping server: ${server.name}...`);
 
   const serverData = {
     serverName: server.name,
@@ -30,16 +27,19 @@ export const scrapeServer = async (
   };
   const { categoryChannels, textChannels } = await getChannels(server);
 
+  console.log(`🗂️ Categories:`);
   for (const categoryChannel of categoryChannels.values()) {
     if (categoryChannel.name.startsWith('#')) {
       serverData.categories.push({ name: categoryChannel.name, channels: [] });
+      console.log(`  ├─🗂️ ${categoryChannel.name}`);
     }
   }
 
+  console.log(`💬 Channels:`);
   for (const textChannel of textChannels.values()) {
     const channelData = await processTextChannel(textChannel as TextChannel);
     if (!textChannel.parent) {
-      null;
+      console.log(`  ├─💬 ${textChannel.name} (No category)`);
     } else {
       const category = serverData.categories.find(
         (category) => category.name === textChannel.parent.name,
@@ -49,14 +49,13 @@ export const scrapeServer = async (
           name: textChannel.name,
           data: channelData,
         });
+        console.log(`  ├─💬 ${textChannel.name}`);
       }
     }
   }
 
   // print number of categories, channels, and threads
-  console.log(
-    `\n\n---------------\n\nTotal categories: ${serverData.categories.length}`,
-  );
+  console.log(`🧵 Threads:`);
   let totalChannels = 0;
   let totalThreads = 0;
   let totalMessages = 0;
@@ -67,21 +66,24 @@ export const scrapeServer = async (
         totalThreads += channel.data.threads.length;
         for (const thread of channel.data.threads) {
           totalMessages += thread.messages.length;
+          console.log(`  ├─🧵 ${thread.name}`);
         }
       }
     }
   }
+
+  console.log(`Total categories: ${serverData.categories.length}`);
   console.log(`Total channels: ${totalChannels}`);
   console.log(`Total threads: ${totalThreads}`);
-  console.log(`Total messages: ${totalMessages}\n\n---------------------`);
-
-  const jsonSavePath = await saveJSONData(
-    serverData,
-    path.dirname(saveDirectory),
-  );
-  console.log('Finished scraping server!');
+  console.log(`Total messages: ${totalMessages}`);
+  const saveDirectory = `${outputDirectory}/discord-server-data/${server.name.replace(
+    / /g,
+    '-',
+  )}`;
+  const jsonSavePath = await saveJSONData(serverData, saveDirectory);
+  console.log('🏰 Finished scraping server!');
   convertJsonToMarkdown(jsonSavePath);
-  console.log('Saved to markdown files ');
+  console.log('Saved to markdown files');
 };
 
 async function getChannels(server: Guild) {
@@ -94,15 +96,16 @@ async function getChannels(server: Guild) {
   );
   return { categoryChannels, textChannels };
 }
-
 const processTextChannel = async (channel: TextChannel) => {
   const channelData = {
     name: channel.name,
     threads: [],
   };
   const threads = await channel.threads.fetch();
+  console.log(`  ├─💬 Channel: ${channel.name}`);
+  console.log(`  │  🧵 Threads:`);
   for (const thread of threads.threads.values()) {
-    console.log(`||----Processing thread: ${thread.name}`);
+    console.log(`  │  ├─🧵 Processing thread: ${thread.name}`);
     const threadData = await processThread(thread);
     if (threadData) {
       channelData.threads.push(threadData);
@@ -114,15 +117,16 @@ const processTextChannel = async (channel: TextChannel) => {
 const processThread = async (thread: AnyThreadChannel) => {
   const messages = await thread.messages.fetch();
   if (messages.size === 0) {
-    console.log('||------No messages to process');
+    console.log('  │  │  └─🧵 No messages to process');
     return null;
   }
   console.log(
-    `||------Processing ${messages.size} messages from thread:  ${thread.name}`,
+    `  │  │  ├─🧵 Processing ${messages.size} messages from thread: ${thread.name}`,
   );
+  const orderedMessages = [...messages.values()].reverse();
   const threadData = {
     name: thread.name,
-    messages: messages.map((message) => ({
+    messages: orderedMessages.map((message) => ({
       speakerName: message.author.username,
       speakerId: message.author.id,
       content: message.content,

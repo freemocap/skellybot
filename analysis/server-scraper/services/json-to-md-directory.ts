@@ -60,25 +60,25 @@ const sanitizeFileName = (input: string): string => {
     .replace(/[<>:"/\\|?*]+/g, ''); // Remove illegal characters
 };
 
-const removeEmptyDirectories = (dirPath: string) => {
-  // Read all files and directories within the directory
-  const entries = fs.readdirSync(dirPath, { withFileTypes: true });
-
-  // Iterate over each entry within the directory
-  for (const entry of entries) {
-    const fullPath = path.join(dirPath, entry.name);
-    // If the entry is a directory, recurse into it
-    if (entry.isDirectory() && !entry.name.startsWith('#')) {
-      removeEmptyDirectories(fullPath);
-    }
-  }
-
-  // Re-check the directory to see if it's empty after potentially removing subdirectories
-  if (fs.readdirSync(dirPath).length === 0) {
-    fs.rmdirSync(dirPath);
-    console.log(`Removed empty directory: ${dirPath}`);
-  }
-};
+// const removeEmptyDirectories = (dirPath: string) => {
+//   // Read all files and directories within the directory
+//   const entries = fs.readdirSync(dirPath, { withFileTypes: true });
+//
+//   // Iterate over each entry within the directory
+//   for (const entry of entries) {
+//     const fullPath = path.join(dirPath, entry.name);
+//     // If the entry is a directory, recurse into it
+//     if (entry.isDirectory() && !entry.name.startsWith('#')) {
+//       removeEmptyDirectories(fullPath);
+//     }
+//   }
+//
+//   // Re-check the directory to see if it's empty after potentially removing subdirectories
+//   if (fs.readdirSync(dirPath).length === 0) {
+//     fs.rmdirSync(dirPath);
+//     console.log(`Removed empty directory: ${dirPath}`);
+//   }
+// };
 
 // Function to format message into markdown
 const formatMessageToMarkdown = (message: Message): string => {
@@ -93,27 +93,34 @@ const formatMessageToMarkdown = (message: Message): string => {
 };
 
 // Main function to process JSON data and create markdown files
-const processDiscordData = (jsonData: Server, rootDir: string) => {
+const discordServerToMarkdownDirectory = (
+  jsonData: Server,
+  rootDir: string,
+) => {
+  console.log(`🌳 Creating markdown files for server: ${jsonData.serverName}`);
   const serverDirectory = path.join(
     rootDir,
-    sanitizeFileName(jsonData.serverName),
+    `${sanitizeFileName(jsonData.serverName)}-knowledge-tree`,
   );
   createDirectory(serverDirectory);
 
-  jsonData.categories.forEach((category) => {
+  jsonData.categories.forEach((category, catIndex) => {
     const categoryDirectory = path.join(
       serverDirectory,
       sanitizeFileName(category.name),
     );
     createDirectory(categoryDirectory);
+    console.log(`├─📁 Category: ${category.name}`);
 
-    category.channels.forEach((channel) => {
+    category.channels.forEach((channel, chanIndex) => {
       const channelDirectory = path.join(
         categoryDirectory,
         sanitizeFileName(channel.name),
       );
       createDirectory(channelDirectory);
-      channel.data.threads.forEach((thread) => {
+      console.log(`│  ├─📂 Channel: ${channel.name}`);
+
+      channel.data.threads.forEach((thread, threadIndex) => {
         const sanitizedThreadName = sanitizeFileName(thread.name);
         const threadFilePath = path.join(
           channelDirectory,
@@ -126,11 +133,33 @@ const processDiscordData = (jsonData: Server, rootDir: string) => {
         });
 
         writeMarkdownFile(threadFilePath, markdownContent);
-      });
-    });
-  });
-};
 
+        // Check if it's the last thread in the last channel of the last category
+        if (
+          catIndex === jsonData.categories.length - 1 &&
+          chanIndex === category.channels.length - 1 &&
+          threadIndex === channel.data.threads.length - 1
+        ) {
+          console.log(`│  │  └─📄 Thread: ${thread.name}`);
+        } else {
+          console.log(`│  │  ├─📄 Thread: ${thread.name}`);
+        }
+      });
+
+      // Check if it's the last channel in the category
+      if (chanIndex === category.channels.length - 1) {
+        console.log(`│  └─`);
+      }
+    });
+
+    // Check if it's the last category
+    if (catIndex === jsonData.categories.length - 1) {
+      console.log(`└─`);
+    }
+  });
+
+  console.log('🌳 Finished converting JSON to markdown!!');
+};
 // Function to read JSON file and start processing
 export const convertJsonToMarkdown = (jsonFilePath: string) => {
   //verify file exist
@@ -147,13 +176,9 @@ export const convertJsonToMarkdown = (jsonFilePath: string) => {
     console.log(`JSON file read successfully: ${jsonFilePath}`);
     const jsonData: Server = JSON.parse(data);
     const markdownRootPath = path.dirname(jsonFilePath);
-    processDiscordData(jsonData, markdownRootPath);
-    removeEmptyDirectories(markdownRootPath);
+    discordServerToMarkdownDirectory(jsonData, markdownRootPath);
+    // removeEmptyDirectories(markdownRootPath);
+
+    console.log('Finished converting JSON to markdown!!');
   });
 };
-
-// // Replace 'jsonFilePath' with the path to your JSON file
-// const jsonFilePath =
-//   'C:/Users/jonma/Sync/skellybot-data/2024-NEU-Capstone/2024-03-27/2024_NEU_Capstone-2024-03-27.json';
-// // Start processing JSON file
-// convertJsonToMarkdown(jsonFilePath);

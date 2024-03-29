@@ -7,8 +7,7 @@ export function getDateString() {
   const year = currentDate.getFullYear();
   const month = (currentDate.getMonth() + 1).toString().padStart(2, '0'); // Months are zero-indexed
   const day = currentDate.getDate().toString().padStart(2, '0');
-  const dateSting = `${year}-${month}-${day}`;
-  return dateSting;
+  return `${year}-${month}-${day}`;
 }
 
 export const saveJSONData = async (
