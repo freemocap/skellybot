@@ -73,11 +73,8 @@ async function saveToDisk(
     'discord-server-data',
     serverDirectoryName,
   );
-  const rawSaveDirectory = path.join(saveDirectory, 'raw');
-  const dateSting = getDateString();
 
-  const saveDirectoryWithDate = rawSaveDirectory + '/' + dateSting + '/';
-  return await saveJSONData(serverData, saveDirectoryWithDate);
+  return await saveJSONData(serverData, saveDirectory);
 }
 
 function printStats(serverData: {
@@ -157,6 +154,7 @@ const processTextChannel = async (channel: TextChannel) => {
       channelData.threads.push(threadData);
     }
   }
+
   return channelData;
 };
 

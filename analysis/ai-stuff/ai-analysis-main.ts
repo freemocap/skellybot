@@ -75,18 +75,6 @@ export async function getAnthropicTextResponse(request: AnthropicRequest) {
   return aiResponse;
 }
 
-function getProcessedDataDirectory(environmentVariables: EnvironmentVariables) {
-  const processedDataDirectory = path.join(
-    environmentVariables.MARKDOWN_DIRECTORY,
-    'processed',
-  );
-  // Create the processed data directory if it doesn't exist
-  if (!fs.existsSync(processedDataDirectory)) {
-    fs.mkdirSync(processedDataDirectory, { recursive: true });
-  }
-  return processedDataDirectory;
-}
-
 function getAnthropicTextRequestConfig(
   environmentVariables: EnvironmentVariables,
   textContent: string,
@@ -106,7 +94,7 @@ function getAnthropicTextRequestConfig(
 async function aiAnalyzeTextTree(
   textDataTree: Record<string, string>,
   environmentVariables: EnvironmentVariables,
-  processedDataDirectory: string,
+  markdownDirectory: string,
 ) {
   // walk through the textDataTree and analyze the text
   // for each text file, send a request to the AI model
@@ -118,8 +106,8 @@ async function aiAnalyzeTextTree(
     throw new Error('No text data to analyze!');
   }
 
-  if (!fs.existsSync(processedDataDirectory)) {
-    fs.mkdirSync(processedDataDirectory, { recursive: true });
+  if (!fs.existsSync(markdownDirectory)) {
+    fs.mkdirSync(markdownDirectory, { recursive: true });
   }
 
   // Iterate over each markdown file in the textDataTree
@@ -139,7 +127,7 @@ async function aiAnalyzeTextTree(
       const newFilePath = processAiResponse(
         aiSummarizationResponse,
         filePath,
-        processedDataDirectory,
+        markdownDirectory,
       );
       console.log(`Processed file saved: ${newFilePath}`);
     } catch (error) {
@@ -175,21 +163,15 @@ function processAiResponse(
 
 async function main() {
   const environmentVariables = loadEnvironmentVariables('../env.analysis');
-  const rawDataDirectory = path.join(
-    environmentVariables.MARKDOWN_DIRECTORY,
-    'raw',
-  );
-  const processedDataDirectory = path.join(
-    environmentVariables.MARKDOWN_DIRECTORY,
-    'processed',
-  );
 
-  const textDataTree = loadTextDataFromMarkdownFiles(rawDataDirectory);
+  const textDataTree = loadTextDataFromMarkdownFiles(
+    environmentVariables.MARKDOWN_DIRECTORY,
+  );
   console.log('Finished loading markdown data');
   await aiAnalyzeTextTree(
     textDataTree,
     environmentVariables,
-    processedDataDirectory,
+    environmentVariables.MARKDOWN_DIRECTORY,
   );
   console.log('AI analysis complete!');
 }

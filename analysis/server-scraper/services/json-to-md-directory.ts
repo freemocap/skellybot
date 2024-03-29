@@ -1,7 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { Couplet, Server } from './data-types';
-import * as https from 'https';
 
 // Utility function to create a directory if it doesn't exist
 export const createDirectory = (dirPath: string) => {
@@ -29,15 +28,11 @@ const sanitizeFileName = (input: string): string => {
 // Main function to process JSON data and create markdown files
 const discordServerToMarkdownDirectory = (
   jsonData: Server,
-  rootDir: string,
+  serverDirectory: string,
 ): Record<string, string> => {
   console.log(`🌳 Creating markdown files for server: ${jsonData.serverName}`);
   const markdownStringJson = {};
 
-  const serverDirectory = path.join(
-    rootDir,
-    `${sanitizeFileName(jsonData.serverName)}-knowledge-tree`,
-  );
   createDirectory(serverDirectory);
   if (!jsonData.categories || !Array.isArray(jsonData.categories)) {
     throw new Error('Invalid JSON structure: "categories" is not an array.');
@@ -138,7 +133,7 @@ function formatCoupletToMarkdown(
   if (couplet.aiResponse.length === 1) {
     markdownString += `${couplet.aiResponse[0].content}\n\n`;
   } else if (couplet.aiResponse.length > 1) {
-    couplet.aiResponse.forEach((response, index) => {
+    couplet.aiResponse.forEach((response) => {
       markdownString += `${response.content}\n\n`;
     });
   }
