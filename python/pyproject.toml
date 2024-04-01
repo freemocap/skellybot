@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "skellybot-analysis"
+version = "0.1.0"
+description = "A python package for analyzing skellybot data"
+authors = ["Skelly FreeMoCap <info@freemocap.org>"]
+license = "AGPLv3"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "<3.12,>=3.9"
+openai = "^1.14.3"
+anthropic = "^0.21.3"
+open-interpreter = "^0.2.4"
+python-dotenv = "^1.0.1"
+pydantic = "^2.6.4"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.1.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
