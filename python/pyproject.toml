@@ -13,6 +13,7 @@ anthropic = "^0.21.3"
 open-interpreter = "^0.2.4"
 python-dotenv = "^1.0.1"
 pydantic = "^2.6.4"
+discord = "^2.3.2"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.1.1"

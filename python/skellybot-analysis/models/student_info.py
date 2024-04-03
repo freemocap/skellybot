@@ -1,10 +1,14 @@
-from pydantic import BaseModel, EmailStr, FilePath
 import csv
+from typing import List
+
+from pydantic import BaseModel, EmailStr, FilePath
+
 
 class StudentInfoModel(BaseModel):
     student_identifier: str
     discord_username: str
     email: EmailStr
+
 
 class ClassRosterModel(BaseModel):
     students: List[StudentInfoModel]
