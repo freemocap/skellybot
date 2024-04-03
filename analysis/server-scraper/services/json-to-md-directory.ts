@@ -1,8 +1,9 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { Couplet, Server } from './data-types';
+import { stringify } from 'yaml';
 
-// Utility function to create a directory if it doesn't exist
+// Utility function to create a directory if it doesn't exisnt
 export const createDirectory = (dirPath: string) => {
   if (!fs.existsSync(dirPath)) {
     fs.mkdirSync(dirPath, { recursive: true });
@@ -39,10 +40,9 @@ const discordServerToMarkdownDirectory = (
   }
 
   jsonData.categories.forEach((category, catIndex) => {
-    const categoryDirectory = path.join(
-      serverDirectory,
-      sanitizeFileName(category.name),
-    );
+    const categoryName = sanitizeFileName(category.name);
+    const categoryDirectory = path.join(serverDirectory, categoryName);
+    markdownStringJson[categoryDirectory] = {};
     createDirectory(categoryDirectory);
     console.log(`├─📁 Category: ${category.name}`);
 
@@ -57,10 +57,9 @@ const discordServerToMarkdownDirectory = (
           'Invalid JSON structure: "data" or "threads" is missing in channel.',
         );
       }
-      const channelDirectory = path.join(
-        categoryDirectory,
-        sanitizeFileName(channel.name),
-      );
+      const channelName = sanitizeFileName(channel.name);
+      markdownStringJson[categoryDirectory][channelName] = {};
+      const channelDirectory = path.join(categoryDirectory, channelName);
       createDirectory(channelDirectory);
       console.log(`│  ├─📂 Channel: ${channel.name}`);
 
@@ -71,6 +70,9 @@ const discordServerToMarkdownDirectory = (
       }
       channel.data.threads.forEach((thread, threadIndex) => {
         const sanitizedThreadName = sanitizeFileName(thread.name);
+        markdownStringJson[categoryDirectory][channelName][
+          sanitizedThreadName
+        ] = {};
         const threadFilePath = path.join(
           channelDirectory,
           `${sanitizedThreadName}.md`,
@@ -88,7 +90,9 @@ const discordServerToMarkdownDirectory = (
         });
 
         writeMarkdownFile(threadFilePath, markdownContent);
-        markdownStringJson[threadFilePath] = markdownContent;
+        markdownStringJson[categoryDirectory][channelName][
+          sanitizedThreadName
+        ] = markdownContent;
 
         // Check if it's the last thread in the last channel of the last category
         if (
@@ -140,7 +144,6 @@ function formatCoupletToMarkdown(
 
   return markdownString;
 }
-// Function to read JSON file and start processing
 export const convertJsonToMarkdown = (jsonFilePath: string) => {
   //verify file exist
   if (!fs.existsSync(jsonFilePath)) {
@@ -162,8 +165,23 @@ export const convertJsonToMarkdown = (jsonFilePath: string) => {
     jsonData,
     markdownRootPath,
   );
-  // removeEmptyDirectories(markdownRootPath);
-  console.log(JSON.stringify(markdownTextJson, null, 2));
+  fs.writeFileSync(
+    path.join(markdownRootPath, 'markdownText.json'),
+    JSON.stringify(markdownTextJson, null, 2),
+  );
+  console.log(
+    `Markdown JSON file created: ${markdownRootPath}/markdownTextJson.json`,
+  );
+  // save as YAML file
+  fs.writeFileSync(
+    path.join(markdownRootPath, 'markdownText.yaml'),
+    stringify(markdownTextJson),
+  );
+  console.log(
+    `Markdown YAML file created: ${markdownRootPath}/markdownText.yaml`,
+  );
+  // Save as TOML file
+
   console.log('Finished converting JSON to markdown!!');
   return markdownTextJson;
 };

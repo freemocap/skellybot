@@ -50,7 +50,7 @@ export interface AnthropicRequest {
 }
 
 export async function getAnthropicTextResponse(request: AnthropicRequest) {
-  console.log('Getting AI response from request: ${JSON.stringify(request)}');
+  console.log(`Getting AI response from request: ${JSON.stringify(request)}`);
   const anthropic = new Anthropic({ apiKey: request.apiKey });
 
   const aiResponse = await anthropic.messages.create({
@@ -146,9 +146,6 @@ function processAiResponse(
 ): string {
   // Extract the text content from the AI response
   const textContent = aiResponse.content[0].text;
-
-  // Define the new file path by replacing 'raw' with 'processed' in the original file path
-  const newFilePath = originalFilePath.replace('raw', 'processed');
 
   // Write the text content to the new file path
   fs.writeFileSync(
