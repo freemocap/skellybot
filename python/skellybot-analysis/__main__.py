@@ -22,11 +22,10 @@ client = commands.Bot(command_prefix='!', intents=intents)
 async def on_ready():
     print(f'Logged in as {client.user.name} (ID: {client.user.id})')
     print('------')
-    guild = discord.utils.get(client.guilds, id=int(GUILD_ID))
-    if guild:
-        print(f'Successfully connected to the guild: {guild.name} (ID: {guild.id})')
-    else:
-        print(f'Could not find the guild with ID: {GUILD_ID}')
+    target_server = discord.utils.get(client.guilds, id=int(GUILD_ID))
+    if target_server:
+        await process_server(target_server)
 
-# Run the client
+
+
 client.run(DISCORD_TOKEN)
