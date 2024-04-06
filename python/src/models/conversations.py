@@ -5,8 +5,7 @@ import aiohttp
 import discord
 from pydantic import BaseModel, Field
 
-from student_info import StudentInfoModel
-
+from src.models.student_info import StudentInfoModel
 
 class Message(BaseModel):
     """

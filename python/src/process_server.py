@@ -1,31 +1,41 @@
-from src.models.conversations import HumanMessage, AiResponse, Couplet
+from typing import List
 
+import discord
+from discord import client
 
-async def process_category(category):
-    print(f"Processing category: {category.name}")
+from src.models.conversations import HumanMessage, AiResponse, Couplet, Message, ChannelData, CategoryData
+import logging
+logger = logging.getLogger(__name__)
+
+async def process_category(category: CategoryData):
+    logger.info(f"Processing category: {category.name}")
     for channel in category.text_channels:
         await process_channel(channel)
 
-async def process_channel(channel):
-    print(f"Processing channel: {channel.name}")
+async def process_channel(channel:ChannelData):
+    logger.info(f"Processing channel: {channel.name}")
     # Retrieve all threads in the channel
     threads = await channel.threads()
     for thread in threads:
         await process_thread(thread)
 
-async def build_couplet_list(messages):
+async def build_couplet_list(messages: List[Message]):
+    logger.info(f"Building couplet list from {len(messages)} messages")
     couplets = []
     ai_responses = []
     human_message = None
 
-    for message in messages:
+    for message_number, message in enumerate(messages):
+        if message_number == 0:
+            # skip the 0th message
+            continue
+
         # Check if the message is from the bot (AI response)
-        if message.author == client.user:
+        if message.bot and not message_number == 1:
             # The first message from the bot is a copy of the human's initial message
             if not human_message:
-                human_message = HumanMessage.from_discord_message(message)
+                raise ValueError("Got an AI response without a human message")
             else:
-                # This is an actual AI response
                 ai_responses.append(AiResponse.from_discord_message(message))
         else:
             # This is a human message
@@ -41,16 +51,16 @@ async def build_couplet_list(messages):
 
     return couplets
 
-async def process_thread(thread):
-    print(f"Processing thread: {thread.name}")
+async def process_thread(thread: discord.Thread):
+    logger.info(f"Processing thread: {thread.name}")
     messages = [message async for message in thread.history(limit=None)]
     couplets = await build_couplet_list(messages)
-    print(f"Found {len(couplets)} couplets in thread: {thread.name}")
+    logger.info(f"Found {len(couplets)} couplets in thread: {thread.name}")
 
-async def process_server(target_server):
-    print(f'Successfully connected to the guild: {target_server.name} (ID: {target_server.id})')
+async def process_server(target_server: discord.Guild):
+    logger.info(f'Successfully connected to the guild: {target_server.name} (ID: {target_server.id})')
     for category in server.categories:
         if category.name.startswith('#'):
             await process_category(category)
         else:
-            print(f"Ignoring category: {category.name}")
+            logger.info(f"Ignoring category: {category.name}")
