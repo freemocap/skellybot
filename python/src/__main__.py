@@ -2,14 +2,16 @@ import os
 from dotenv import load_dotenv
 import discord
 from discord.ext import commands
+from process_server import process_server
 
 # Load environment variables
-load_dotenv()
+load_dotenv(".env.analysis")
 DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
 GUILD_ID = os.getenv('GUILD_ID')
+OUTPUT_DIRECTORY = os.getenv('OUTPUT_DIRECTORY')
 
 # Ensure the environment variables are set
-if not DISCORD_TOKEN or not GUILD_ID:
+if not DISCORD_TOKEN or not GUILD_ID or not OUTPUT_DIRECTORY:
     raise ValueError("Please set DISCORD_TOKEN and GUILD_ID in your .env file")
 
 # Initialize the Discord client

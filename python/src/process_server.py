@@ -1,3 +1,4 @@
+from src.models.conversations import HumanMessage, AiResponse, Couplet
 
 
 async def process_category(category):
@@ -46,7 +47,7 @@ async def process_thread(thread):
     couplets = await build_couplet_list(messages)
     print(f"Found {len(couplets)} couplets in thread: {thread.name}")
 
-async def process_server(server):
+async def process_server(target_server):
     print(f'Successfully connected to the guild: {target_server.name} (ID: {target_server.id})')
     for category in server.categories:
         if category.name.startswith('#'):
