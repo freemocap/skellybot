@@ -48,8 +48,9 @@ async def process_channel(channel: discord.TextChannel) -> ChannelData:
     channel_data.pinned_messages = [Message.from_discord_message(message) for message in await channel.pins()]
     for thread in channel.threads:
         channel_data.chat_threads[f"name:{thread.name},id:{thread.id}"] = await process_chat_thread(thread)
-
-    logger.info(f"Processed {len(channel_data.chat_threads)} threads in channel: {channel.name}")
+    if len(channel_data.chat_threads) == 0:
+        logger.warning(f"No chat threads found in channel: {channel.name}")
+    logger.info(f"Processed {len(channel_data.chat_threads.items())} threads in channel: {channel.name}")
     return channel_data
 
 
@@ -62,7 +63,7 @@ async def process_category(category: discord.CategoryChannel) -> CategoryData:
             category_data.bot_prompt_messages.extend(await get_reaction_tagged_messages(channel, '🤖'))
         category_data.channels[f"name:{channel.name},id:{channel.id}"] = await process_channel(channel)
 
-    logger.info(f"Processed {len(category_data.channels)} channels in category: {category.name}")
+    logger.info(f"Processed {len(category_data.channels.items())} channels in category: {category.name}")
     return category_data
 
 
