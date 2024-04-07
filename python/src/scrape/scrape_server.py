@@ -24,7 +24,6 @@ async def get_reaction_tagged_messages(channel: discord.TextChannel, target_emoj
 
 
 async def process_chat_thread(thread: discord.Thread) -> ChatThread:
-    logger.info(f"Processing thread: {thread.name}")
     chat_thread = ChatThread(name=thread.name, id=thread.id)
 
     async for message in thread.history(limit=None, oldest_first=True):
@@ -37,26 +36,35 @@ async def process_chat_thread(thread: discord.Thread) -> ChatThread:
 
     # chat_thread.couplets = await build_couplet_list(messages)
     logger.info(f"Found {len(chat_thread.messages)} messages in thread: {thread.name}")
-
+    if len(chat_thread.messages) == 0:
+        logger.warning(f"No messages found in thread: {thread.name}")
     return chat_thread
 
 
 async def process_channel(channel: discord.TextChannel) -> ChannelData:
-    logger.info(f"Processing channel: {channel.name}")
     channel_data = ChannelData(name=channel.name, id=channel.id)
     channel_data.channel_description_prompt = channel.topic
     channel_data.pinned_messages = [Message.from_discord_message(message) for message in await channel.pins()]
-    for thread in channel.threads:
-        channel_data.chat_threads[f"name:{thread.name},id:{thread.id}"] = await process_chat_thread(thread)
+    threads = channel.threads
+
+    archived_threads = []
+    async for thread in channel.archived_threads(limit=None):
+        archived_threads.append(thread)
+    all_threads = threads + archived_threads
+    for thread in all_threads:
+        chat_data = await process_chat_thread(thread)
+        channel_data.chat_threads[f"name:{chat_data.name},id:{chat_data.id}"] = chat_data
     if len(channel_data.chat_threads) == 0:
         logger.warning(f"No chat threads found in channel: {channel.name}")
-    logger.info(f"Processed {len(channel_data.chat_threads.items())} threads in channel: {channel.name}")
+    else:
+        logger.info(f"Processed {len(channel_data.chat_threads.items())} threads in channel: {channel.name}")
     return channel_data
 
 
 async def process_category(category: discord.CategoryChannel) -> CategoryData:
-    logger.info(f"---------------------------\n\n-------------------------\n\n"
-                f"Processing category: {category.name}\n\n")
+    logger.info(f"\n\n---------------------------\n\n"
+                f"Processing category: {category.name}\n\n"
+                f"-------------------------\n\n")
     category_data = CategoryData(name=category.name, id=category.id)
     for channel in category.text_channels:
         if 'bot' in channel.name or 'prompt' in channel.name:

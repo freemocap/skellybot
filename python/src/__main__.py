@@ -31,7 +31,7 @@ async def on_ready():
     target_server = discord.utils.get(client.guilds, id=int(TARGET_SERVER_ID))
     if target_server:
         server_data = await process_server(target_server)
-        json_save_path = server_data.save_to_disk(OUTPUT_DIRECTORY)
+        json_save_path = server_data.save_to_json(OUTPUT_DIRECTORY)
         logger.info(f"Saved server data to disk: {json_save_path}")
 
     logger.info('------Done!------')
