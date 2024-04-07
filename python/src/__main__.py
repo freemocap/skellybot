@@ -1,10 +1,12 @@
 import logging
 import os
-from dotenv import load_dotenv
+
 import discord
 from discord.ext import commands
-from src.scrape.scrape_server import process_server
+from dotenv import load_dotenv
+
 from src.configure_logging import configure_logging
+from src.scrape.scrape_server import process_server
 
 configure_logging()
 logger = logging.getLogger(__name__)
@@ -20,10 +22,8 @@ if not DISCORD_DEV_BOT_TOKEN or not OUTPUT_DIRECTORY or not OUTPUT_DIRECTORY:
     raise ValueError("Please set DISCORD_DEV_BOT_TOKEN and OUTPUT_DIRECTORY in your .env file")
 
 # Initialize the Discord client
-intents = discord.Intents.default()
-intents.messages = True
-intents.guilds = True
-client = commands.Bot(command_prefix='!', intents=intents)
+client = commands.Bot(command_prefix='!', intents=discord.Intents.all())
+
 
 @client.event
 async def on_ready():
@@ -31,7 +31,6 @@ async def on_ready():
     target_server = discord.utils.get(client.guilds, id=int(TARGET_SERVER_ID))
     if target_server:
         await process_server(target_server)
-
 
 
 client.run(DISCORD_DEV_BOT_TOKEN)

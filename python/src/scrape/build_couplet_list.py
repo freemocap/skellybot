@@ -1,8 +1,10 @@
+import logging
 from typing import List
 
-from src.models.server_data_model import Message, AiResponse, Couplet, HumanMessage
-import logging
+from src.models.message_models import Message, HumanMessage, AiResponse, Couplet
+
 logger = logging.getLogger(__name__)
+
 
 async def build_couplet_list(messages: List[Message]):
     logger.info(f"Building couplet list from {len(messages)} messages")
@@ -11,27 +13,28 @@ async def build_couplet_list(messages: List[Message]):
     human_message = None
 
     for message_number, message in enumerate(messages):
-        if message_number == 0:
-            # skip the 0th message
+        if message.content.startswith('~'):
+            logger.debug(f"Skipping `~` message {message_number} with content: {message.content}")
             continue
 
-        # Check if the message is from the bot (AI response)
-        if message.bot and not message_number == 1:
-            # The first message from the bot is a copy of the human's initial message
-            if not human_message:
-                raise ValueError("Got an AI response without a human message")
-            else:
-                ai_responses.append(AiResponse.from_discord_message(message))
-        else:
-            # This is a human message
+        if message_number == 0:
+            # The first message is the bot copying the human's initial message, so we treat it as a human message
+            logger.debug(f"Processing INITIAL message {message_number} with content: {message.content}")
+            human_message = HumanMessage.from_discord_message(message)
+            continue
+
+        if not message.author.bot:
+            logger.debug(f"Processing HUMAN message {message_number} with content: {message.content}")
             if human_message:
                 # Save previous couplet if it exists
-                couplets.append(Couplet(human_message=human_message, ai_responses=ai_responses))
-                ai_responses = []  # Reset the AI responses for the next couplet
+                couplets.append(Couplet(human_message=human_message,
+                                        ai_responses=ai_responses))
+                ai_responses = []
             human_message = HumanMessage.from_discord_message(message)
-
-    # Add the last couplet if the last message was from a human
-    if human_message:
-        couplets.append(Couplet(human_message=human_message, ai_responses=ai_responses))
+        else:
+            logger.debug(f"Processing AI response {message_number} with content: {message.content}")
+            if not human_message:
+                raise ValueError(f"AI response found before human message in message {message_number}")
+            ai_responses.append(AiResponse.from_discord_message(message))
 
     return couplets

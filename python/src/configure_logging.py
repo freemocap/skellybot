@@ -1,7 +1,7 @@
 import logging
 import sys
-from datetime import datetime
 import time
+from datetime import datetime
 from enum import Enum
 from logging.config import dictConfig
 from pathlib import Path
@@ -9,7 +9,6 @@ from pathlib import Path
 # Suppress some annoying log messages
 logging.getLogger("tzlocal").setLevel(logging.WARNING)
 logging.getLogger("matplotlib").setLevel(logging.WARNING)
-
 
 
 def create_log_file_name():
@@ -42,7 +41,6 @@ class DeltaTimeFilter(logging.Filter):
         super().__init__()
         self.prev_time = datetime.now().timestamp()
 
-
     def filter(self, record):
         current_time = datetime.now().timestamp()
         delta = current_time - self.prev_time
@@ -71,7 +69,7 @@ class LoggerBuilder:
     format_string = (
         "[%(asctime)s]"
         "[%(delta_t)s]"
-        "[%(levelname)s]" 
+        "[%(levelname)s]"
         "[%(name)s:%(funcName)s():%(lineno)s] "
         # "[PID:%(process)d:%(processName)s TID:%(thread)d:%(threadName)s ]"
         "%(message)s"
