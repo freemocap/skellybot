@@ -1,6 +1,7 @@
 import logging
 import sys
-from datetime import datetime, time
+from datetime import datetime
+import time
 from enum import Enum
 from logging.config import dictConfig
 from pathlib import Path
@@ -9,7 +10,6 @@ from pathlib import Path
 logging.getLogger("tzlocal").setLevel(logging.WARNING)
 logging.getLogger("matplotlib").setLevel(logging.WARNING)
 
-log_view_logging_format_string = "[%(asctime)s.%(msecs)04d] [%(levelname)4s] [%(name)s] [Process:%(process)d Thread:%(thread)d] ::::: [%(name)s:%(funcName)s():%(lineno)s] |||| %(message)s."
 
 
 def create_log_file_name():
@@ -69,9 +69,12 @@ class LoggerBuilder:
     DEFAULT_LOGGING = {"version": 1, "disable_existing_loggers": False}
 
     format_string = (
-        "[%(asctime)s] [%(delta_t)s] [%(levelname)8s] [%(name)s] "
-        "[%(module)s:%(funcName)s():%(lineno)s] "
-        "[PID:%(process)d:%(processName)s TID:%(thread)d:%(threadName)s ] %(message)s"
+        "[%(asctime)s]"
+        "[%(delta_t)s]"
+        "[%(levelname)s]" 
+        "[%(name)s:%(funcName)s():%(lineno)s] "
+        # "[PID:%(process)d:%(processName)s TID:%(thread)d:%(threadName)s ]"
+        "%(message)s"
     )
 
     def __init__(self, level: LogLevel):

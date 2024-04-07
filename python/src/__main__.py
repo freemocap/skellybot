@@ -3,7 +3,7 @@ import os
 from dotenv import load_dotenv
 import discord
 from discord.ext import commands
-from process_server import process_server
+from src.scrape.scrape_server import process_server
 from src.configure_logging import configure_logging
 
 configure_logging()

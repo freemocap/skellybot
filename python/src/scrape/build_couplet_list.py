@@ -1,23 +1,8 @@
 from typing import List
 
-import discord
-from discord import client
-
-from src.models.conversations import HumanMessage, AiResponse, Couplet, Message, ChannelData, CategoryData
+from src.models.server_data_model import Message, AiResponse, Couplet, HumanMessage
 import logging
 logger = logging.getLogger(__name__)
-
-async def process_category(category: CategoryData):
-    logger.info(f"Processing category: {category.name}")
-    for channel in category.text_channels:
-        await process_channel(channel)
-
-async def process_channel(channel:ChannelData):
-    logger.info(f"Processing channel: {channel.name}")
-    # Retrieve all threads in the channel
-    threads = await channel.threads()
-    for thread in threads:
-        await process_thread(thread)
 
 async def build_couplet_list(messages: List[Message]):
     logger.info(f"Building couplet list from {len(messages)} messages")
@@ -50,17 +35,3 @@ async def build_couplet_list(messages: List[Message]):
         couplets.append(Couplet(human_message=human_message, ai_responses=ai_responses))
 
     return couplets
-
-async def process_thread(thread: discord.Thread):
-    logger.info(f"Processing thread: {thread.name}")
-    messages = [message async for message in thread.history(limit=None)]
-    couplets = await build_couplet_list(messages)
-    logger.info(f"Found {len(couplets)} couplets in thread: {thread.name}")
-
-async def process_server(target_server: discord.Guild):
-    logger.info(f'Successfully connected to the guild: {target_server.name} (ID: {target_server.id})')
-    for category in server.categories:
-        if category.name.startswith('#'):
-            await process_category(category)
-        else:
-            logger.info(f"Ignoring category: {category.name}")
