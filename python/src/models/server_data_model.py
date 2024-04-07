@@ -1,3 +1,4 @@
+import pickle
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List
@@ -73,21 +74,31 @@ class ServerData(BaseModel):
         directory_path = Path(output_directory)
         save_path = directory_path / "markdown"
         save_path.mkdir(parents=True, exist_ok=True)
-        server_directory = save_path / str(self.name).replace(" ", "_").replace(":", "-").replace("/", "-")
+        server_directory = save_path / sanitize_name(self.name)
         server_directory.mkdir(exist_ok=True)
         for category_name, category_data in self.categories.items():
-            category_directory = server_directory / category_name.replace(" ", "_").replace(":", "-").replace("/", "-")
+            clean_category_name = sanitize_name(category_name)
+            category_directory = server_directory / clean_category_name
             category_directory.mkdir(exist_ok=True)
             for channel_name, channel_data in category_data.channels.items():
-                channel_directory = category_directory / channel_name.replace(" ", "_").replace(":", "-").replace("/", "-")
+                clean_channel_name = sanitize_name(channel_name)
+                channel_directory = category_directory / clean_channel_name
                 channel_directory.mkdir(exist_ok=True)
                 for thread_name, thread_data in channel_data.chat_threads.items():
-                    clean_thread_name = thread_name.replace(" ", "_").replace(":", "-").replace("/", "-")
-                    thread_file_path = channel_directory / f"{clean_thread_name}.md"
+                    thread_file_name = f"{clean_category_name}_{clean_channel_name}_thread-{thread_data.id}.md"
+                    thread_file_path = channel_directory / thread_file_name
                     with open(thread_file_path, 'w', encoding='utf-8') as f:
-                        f.write(f"# {thread_name}\n")
-                        for message in thread_data.messages:
-                            f.write(f"## {message.user_id}\n\n")
+                        clean_thread_name = thread_name.replace('name:', '')
+                        clean_thread_name = clean_thread_name.split(',id:')[0]
+                        f.write(f"# {clean_thread_name}\n\n")
+                        for message_number, message in enumerate(thread_data.messages):
+                            if message_number == 0:
+                                f.write(f"## Starting Message\n\n")
+                            elif message.is_bot:
+                                f.write(f"## AI MESSAGE\n\n")
+                            else:
+                                f.write(f"## HUMAN MESSAGE\n\n")
+                            f.write(f'> userid: {message.user_id}')
                             f.write(f"> {message.jump_url}\n\n")
                             f.write(f"{message.content}\n\n")
                             if message.attachments:
@@ -98,9 +109,16 @@ class ServerData(BaseModel):
         return str(server_directory)
 
 
-if __name__ == "__main__":
-    json_path  = "C:/Users/jonma/Sync/skellybot-data/2024 NEU Capstone_2024-04-07_12-20-00.json"
-    output_directory = "C:/Users/jonma/Sync/skellybot-data/markdown"
-    server_data = ServerData.parse_file(json_path)
+
+def sanitize_name(name: str) -> str:
+    """
+    Sanitize a name to be a valid directory name
+    """
+    return name.replace(" ", "_").replace(":", "-").replace("/", "-").replace("\\", "-").replace("|", "-")
+
+
+if __name__ == '__main__':
+    pickle_path = r"C:\Users\jonma\Sync\skellybot-data\2024 NEU Capstone_2024-04-07_12-45-43.pkl"
+    output_directory = r"C:\Users\jonma\Sync\skellybot-data"
+    server_data = pickle.load(open(pickle_path, 'rb'))
     server_data.save_as_markdown_directory(output_directory)
-    print(f"Markdown files saved to {output_directory}")
