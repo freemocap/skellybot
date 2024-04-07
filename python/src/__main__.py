@@ -1,5 +1,7 @@
 import logging
 import os
+import pickle
+from pathlib import Path
 
 import discord
 from discord.ext import commands
@@ -33,6 +35,19 @@ async def on_ready():
         server_data = await process_server(target_server)
         json_save_path = server_data.save_as_json(OUTPUT_DIRECTORY)
         logger.info(f"Saved server data to disk: {json_save_path}")
+
+        try:
+            pickle_save_path = json_save_path.replace('.json', '.pkl')
+            pickle.dump(server_data, open(pickle_save_path, 'wb'))
+            logger.info(f"Saved server data to disk: {pickle_save_path}")
+        except Exception as e:
+            logger.error(f"Error saving server data as pickle: {e}")
+
+        try:
+            markdown_save_path = server_data.save_as_markdown_directory(OUTPUT_DIRECTORY)
+            logger.info(f"Saved server data to disk: {markdown_save_path}")
+        except Exception as e:
+            logger.error(f"Error saving server data as markdown: {e}")
 
     logger.info('------Done!------')
 
