@@ -1,3 +1,5 @@
+from datetime import datetime
+from pathlib import Path
 from typing import Dict, List
 
 from pydantic import BaseModel
@@ -33,7 +35,6 @@ class CategoryData(BaseModel):
     name: str
     id: int
     channels: Dict[str, ChannelData] = {}
-    prompt_messages: List[Message] = []
     bot_prompt_messages: List[Message] = []
 
 
@@ -42,3 +43,13 @@ class ServerData(BaseModel):
     id: int
     bot_prompt_messages: List[Message] = []
     categories: Dict[str, CategoryData] = {}
+
+    def save_as_json(self, output_directory: str) -> str:
+        directory_path  = Path(output_directory)
+        directory_path.mkdir(parents=True, exist_ok=True)
+        server_data_json = self.to_json()
+        date_string = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        full_path = f"{output_directory}/{self.name}_{date_string}.json"
+        with open(f"{output_directory}/{self.name}_{date_string}.json", "w") as f:
+            f.write(server_data_json)
+        return full_path

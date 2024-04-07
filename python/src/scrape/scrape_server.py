@@ -27,18 +27,16 @@ async def process_chat_thread(thread: discord.Thread) -> ChatThread:
     logger.info(f"Processing thread: {thread.name}")
     chat_thread = ChatThread(name=thread.name, id=thread.id)
 
-    for message in await thread.history(limit=None, oldest_first=True):
+    async for message in thread.history(limit=None, oldest_first=True):
         if message.content == '' and len(message.attachments) == 0:
-            logger.debug(f"Skipping empty message")
             continue
         if message.content.startswith('~'):
-            logger.debug(f"Skipping `~` message with content: {message.content}")
             continue
 
         chat_thread.messages.append(Message.from_discord_message(message))
 
     # chat_thread.couplets = await build_couplet_list(messages)
-    # logger.info(f"Found {len(chat_thread.couplets)} couplets in thread: {thread.name}")
+    logger.info(f"Found {len(chat_thread.messages)} messages in thread: {thread.name}")
 
     return chat_thread
 
@@ -56,7 +54,8 @@ async def process_channel(channel: discord.TextChannel) -> ChannelData:
 
 
 async def process_category(category: discord.CategoryChannel) -> CategoryData:
-    logger.info(f"Processing category: {category.name}")
+    logger.info(f"---------------------------\n\n-------------------------\n\n"
+                f"Processing category: {category.name}\n\n")
     category_data = CategoryData(name=category.name, id=category.id)
     for channel in category.text_channels:
         if 'bot' in channel.name or 'prompt' in channel.name:
@@ -92,4 +91,6 @@ async def process_server(target_server: discord.Guild) -> ServerData:
     logger.info(f"Processed {len(server_data.categories)} categories in server: {target_server.name}")
 
     logger.info(f"Finished processing server: {target_server.name}")
+
+
     return server_data
