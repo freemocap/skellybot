@@ -45,11 +45,12 @@ class ServerData(BaseModel):
     categories: Dict[str, CategoryData] = {}
 
     def save_as_json(self, output_directory: str) -> str:
-        directory_path  = Path(output_directory)
+        directory_path = Path(output_directory)
         directory_path.mkdir(parents=True, exist_ok=True)
-        server_data_json = self.to_json()
+        server_data_json = self.json()
         date_string = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         full_path = f"{output_directory}/{self.name}_{date_string}.json"
-        with open(f"{output_directory}/{self.name}_{date_string}.json", "w") as f:
+        # encoding='utf-8' is necessary to avoid UnicodeEncodeError
+        with open(f"{output_directory}/{self.name}_{date_string}.json", 'w', encoding='utf-8') as f:
             f.write(server_data_json)
         return full_path
