@@ -2,8 +2,8 @@ import json
 import logging
 import os
 import pprint
-from typing import Type
 
+import tiktoken
 from dotenv import load_dotenv
 from openai import AsyncOpenAI
 from pydantic import BaseModel
@@ -21,11 +21,23 @@ OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 if not OPENAI_API_KEY:
     raise ValueError("Please set OPENAI_API_KEY in your .env file")
 
+
 async def analyze_text(input_text: str,
-                 json_schema_model: ExtractedTextData,
-                 base_prompt_text: str = "",
-                 llm_model: str = "gpt-4-turbo") -> BaseModel:
+                       json_schema_model: ExtractedTextData,
+                       base_prompt_text: str = "",
+                       max_input_tokens: int = 1.6e4,
+                       llm_model: str = "gpt-4-turbo") -> BaseModel:
     openai_client = AsyncOpenAI(api_key=OPENAI_API_KEY)
+
+    encoding = tiktoken.encoding_for_model(llm_model)
+    text_length_check = False
+    while not text_length_check:
+        num_tokens = len(encoding.encode(input_text))
+        if num_tokens > max_input_tokens:
+            logger.warning(f"Input text length {num_tokens} exceeds maximum tokens {max_input_tokens}. Truncating ...")
+            input_text = input_text[:int(len(input_text) * 0.9)]
+        else:
+            text_length_check = True
     analyzer_prompt = construct_analyzer_prompt(json_schema_model=json_schema_model,
                                                 input_text=input_text,
                                                 base_prompt_text=base_prompt_text)

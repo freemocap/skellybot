@@ -16,6 +16,8 @@ class ExtractedTextData(BaseModel):
     title_slug: str = Field("", description="The a descriptive title of the text, will be used as the H1 header, the filename slug, and the URL slug. It should be short (only a few words) and provide a terse preview of the basic content of the full text, it should include NO colons")
     tags: str = Field("",
                       description="A list of tags that describe the content of the text, formatted as comma separated #lower-kabob-case")
+    backlinks: str = Field("",
+                            description="A list of key concepts and terms that will be used as backlinks in the text, formatted as comma separated wiki style links like `[[backlink 1]], [[backlink 2]], [[backlink 3]]` etc")
 
     @property
     def title(self):
