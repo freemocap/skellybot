@@ -1,4 +1,4 @@
-from src.models.extraction import ExtractedTextData
+from src.models.extract_text_data import ExtractedTextData
 
 TEST_STRING="""
  The Free Motion Capture Project (FreeMoCap) aims to provide research-grade markerless motion capture software to everyone for free.
@@ -48,7 +48,7 @@ if __name__ == "__main__":
 
   ai_response = response.choices[0].message.content
 
-  from src.models.extraction import ExtractedTextData
+  from src.models.extract_text_data import ExtractedTextData
   import json
   constructed_pydantic_model = ExtractedTextData(**json.loads(ai_response))
   print(constructed_pydantic_model)

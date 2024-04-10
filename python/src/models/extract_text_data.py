@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from pydantic import BaseModel, Field
 
 from src.utilities.sanitize_filename import sanitize_name
@@ -5,7 +7,7 @@ from src.utilities.sanitize_filename import sanitize_name
 
 class ExtractedTextData(BaseModel):
     detailed_summary: str = Field("",
-                                  description="An exhaustively thorough and detailed summary of the major points of this text in a bulleted outline format")
+                                  description="An exhaustively thorough and detailed summary of the major points of this text in markdown bulleted outline format, like `* point 1\n* point 2\n* point 3` etc")
     highlights: str = Field("",
                             description="A list of the most important points of the text, formatted as a bulleted list")
     short_summary: str = Field("", description="A short (2-3 sentence) summary of the text")
@@ -19,8 +21,12 @@ class ExtractedTextData(BaseModel):
     def title(self):
         return self.title_slug.replace("-", " ").title()
     @property
-    def filename(self):
-        return sanitize_name(self.title_slug)
+    def filename(self, extension="md"):
+        if not extension.startswith("."):
+            extension = "." + extension
+        return sanitize_name(self.title_slug) + f"{extension}"
+
+
 
     def __str__(self):
         tags = "\n".join(self.tags.split(","))
