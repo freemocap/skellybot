@@ -44,6 +44,13 @@ async def process_chat_thread(thread: discord.Thread) -> ChatThread:
 async def process_channel(channel: discord.TextChannel) -> ChannelData:
     channel_data = ChannelData(name=channel.name, id=channel.id)
     channel_data.channel_description_prompt = channel.topic
+
+    try:
+        channel_data.messages = [Message.from_discord_message(message) async for message in
+                                 channel.history(limit=None, oldest_first=True)]
+    except discord.Forbidden:
+        logger.warning(f"Permission error extracting messages from {channel.name} - skipping!")
+
     channel_data.pinned_messages = [Message.from_discord_message(message) for message in await channel.pins()]
     threads = channel.threads
 

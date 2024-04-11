@@ -28,6 +28,7 @@ class ChannelData(BaseModel):
     channel_description_prompt: str = ''
     pinned_messages: List[Message] = []
     chat_threads: Dict[str, ChatThread] = {}
+    messages: List[Message] = []
 
 
 class CategoryData(BaseModel):

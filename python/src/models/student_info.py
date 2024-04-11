@@ -13,20 +13,21 @@ class StudentInfoModel(BaseModel):
     discord_username: str
     identifiers: List[str]
     category_data: CategoryData = None
+    capstone_outline: str = None
 
 
 class ClassRosterModel(BaseModel):
     students: Dict[str, StudentInfoModel]
 
     @classmethod
-    def load_from_csv(cls, file_path: FilePath) -> 'ClassRosterModel':
+    def from_csv(cls, file_path: FilePath) -> 'ClassRosterModel':
         students = {}
         df = pd.read_csv(file_path)
         for _, row in df.iterrows():
-            student = StudentInfoModel(student_hex_id=row['student_hex_id'],
+            student = StudentInfoModel(student_hex_id=row['hex-id'],
                                        sisid=row['sisid'],
                                        email=row['email'],
-                                       discord_username=row['discord_username'],
+                                       discord_username=row['discord-username'],
                                        identifiers=row['identifiers'].split(','))
             students[student.student_hex_id] = student
         return cls(students=students)

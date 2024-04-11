@@ -22,6 +22,8 @@ class Message(BaseModel):
                                                '`START [filename](url) END [filename](url)`')
     timestamp: datetime = Field(default_factory=datetime.now,
                                 description='The timestamp of the message in ISO 8601 format')
+    reactions: List[str] = Field(default_factory=list,
+                                 description='A list of reactions to the message')
 
     @classmethod
     def from_discord_message(cls, discord_message: discord.Message):
@@ -31,7 +33,8 @@ class Message(BaseModel):
             content=discord_message.clean_content,
             jump_url=discord_message.jump_url,
             attachments=[attachment.url for attachment in discord_message.attachments],
-            timestamp=discord_message.created_at
+            timestamp=discord_message.created_at,
+            reactions=[reaction.emoji for reaction in discord_message.reactions]
         )
 
     @staticmethod
