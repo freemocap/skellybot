@@ -8,7 +8,7 @@ from discord.ext import commands
 from dotenv import load_dotenv
 
 from src.configure_logging import configure_logging
-from src.scrape.scrape_server import process_server
+from src.scrape_server.scrape_server import process_server
 
 configure_logging()
 logger = logging.getLogger(__name__)
