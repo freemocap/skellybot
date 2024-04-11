@@ -1,30 +1,36 @@
-import csv
-from typing import List
+import pandas as pd
+from typing import List, Dict
 
 from pydantic import BaseModel, EmailStr, FilePath
 
+from src.models.server_data_model import CategoryData
+
 
 class StudentInfoModel(BaseModel):
-    student_identifier: str
-    discord_username: str
+    student_hex_id: str
+    sisid: str
     email: EmailStr
+    discord_username: str
+    identifiers: List[str]
+    category_data: CategoryData = None
 
 
 class ClassRosterModel(BaseModel):
-    students: List[StudentInfoModel]
+    students: Dict[str, StudentInfoModel]
 
     @classmethod
     def load_from_csv(cls, file_path: FilePath) -> 'ClassRosterModel':
-        students = []
-        with open(file_path, mode='r', encoding='utf-8') as csvfile:
-            reader = csv.DictReader(csvfile)
-            for row in reader:
-                students.append(StudentInfoModel(
-                    student_identifier=row['student_identifier'],
-                    discord_username=row['discord_username'],
-                    email=row['email']
-                ))
+        students = {}
+        df = pd.read_csv(file_path)
+        for _, row in df.iterrows():
+            student = StudentInfoModel(student_hex_id=row['student_hex_id'],
+                                       sisid=row['sisid'],
+                                       email=row['email'],
+                                       discord_username=row['discord_username'],
+                                       identifiers=row['identifiers'].split(','))
+            students[student.student_hex_id] = student
         return cls(students=students)
+
 
 # Usage example:
 # class_roster = ClassRosterModel.load_from_csv('path_to_csv.csv')

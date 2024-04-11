@@ -101,5 +101,4 @@ async def process_server(target_server: discord.Guild) -> ServerData:
 
     logger.info(f"Finished processing server: {target_server.name}")
 
-
     return server_data

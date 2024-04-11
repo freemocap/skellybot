@@ -5,3 +5,4 @@ python-dotenv==1.0.1
 pydantic[email]==2.6.4
 discord==2.3.2
 pytest==8.1.1; extra == "dev"
+pandas

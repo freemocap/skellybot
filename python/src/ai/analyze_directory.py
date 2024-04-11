@@ -47,10 +47,18 @@ async def analyze_markdown_file(base_prompt_text: str,
         file_parent_path = file_path.parent
         output_parent_path = output_directory_path / file_parent_path.relative_to(input_directory_path)
         output_parent_path.mkdir(parents=True, exist_ok=True)
-        constructed_pydantic_model = await analyze_text(input_text=input_file_text,
+        try:
+            constructed_pydantic_model = await analyze_text(input_text=input_file_text,
                                                         json_schema_model=json_schema_model,
                                                         base_prompt_text=base_prompt_text,
                                                         llm_model=llm_model)
+        except Exception as e:
+            logger.error(f"Error analyzing file: {file_path}")
+            logger.error(e)
+            return
+        if not constructed_pydantic_model:
+            logger.warning(f"No Pydantic model constructed for file: {file_path}")
+            return
         logger.info(f"Constructed Pydantic model:\n\n{constructed_pydantic_model}")
 
         output_markdown_string = str(constructed_pydantic_model)
@@ -82,3 +90,5 @@ if __name__ == "__main__":
                                   base_prompt_text=classbot_prompt))
 
     logger.info(f"Analysis complete for directory: {input_directory_out}")
+
+    print("Done!")

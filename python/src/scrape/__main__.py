@@ -14,7 +14,7 @@ configure_logging()
 logger = logging.getLogger(__name__)
 
 # Load environment variables
-load_dotenv("../env.analysis")
+load_dotenv("../../env.analysis")
 DISCORD_DEV_BOT_TOKEN = os.getenv('DISCORD_DEV_BOT_TOKEN')
 TARGET_SERVER_ID = os.getenv('TARGET_SERVER_ID')
 OUTPUT_DIRECTORY = os.getenv('OUTPUT_DIRECTORY')
