@@ -11,6 +11,7 @@ import {
   TextChannel,
   ThreadChannel,
 } from 'discord.js';
+import { DiscordMessageService } from './discord-message.service';
 
 @Injectable()
 export class DiscordContextPromptService {
@@ -18,6 +19,8 @@ export class DiscordContextPromptService {
   oldInstructionsChannelPattern = new RegExp('.*bot-instructions.*', 'i');
   instructionsChannelPattern = new RegExp('.*?prompt-?settings.*', 'i');
   botPromptEmoji = '🤖';
+
+  constructor(private readonly _messageService: DiscordMessageService) {}
 
   async getContextPromptFromMessage(message: Message) {
     try {
@@ -209,7 +212,12 @@ export class DiscordContextPromptService {
     let pinnedMessageCount = 0;
     for (const message of pinnedMessages.values()) {
       pinnedMessagesContent += `Pinned message ${pinnedMessageCount++}:\n`;
-      pinnedMessagesContent += message.content + '\n';
+      const { humanInputText, attachmentText, imageURLs } =
+        await this._messageService.extractMessageContent(message);
+
+      pinnedMessagesContent += humanInputText;
+      pinnedMessagesContent += attachmentText;
+      pinnedMessagesContent += imageURLs?.join('\n') || '';
     }
     pinnedMessagesContent += '\nEND PINNED MESSAGES';
     return pinnedMessagesContent;

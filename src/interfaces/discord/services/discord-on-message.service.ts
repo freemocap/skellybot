@@ -60,7 +60,7 @@ export class DiscordOnMessageService {
         contextRoute,
         contextInstructions: contextPrompt,
         couplets: [],
-        modelName: 'gpt-4-vision-preview',
+        modelName: 'gpt-4o',
       });
 
       this.logger.debug(`Adding threadId ${aiChatId} to active listeners`);
