@@ -26,11 +26,11 @@ import { DiscordConfigureChannelService } from './commands/server-config-command
 
 @Module({
   imports: [
+    GcpModule,
     NecordModule.forRootAsync({
       imports: [GcpModule],
       useClass: DiscordConfigService,
     }),
-    GcpModule,
     UsersModule,
     ChatbotModule,
     AiChatsModule,
