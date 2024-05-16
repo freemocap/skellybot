@@ -137,6 +137,7 @@ export class OpenaiChatService implements OnModuleInit {
       max_tokens: 4096,
     } as OpenAiChatConfig;
   }
+
   private _reloadMessageHistoryFromAiChatDocument(aiChat: AiChatDocument) {
     const chatConfig = this._getConfigOrThrow(aiChat.aiChatId);
 

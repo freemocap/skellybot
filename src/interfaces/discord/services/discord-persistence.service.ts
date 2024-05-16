@@ -10,6 +10,7 @@ import {
   TextChannel,
 } from 'discord.js';
 import { AiChatDocument } from '../../../core/database/collections/ai-chats/ai-chat.schema';
+import { CoupletDocument } from '../../../core/database/collections/couplets/couplet.schema';
 
 @Injectable()
 export class DiscordPersistenceService {
@@ -73,20 +74,22 @@ export class DiscordPersistenceService {
       });
 
       await this._aiChatsService.addCouplets(aiChatId, [couplet]);
-      await this.attachAiChatToOldestMessage(
+      await this._updateInChatPersistence(
         aiChatId,
         await this._aiChatsService.findOne(aiChatId),
         discordMessage.channel as TextChannel,
+        couplet,
       );
     } catch (error) {
       this.logger.error(`Error persisting interaction: ${error}`);
     }
   }
 
-  public async attachAiChatToOldestMessage(
+  private async _updateInChatPersistence(
     aiChatId: string,
     aiChatDocument: AiChatDocument,
     channel: TextChannel,
+    couplet: CoupletDocument,
   ) {
     this.logger.debug(
       `Attaching chat document to oldest message in thread ${aiChatId}`,
@@ -95,6 +98,8 @@ export class DiscordPersistenceService {
     const aiChatAsJson = JSON.parse(JSON.stringify(aiChatDocument, null, 2));
     delete aiChatAsJson._id;
     delete aiChatAsJson.__v;
+
+    console.log(JSON.stringify(couplet, null, 2));
 
     const oldestMessage = await this._findOldestMessage(channel);
     const aiChatAttachmentName = `chat-${aiChatId}.json`;
