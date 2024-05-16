@@ -86,10 +86,8 @@ export class DiscordContextPromptService {
       const instructions = await this._getBotReactionMessages(botConfigChannel);
       return `INSTRUCTIONS FOR CATEGORY: ${category.name}\n\n${instructions}`;
     } catch (error) {
-      this.logger.error(`Failed to get instructions: ${error.message}`);
-      throw new Error(
-        `Failed to get instructions: ${error.message} ${error.stack}`,
-      );
+      this.logger.log(`Failed to get instructions: ${error.message}`);
+      return '';
     }
   }
 
@@ -106,10 +104,8 @@ export class DiscordContextPromptService {
       const instructions = await this._getBotReactionMessages(botConfigChannel);
       return `SERVER-WIDE INSTRUCTIONS FOR SERVER ${server.name}\n\n${instructions}\n\n`;
     } catch (error) {
-      this.logger.error(`Failed to get instructions: ${error.message}`);
-      throw new Error(
-        `Failed to get instructions: ${error.message} ${error.stack}`,
-      );
+      this.logger.log(`Failed to get server instructions: ${error.message}`);
+      return '';
     }
   }
 
