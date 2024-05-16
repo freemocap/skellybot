@@ -47,11 +47,12 @@ export class DiscordOnMessageService {
 
       const chatConfig = {
         messages: [],
-        model: 'gpt-4-vision-preview',
+        model: 'gpt-4o',
         temperature: 0.7,
         stream: true,
         max_tokens: 4096,
       } as OpenAiChatConfig;
+
       this._openaiChatService.createChat(aiChatId, contextPrompt, chatConfig);
       const aiChatDocument = await this._aiChatsService.createAiChat({
         aiChatId,
@@ -59,7 +60,7 @@ export class DiscordOnMessageService {
         contextRoute,
         contextInstructions: contextPrompt,
         couplets: [],
-        modelName: 'gpt-4-vision-preview',
+        modelName: 'gpt-4o',
       });
 
       this.logger.debug(`Adding threadId ${aiChatId} to active listeners`);
@@ -77,11 +78,6 @@ export class DiscordOnMessageService {
       return false;
     }
     const botId = message.client.user.id;
-
-    // Respond to messages that mention the bot
-    if (message.mentions.has(botId)) {
-      return true;
-    }
 
     // Respond to messages in threads the bot created/owns
     if (

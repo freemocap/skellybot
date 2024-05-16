@@ -11,6 +11,7 @@ import {
   TextChannel,
   ThreadChannel,
 } from 'discord.js';
+import { DiscordMessageService } from './discord-message.service';
 
 @Injectable()
 export class DiscordContextPromptService {
@@ -18,6 +19,8 @@ export class DiscordContextPromptService {
   oldInstructionsChannelPattern = new RegExp('.*bot-instructions.*', 'i');
   instructionsChannelPattern = new RegExp('.*?prompt-?settings.*', 'i');
   botPromptEmoji = '🤖';
+
+  constructor(private readonly _messageService: DiscordMessageService) {}
 
   async getContextPromptFromMessage(message: Message) {
     try {
@@ -33,13 +36,17 @@ export class DiscordContextPromptService {
       const server = await channel.client.guilds.fetch(channel.guildId);
       const channelTopic =
         `CHANNEL ${channel.name} TOPIC:\n\n${channel.topic}` || '';
+
       const channelPinnedInstructions =
         await this._getPinnedInstructions(channel);
+
       const categoryInstructions = await this.getCategoryInstructions(
         server,
         channel.parent as CategoryChannel,
       );
+
       const serverInstructions = await this.getServerInstructions(server);
+
       return [
         serverInstructions,
         categoryInstructions,
@@ -180,7 +187,9 @@ export class DiscordContextPromptService {
     );
 
     return instructionMessages
-      .map((message: Message) => message.content)
+      .map((message: Message) =>
+        this._messageService.extractMessageContentAsString(message),
+      )
       .join('\n');
   }
 
@@ -208,10 +217,14 @@ export class DiscordContextPromptService {
 
     let pinnedMessageCount = 0;
     for (const message of pinnedMessages.values()) {
-      pinnedMessagesContent += `Pinned message ${pinnedMessageCount++}:\n`;
-      pinnedMessagesContent += message.content + '\n';
+      pinnedMessagesContent += `BEGIN PINNED MESSAGE ${pinnedMessageCount++}:\n\n`;
+      const content =
+        await this._messageService.extractMessageContentAsString(message);
+      pinnedMessagesContent += content;
+      pinnedMessagesContent += `END PINNED MESSAGE ${pinnedMessageCount++}:\n\n`;
+
+      pinnedMessagesContent += '\nEND PINNED MESSAGES';
     }
-    pinnedMessagesContent += '\nEND PINNED MESSAGES';
     return pinnedMessagesContent;
   }
 }
