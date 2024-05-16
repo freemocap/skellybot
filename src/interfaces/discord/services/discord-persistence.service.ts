@@ -99,8 +99,6 @@ export class DiscordPersistenceService {
     delete aiChatAsJson._id;
     delete aiChatAsJson.__v;
 
-    console.log(JSON.stringify(couplet, null, 2));
-
     const oldestMessage = await this._findOldestMessage(channel);
     const aiChatAttachmentName = `chat-${aiChatId}.json`;
     const aiChatAttachment = new AttachmentBuilder(
