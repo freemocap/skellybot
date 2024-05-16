@@ -15,4 +15,4 @@ gcloud compute instances create-with-container skelly-bot-testing \
     --no-shielded-secure-boot \
     --shielded-vtpm \
     --shielded-integrity-monitoring \
-    --labels=goog-ec-src=vm_add-gcloud,container-vm=cos-stable-109-17800-66-43
+    --labels=goog-ec-src=vm_add-gcloud,container-vm=cos-stable-109-17800-66-54
