@@ -37,4 +37,6 @@ COPY . .
 
 RUN npm run build
 
+ENV NODE_ENV=production
+
 ENTRYPOINT ["/usr/bin/dumb-init", "--", "npm", "run", "start:prod"]

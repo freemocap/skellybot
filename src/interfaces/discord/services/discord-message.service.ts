@@ -9,6 +9,7 @@ import { OpenaiChatService } from '../../../core/ai/openai/openai-chat.service';
 export class DiscordMessageService {
   private readonly maxMessageLength = 2000 * 0.85; // discord max message length is 2000 characters (and * 0.85 to be safe)
   private readonly logger = new Logger(DiscordMessageService.name);
+
   constructor(
     private readonly _persistenceService: DiscordPersistenceService,
     private readonly _contextService: DiscordContextRouteService,
@@ -191,6 +192,21 @@ export class DiscordMessageService {
     }
   }
 
+  public async extractMessageContentAsString(discordMessage: Message<boolean>) {
+    const { humanInputText, attachmentText, imageURLs } =
+      await this.extractMessageContent(discordMessage);
+    let fullText = `BEGIN MESSAGE CONTENT:\n\n ${humanInputText}\n\n END MESSAGE CONTENT\n\n`;
+    if (attachmentText) {
+      fullText += attachmentText;
+    }
+    if (imageURLs.length > 0) {
+      fullText += '\n\nBEGIN IMAGE URLS:\n\n';
+      fullText += imageURLs.join('\n');
+      fullText += '\n\nEND IMAGE URLS\n\n';
+    }
+    return fullText;
+  }
+
   public async extractMessageContent(
     discordMessage: Message<boolean>,
     respondToChannelOrMessage?: Message<boolean> | TextBasedChannel,
@@ -246,6 +262,7 @@ export class DiscordMessageService {
         attachmentText += 'END TEXT FROM ATTACHMENTS';
       }
     }
+
     return { humanInputText, attachmentText, imageURLs };
   }
 

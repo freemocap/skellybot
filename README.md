@@ -1,7 +1,9 @@
+<h3 align="center">SkellyBot: A free-open-source ai chatbot 💀🤖✨️</h3>
+<p align="center"><i>This bot helped me build this bot</i></p>
 <p align="center">
   <a href="http://freemocap.org/" target="blank"><img src="https://github.com/freemocap/skellybot/assets/15314521/37d5a1d1-e9c9-40f5-8c8a-21eb5985eb8b" width="200" alt="SkellyBot Logo" /></a>
-</p>
-<p align="center">This bot helped me build this bot 💀🤖✨️ </p>
+<p align="center">(A FreeMoCap Foundation software)</p>
+
 <p align="center">
 
 [//]: # (<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>)
@@ -33,9 +35,13 @@
 [//]: # (  [![Sponsors on Open Collective]&#40;https://opencollective.com/nest/sponsors/badge.svg&#41;]&#40;https://opencollective.com/nest#sponsor&#41;-->)
 
 
+---
+## (Sloppy) Documentation 
+  https://freemocap.github.io/skellybot/overview.html
+  
+---
 
-# 👇 (everything below this line is generic boilerplate) 👇
-## Description
+## NestJS boilerplate below
 
 [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
 
