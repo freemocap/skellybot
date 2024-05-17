@@ -35,12 +35,16 @@ lerna-debug.log*
 !.vscode/extensions.json
 
 .env.slack
+.env.analysis
 .env.discord
 .env.analysis
 /.env.openai
 /src/interfaces/discord/commands/server-config-command/server-config-examples/capstone/2024-capstone-category-per-student-config.yaml
 /src/interfaces/discord/commands/server-config-command/server-config-examples/capstone/2024-capstone-category-per-student-config-CHANGE_NICKNAMES.yaml
 /src/interfaces/discord/commands/server-config-command/server-config-examples/capstone/student-identifiers.ts
+
+/analysis/env.analysis
+/env.python
 
 venv/
 .venv/

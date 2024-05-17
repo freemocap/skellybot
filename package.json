@@ -20,7 +20,10 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.19.0",
     "@discordjs/voice": "^0.16.1",
+    "@ffmpeg/core": "^0.12.6",
+    "@ffmpeg/ffmpeg": "^0.12.10",
     "@google-cloud/secret-manager": "^5.0.1",
     "@iarna/toml": "^2.2.5",
     "@langchain/community": "^0.0.14",
@@ -41,7 +44,9 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
     "discord.js": "^14.14.1",
+    "dotenv": "^16.4.5",
     "form-data": "^4.0.0",
+    "fs-extra": "^11.2.0",
     "js-yaml": "^4.1.0",
     "langchain": "^0.0.209",
     "mongodb": "^5.9.2",
@@ -53,7 +58,7 @@
     "rxjs": "^7.8.1",
     "toml": "^3.0.0",
     "uuid": "^9.0.1",
-    "yaml": "^2.3.4",
+    "yaml": "^2.4.1",
     "yml": "^1.0.0"
   },
   "devDependencies": {
