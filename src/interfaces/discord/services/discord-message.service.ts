@@ -211,6 +211,9 @@ export class DiscordMessageService {
     discordMessage: Message<boolean>,
     respondToChannelOrMessage?: Message<boolean> | TextBasedChannel,
   ) {
+    this.logger.debug(
+      `Extracting message content from discord message: ${discordMessage.id}`,
+    );
     let humanInputText = discordMessage.content;
     let attachmentText = '';
     const imageURLs = [];
@@ -222,7 +225,7 @@ export class DiscordMessageService {
           '\n\nEND TEXT FROM HUMAN INPUT\n\n';
       }
       for (const [, attachment] of discordMessage.attachments) {
-        if (attachment.contentType.split('/')[0] == 'image') {
+        if (attachment.contentType?.split('/')[0] == 'image') {
           imageURLs.push(
             await this._discordAttachmentService.getImageDataFromURL(
               attachment.url, //.split('?')[0]

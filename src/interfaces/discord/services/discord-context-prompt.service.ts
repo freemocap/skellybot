@@ -209,6 +209,7 @@ export class DiscordContextPromptService {
   }
 
   private async _getPinnedInstructions(channel: TextChannel) {
+    this.logger.debug(`Getting pinned messages for channel: ${channel.name}`);
     const pinnedMessages = await channel.messages.fetchPinned();
     if (pinnedMessages.size === 0) {
       return '';
