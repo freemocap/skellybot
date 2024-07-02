@@ -52,7 +52,7 @@ export class DiscordContextPromptService {
         categoryInstructions,
         channelTopic,
         channelPinnedInstructions,
-      ].join('\n\n');
+      ].join('\n-----\n');
     } catch (error) {
       this.logger.error(
         `Failed to get context instructions with error: ${error}`,

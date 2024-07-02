@@ -5,6 +5,25 @@ import { DiscordContextRouteService } from './discord-context-route.service';
 import { DiscordAttachmentService } from './discord-attachment.service';
 import { OpenaiChatService } from '../../../core/ai/openai/openai-chat.service';
 
+/**
+ * Checks if the given text ends with an unclosed code block.
+ * @param text The text to check
+ * @returns True if the text ends with an unclosed code block, false otherwise
+ */
+function hasUnclosedCodeBlock(text: string): boolean {
+  const codeBlockPattern = /```/g;
+  let match;
+  let codeBlockCount = 0;
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  while ((match = codeBlockPattern.exec(text)) !== null) {
+    codeBlockCount++;
+  }
+
+  // A code block is unclosed if the count of ```  is odd
+  return codeBlockCount % 2 !== 0;
+}
+
 @Injectable()
 export class DiscordMessageService {
   private readonly maxMessageLength = 2000 * 0.85; // discord max message length is 2000 characters (and * 0.85 to be safe)
@@ -140,6 +159,7 @@ export class DiscordMessageService {
           continue;
         }
         fullAiTextResponse += incomingTextChunk;
+        const inCodeBlock = hasUnclosedCodeBlock(fullAiTextResponse);
 
         // If the proposed text is less than the max message length, just add it to the current text
         if (
@@ -147,15 +167,22 @@ export class DiscordMessageService {
           maxMessageLength
         ) {
           currentReplyMessageText += incomingTextChunk;
-          await currentReplyMessage.edit(currentReplyMessageText);
+          let replyMessageToSend = currentReplyMessageText;
+          if (inCodeBlock) {
+            replyMessageToSend += '\n```\n';
+          }
+          await currentReplyMessage.edit(replyMessageToSend);
         } else {
           // Otherwise, split the message and start a new one
           this.logger.debug(
             'Reply message too long, splitting into multiple messages',
           );
-          const continuingFromString = `> continuing from \`...${currentReplyMessageText.slice(
+          let continuingFromString = `> continuing from '...${currentReplyMessageText.slice(
             -50,
-          )}...\`\n\n`;
+          )}'...\n\n`;
+          if (inCodeBlock) {
+            continuingFromString += '```\n';
+          }
 
           replyMessages.push(
             await currentReplyMessage.reply(continuingFromString),

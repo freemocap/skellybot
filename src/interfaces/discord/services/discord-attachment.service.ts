@@ -223,7 +223,7 @@ export class DiscordAttachmentService {
     const simpleUrl = attachment.url.split('?')[0];
     return {
       ...response,
-      text: `> ${fileType} file URL: ${simpleUrl}\n\n\`\`\`\n\nBEGIN ${response.decorator}\n\n${response.rawText}\n\nEND ${response.decorator}\n\n\`\`\``,
+      text: `> ${fileType} file URL: ${simpleUrl}\n\nBEGIN ${response.decorator}\n\n${response.rawText}\n\nEND ${response.decorator}\n\n`,
     };
   }
 }
