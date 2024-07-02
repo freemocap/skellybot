@@ -195,14 +195,13 @@ export class DiscordMessageService {
   public async extractMessageContentAsString(discordMessage: Message<boolean>) {
     const { humanInputText, attachmentText, imageURLs } =
       await this.extractMessageContent(discordMessage);
-    let fullText = `BEGIN MESSAGE CONTENT:\n\n ${humanInputText}\n\n END MESSAGE CONTENT\n\n`;
+    let fullText = `BEGIN MESSAGE ${discordMessage.id}: \n\n ${humanInputText}\n\n END MESSAGE  ${discordMessage.id}\n\n`;
     if (attachmentText) {
       fullText += attachmentText;
     }
     if (imageURLs.length > 0) {
-      fullText += '\n\nBEGIN IMAGE URLS:\n\n';
+      fullText += '\n\nIMAGE URLS:\n\n';
       fullText += imageURLs.join('\n');
-      fullText += '\n\nEND IMAGE URLS\n\n';
     }
     return fullText;
   }
