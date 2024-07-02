@@ -10,15 +10,17 @@ import {
   TextChannel,
 } from 'discord.js';
 import { AiChatDocument } from '../../../core/database/collections/ai-chats/ai-chat.schema';
-import { CoupletDocument } from '../../../core/database/collections/couplets/couplet.schema';
+import { DiscordAttachmentService } from './discord-attachment.service';
 
 @Injectable()
 export class DiscordPersistenceService {
   private readonly logger = new Logger(DiscordPersistenceService.name);
+
   constructor(
     private readonly _coupletService: CoupletsService,
     private readonly _aiChatsService: AiChatsService,
     private readonly _messageService: MessagesService,
+    private readonly _attachementService: DiscordAttachmentService,
   ) {}
 
   public async persistInteraction(
@@ -78,7 +80,9 @@ export class DiscordPersistenceService {
         aiChatId,
         await this._aiChatsService.findOne(aiChatId),
         discordMessage.channel as TextChannel,
-        couplet,
+        discordMessage.content,
+        attachmentText,
+        fullAiTextResponse,
       );
     } catch (error) {
       this.logger.error(`Error persisting interaction: ${error}`);
@@ -89,29 +93,58 @@ export class DiscordPersistenceService {
     aiChatId: string,
     aiChatDocument: AiChatDocument,
     channel: TextChannel,
-    couplet: CoupletDocument,
+    humanMessageContent: string,
+    humanAttachmentContent: string,
+    aiFullMessageReponse: string,
   ) {
     this.logger.debug(
       `Attaching chat document to oldest message in thread ${aiChatId}`,
     );
-    // remove the _id field from the document
-    const aiChatAsJson = JSON.parse(JSON.stringify(aiChatDocument, null, 2));
-    delete aiChatAsJson._id;
-    delete aiChatAsJson.__v;
-
     const oldestMessage = await this._findOldestMessage(channel);
-    const aiChatAttachmentName = `chat-${aiChatId}.json`;
-    const aiChatAttachment = new AttachmentBuilder(
-      Buffer.from(JSON.stringify(aiChatDocument, null, 2)),
-      { name: aiChatAttachmentName },
+    const aiChatAttachmentName = `chat-${aiChatId}.md`;
+    let chatAttachmentText = '';
+
+    // Check if the attachment already exists
+    const existingAttachment = oldestMessage.attachments.find(
+      (attachment) => attachment.name === aiChatAttachmentName,
     );
 
+    if (!existingAttachment) {
+      // Initialize new chat document if it does not exist
+      const aiChatAsJson = JSON.parse(JSON.stringify(aiChatDocument, null, 2));
+      const contextInstructions = aiChatAsJson.contextInstructions;
+      delete aiChatAsJson.contextInstructions;
+      delete aiChatAsJson._id;
+      delete aiChatAsJson.__v;
+      chatAttachmentText =
+        '```\n' + JSON.stringify(aiChatAsJson, null, 2) + '\n```\n';
+      chatAttachmentText += '\n___\n';
+      chatAttachmentText += '\nCONTEXT INSTRUCTIONS/SYSTEM PROMPT:\n\n```\n';
+      chatAttachmentText += `${contextInstructions}\n`;
+      chatAttachmentText += '```\n';
+    } else {
+      // Fetch the existing attachment content
+      const chatAttachmentPath =
+        await this._attachementService.downloadAttachment(existingAttachment);
+    }
+
+    // Append the new HumanMessage and AIMessage
+    chatAttachmentText += `**HUMAN MESSAGE:**\n\n${humanMessageContent}\n\n`;
+    if (humanAttachmentContent) {
+      chatAttachmentText += `**ATTACHMENTS:**\n\n${humanAttachmentContent}\n\n`;
+    }
+    chatAttachmentText += `**AI MESSAGE:**\n\n${aiFullMessageReponse}\n\n`;
     const existingAttachmentsCollection = oldestMessage.attachments.filter(
       (attachment) => attachment.name !== aiChatAttachmentName,
     );
 
     const existingAttachments = Array.from(
       existingAttachmentsCollection.values(),
+    );
+
+    const aiChatAttachment = new AttachmentBuilder(
+      Buffer.from(chatAttachmentText),
+      { name: aiChatAttachmentName },
     );
 
     await oldestMessage.edit({

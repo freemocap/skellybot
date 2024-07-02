@@ -98,11 +98,7 @@ export class DiscordAttachmentService {
         decorator: `AUDIO TRANSCRIPT: ${attachment.name}`,
         verboseOutput: transcriptionResponse,
       };
-      return this.formatResponse(
-        rawResponse,
-        mime.lookup(attachment.name),
-        attachment,
-      );
+      return this.formatResponse(rawResponse);
     } catch (error) {
       this.logger.error(
         `Error processing audio attachment: ${error.message || error}`,
@@ -151,11 +147,7 @@ export class DiscordAttachmentService {
         rawText: textFileContent,
         decorator: `TEXT ATTACHMENT: ${attachment.name}`,
       };
-      return this.formatResponse(
-        rawResponse,
-        mime.lookup(attachment.name),
-        attachment,
-      );
+      return this.formatResponse(rawResponse);
     } catch {
       return false;
     }
@@ -215,15 +207,10 @@ export class DiscordAttachmentService {
     }
   }
 
-  private formatResponse(
-    response: any,
-    fileType: string,
-    attachment: Attachment,
-  ) {
-    const simpleUrl = attachment.url.split('?')[0];
+  private formatResponse(response: any) {
     return {
       ...response,
-      text: `> ${fileType} file URL: ${simpleUrl}\n\nBEGIN ${response.decorator}\n\n${response.rawText}\n\nEND ${response.decorator}\n\n`,
+      text: `\nBEGIN ${response.decorator}\n\n${response.rawText}\n\n`,
     };
   }
 }

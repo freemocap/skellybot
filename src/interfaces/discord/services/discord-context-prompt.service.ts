@@ -214,17 +214,12 @@ export class DiscordContextPromptService {
     if (pinnedMessages.size === 0) {
       return '';
     }
-    let pinnedMessagesContent = `CHANNEL '${channel.name}' PINNED MESSAGES START:\n\n`;
+    let pinnedMessagesContent = `CHANNEL '${channel.name}' PINNED MESSAGE INSTRUCTIONS:\n\n`;
 
-    let pinnedMessageCount = 0;
     for (const message of pinnedMessages.values()) {
-      pinnedMessagesContent += `PINNED MESSAGE [${pinnedMessageCount++}] START:\n\n`;
       const content =
         await this._messageService.extractMessageContentAsString(message);
       pinnedMessagesContent += content;
-      pinnedMessagesContent += `PINNED MESSAGE [${pinnedMessageCount++}] END\n\n`;
-
-      pinnedMessagesContent += `CHANNEL '${channel.name}' PINNED MESSAGES END\n\n`;
     }
     return pinnedMessagesContent;
   }

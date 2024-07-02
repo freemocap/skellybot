@@ -222,7 +222,7 @@ export class DiscordMessageService {
   public async extractMessageContentAsString(discordMessage: Message<boolean>) {
     const { humanInputText, attachmentText, imageURLs } =
       await this.extractMessageContent(discordMessage);
-    let fullText = `BEGIN MESSAGE ${discordMessage.id}: \n\n ${humanInputText}\n\n END MESSAGE  ${discordMessage.id}\n\n`;
+    let fullText = `${humanInputText}\n\n`;
     if (attachmentText) {
       fullText += attachmentText;
     }
@@ -237,16 +237,10 @@ export class DiscordMessageService {
     discordMessage: Message<boolean>,
     respondToChannelOrMessage?: Message<boolean> | TextBasedChannel,
   ) {
-    let humanInputText = discordMessage.content;
+    const humanInputText = discordMessage.content;
     let attachmentText = '';
     const imageURLs = [];
     if (discordMessage.attachments.size > 0) {
-      if (humanInputText.length > 0) {
-        humanInputText =
-          'BEGIN TEXT FROM HUMAN INPUT:\n\n' +
-          humanInputText +
-          '\n\nEND TEXT FROM HUMAN INPUT\n\n';
-      }
       for (const [, attachment] of discordMessage.attachments) {
         if (attachment.contentType.split('/')[0] == 'image') {
           imageURLs.push(
