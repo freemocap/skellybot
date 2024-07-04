@@ -105,11 +105,11 @@ export class DiscordPersistenceService {
     let chatAttachmentText = '';
 
     // Check if the attachment already exists
-    const existingAttachment = oldestMessage.attachments.find(
+    const existingChatPersistenceAttachment = oldestMessage.attachments.find(
       (attachment) => attachment.name === aiChatAttachmentName,
     );
 
-    if (!existingAttachment) {
+    if (!existingChatPersistenceAttachment) {
       // Initialize new chat document if it does not exist
       const aiChatAsJson = JSON.parse(JSON.stringify(aiChatDocument, null, 2));
       const contextInstructions = aiChatAsJson.contextInstructions;
@@ -124,8 +124,9 @@ export class DiscordPersistenceService {
       chatAttachmentText += '```\n';
     } else {
       // Fetch the existing attachment content
-      const chatAttachmentPath =
-        await this._attachementService.downloadAttachment(existingAttachment);
+      chatAttachmentText = await this._attachementService.getAttachmentText(
+        existingChatPersistenceAttachment,
+      );
     }
 
     // Append the new HumanMessage and AIMessage

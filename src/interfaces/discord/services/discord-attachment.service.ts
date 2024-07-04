@@ -2,7 +2,6 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Attachment } from 'discord.js';
 import { OpenaiAudioService } from '../../../core/ai/openai/openai-audio.service';
 import axios from 'axios';
-import * as mime from 'mime-types'; // Ensure to import mime-types
 import * as path from 'path';
 import * as fs from 'fs';
 import { createReadStream, createWriteStream } from 'fs';
@@ -183,6 +182,14 @@ export class DiscordAttachmentService {
     };
   }
 
+  public async getAttachmentText(attachment: Attachment): Promise<string> {
+    const attachmentPath = await this.downloadAttachment(attachment);
+    try {
+      return fs.readFileSync(attachmentPath, 'utf8');
+    } catch (err) {
+      console.error(err);
+    }
+  }
   public async downloadAttachment(attachment: Attachment): Promise<string> {
     this.logger.log('Downloading attachment:', attachment.name);
     try {
