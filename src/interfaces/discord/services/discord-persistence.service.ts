@@ -121,7 +121,7 @@ export class DiscordPersistenceService {
       chatAttachmentText += '\n___\n';
       chatAttachmentText += '\nCONTEXT INSTRUCTIONS/SYSTEM PROMPT:\n\n```\n';
       chatAttachmentText += `${contextInstructions}\n`;
-      chatAttachmentText += '```\n';
+      chatAttachmentText += '```\n---\n## CONVERSATION\n\n';
     } else {
       // Fetch the existing attachment content
       chatAttachmentText = await this._attachementService.getAttachmentText(

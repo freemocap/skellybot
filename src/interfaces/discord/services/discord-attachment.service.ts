@@ -184,12 +184,9 @@ export class DiscordAttachmentService {
 
   public async getAttachmentText(attachment: Attachment): Promise<string> {
     const attachmentPath = await this.downloadAttachment(attachment);
-    try {
-      return fs.readFileSync(attachmentPath, 'utf8');
-    } catch (err) {
-      console.error(err);
-    }
+    return await fs.promises.readFile(attachmentPath, 'utf8');
   }
+
   public async downloadAttachment(attachment: Attachment): Promise<string> {
     this.logger.log('Downloading attachment:', attachment.name);
     try {
