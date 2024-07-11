@@ -2,7 +2,6 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Attachment } from 'discord.js';
 import { OpenaiAudioService } from '../../../core/ai/openai/openai-audio.service';
 import axios from 'axios';
-import * as mime from 'mime-types'; // Ensure to import mime-types
 import * as path from 'path';
 import * as fs from 'fs';
 import { createReadStream, createWriteStream } from 'fs';
@@ -98,11 +97,7 @@ export class DiscordAttachmentService {
         decorator: `AUDIO TRANSCRIPT: ${attachment.name}`,
         verboseOutput: transcriptionResponse,
       };
-      return this.formatResponse(
-        rawResponse,
-        mime.lookup(attachment.name),
-        attachment,
-      );
+      return this.formatResponse(rawResponse);
     } catch (error) {
       this.logger.error(
         `Error processing audio attachment: ${error.message || error}`,
@@ -151,11 +146,7 @@ export class DiscordAttachmentService {
         rawText: textFileContent,
         decorator: `TEXT ATTACHMENT: ${attachment.name}`,
       };
-      return this.formatResponse(
-        rawResponse,
-        mime.lookup(attachment.name),
-        attachment,
-      );
+      return this.formatResponse(rawResponse);
     } catch {
       return false;
     }
@@ -191,6 +182,11 @@ export class DiscordAttachmentService {
     };
   }
 
+  public async getAttachmentText(attachment: Attachment): Promise<string> {
+    const attachmentPath = await this.downloadAttachment(attachment);
+    return await fs.promises.readFile(attachmentPath, 'utf8');
+  }
+
   public async downloadAttachment(attachment: Attachment): Promise<string> {
     this.logger.log('Downloading attachment:', attachment.name);
     try {
@@ -215,15 +211,10 @@ export class DiscordAttachmentService {
     }
   }
 
-  private formatResponse(
-    response: any,
-    fileType: string,
-    attachment: Attachment,
-  ) {
-    const simpleUrl = attachment.url.split('?')[0];
+  private formatResponse(response: any) {
     return {
       ...response,
-      text: `> ${fileType} file URL: ${simpleUrl}\n\n\`\`\`\n\nBEGIN ${response.decorator}\n\n${response.rawText}\n\nEND ${response.decorator}\n\n\`\`\``,
+      text: `\nBEGIN ${response.decorator}\n\n${response.rawText}\n\n`,
     };
   }
 }

@@ -52,7 +52,7 @@ export class DiscordContextPromptService {
         categoryInstructions,
         channelTopic,
         channelPinnedInstructions,
-      ].join('\n\n');
+      ].join('\n-----\n');
     } catch (error) {
       this.logger.error(
         `Failed to get context instructions with error: ${error}`,
@@ -186,11 +186,12 @@ export class DiscordContextPromptService {
       ),
     );
 
-    return instructionMessages
-      .map((message: Message) =>
+    const extractedMessages: string[] = await Promise.all(
+      instructionMessages.map((message: Message) =>
         this._messageService.extractMessageContentAsString(message),
-      )
-      .join('\n');
+      ),
+    );
+    return extractedMessages.join('\n');
   }
 
   public isBotInstructionEmoji(emoji: GuildEmoji | ReactionEmoji): boolean {
@@ -213,17 +214,12 @@ export class DiscordContextPromptService {
     if (pinnedMessages.size === 0) {
       return '';
     }
-    let pinnedMessagesContent = `MESSAGES PINNED IN CHANNEL ${channel.name}:\n\n`;
+    let pinnedMessagesContent = `CHANNEL '${channel.name}' PINNED MESSAGE INSTRUCTIONS:\n\n`;
 
-    let pinnedMessageCount = 0;
     for (const message of pinnedMessages.values()) {
-      pinnedMessagesContent += `BEGIN PINNED MESSAGE ${pinnedMessageCount++}:\n\n`;
       const content =
         await this._messageService.extractMessageContentAsString(message);
       pinnedMessagesContent += content;
-      pinnedMessagesContent += `END PINNED MESSAGE ${pinnedMessageCount++}:\n\n`;
-
-      pinnedMessagesContent += '\nEND PINNED MESSAGES';
     }
     return pinnedMessagesContent;
   }

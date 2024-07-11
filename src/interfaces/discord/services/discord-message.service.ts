@@ -5,6 +5,25 @@ import { DiscordContextRouteService } from './discord-context-route.service';
 import { DiscordAttachmentService } from './discord-attachment.service';
 import { OpenaiChatService } from '../../../core/ai/openai/openai-chat.service';
 
+/**
+ * Checks if the given text ends with an unclosed code block.
+ * @param text The text to check
+ * @returns True if the text ends with an unclosed code block, false otherwise
+ */
+function hasUnclosedCodeBlock(text: string): boolean {
+  const codeBlockPattern = /```/g;
+  let match;
+  let codeBlockCount = 0;
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  while ((match = codeBlockPattern.exec(text)) !== null) {
+    codeBlockCount++;
+  }
+
+  // A code block is unclosed if the count of ```  is odd
+  return codeBlockCount % 2 !== 0;
+}
+
 @Injectable()
 export class DiscordMessageService {
   private readonly maxMessageLength = 2000 * 0.85; // discord max message length is 2000 characters (and * 0.85 to be safe)
@@ -140,6 +159,7 @@ export class DiscordMessageService {
           continue;
         }
         fullAiTextResponse += incomingTextChunk;
+        const inCodeBlock = hasUnclosedCodeBlock(fullAiTextResponse);
 
         // If the proposed text is less than the max message length, just add it to the current text
         if (
@@ -147,15 +167,22 @@ export class DiscordMessageService {
           maxMessageLength
         ) {
           currentReplyMessageText += incomingTextChunk;
-          await currentReplyMessage.edit(currentReplyMessageText);
+          let replyMessageToSend = currentReplyMessageText;
+          if (inCodeBlock) {
+            replyMessageToSend += '\n```\n';
+          }
+          await currentReplyMessage.edit(replyMessageToSend);
         } else {
           // Otherwise, split the message and start a new one
           this.logger.debug(
             'Reply message too long, splitting into multiple messages',
           );
-          const continuingFromString = `> continuing from \`...${currentReplyMessageText.slice(
+          let continuingFromString = `> continuing from '...${currentReplyMessageText.slice(
             -50,
-          )}...\`\n\n`;
+          )}'...\n\n`;
+          if (inCodeBlock) {
+            continuingFromString += '```\n';
+          }
 
           replyMessages.push(
             await currentReplyMessage.reply(continuingFromString),
@@ -195,14 +222,13 @@ export class DiscordMessageService {
   public async extractMessageContentAsString(discordMessage: Message<boolean>) {
     const { humanInputText, attachmentText, imageURLs } =
       await this.extractMessageContent(discordMessage);
-    let fullText = `BEGIN MESSAGE CONTENT:\n\n ${humanInputText}\n\n END MESSAGE CONTENT\n\n`;
+    let fullText = `${humanInputText}\n\n`;
     if (attachmentText) {
       fullText += attachmentText;
     }
     if (imageURLs.length > 0) {
-      fullText += '\n\nBEGIN IMAGE URLS:\n\n';
+      fullText += '\n\nIMAGE URLS:\n\n';
       fullText += imageURLs.join('\n');
-      fullText += '\n\nEND IMAGE URLS\n\n';
     }
     return fullText;
   }
@@ -211,16 +237,10 @@ export class DiscordMessageService {
     discordMessage: Message<boolean>,
     respondToChannelOrMessage?: Message<boolean> | TextBasedChannel,
   ) {
-    let humanInputText = discordMessage.content;
+    const humanInputText = discordMessage.content;
     let attachmentText = '';
     const imageURLs = [];
     if (discordMessage.attachments.size > 0) {
-      if (humanInputText.length > 0) {
-        humanInputText =
-          'BEGIN TEXT FROM HUMAN INPUT:\n\n' +
-          humanInputText +
-          '\n\nEND TEXT FROM HUMAN INPUT\n\n';
-      }
       for (const [, attachment] of discordMessage.attachments) {
         if (attachment.contentType.split('/')[0] == 'image') {
           imageURLs.push(
