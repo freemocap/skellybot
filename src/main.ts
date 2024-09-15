@@ -7,7 +7,7 @@ async function bootstrap() {
   const app = await NestFactory.create(MainModule, {
     logger: ['error', 'warn', 'debug', 'log', 'verbose'],
   });
-
+  console.log(`Hi, hey wow, nice to see you `);
   setupSwaggerUI(app);
 
   app.useGlobalPipes(new ValidationPipe());
