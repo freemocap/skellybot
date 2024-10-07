@@ -2,7 +2,6 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field
 
-from src.utilities.sanitize_filename import sanitize_name
 
 
 class ExtractedTextData(BaseModel):

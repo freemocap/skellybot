@@ -3,7 +3,7 @@ from typing import List, Dict
 
 from pydantic import BaseModel, EmailStr, FilePath
 
-from src.models.server_data_model import CategoryData
+from src_python.src.models.server_data_model import CategoryData
 
 
 class StudentInfoModel(BaseModel):

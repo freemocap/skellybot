@@ -1,8 +1,0 @@
-openai==1.14.3
-anthropic==0.21.3
-open-interpreter==0.2.4
-python-dotenv==1.0.1
-pydantic[email]==2.6.4
-discord==2.3.2
-pytest==8.1.1; extra == "dev"
-pandas

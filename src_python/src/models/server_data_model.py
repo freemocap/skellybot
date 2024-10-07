@@ -5,8 +5,8 @@ from typing import Dict, List
 
 from pydantic import BaseModel
 
-from src.models.message_models import Message
-from src.utilities.sanitize_filename import sanitize_name
+from src_python.src.models.content_message_models import ContentMessage
+from src_python.src.utilities.sanitize_filename import sanitize_name
 
 
 class ChatThread(BaseModel):
@@ -16,7 +16,7 @@ class ChatThread(BaseModel):
     name: str
     id: int
     # couplets: List[Couplet] = []
-    messages: List[Message] = []
+    messages: List[ContentMessage] = []
 
 
 class ChannelData(BaseModel):
@@ -26,9 +26,9 @@ class ChannelData(BaseModel):
     name: str
     id: int
     channel_description_prompt: str = ''
-    pinned_messages: List[Message] = []
+    pinned_messages: List[ContentMessage] = []
     chat_threads: Dict[str, ChatThread] = {}
-    messages: List[Message] = []
+    messages: List[ContentMessage] = []
 
 
 class CategoryData(BaseModel):
@@ -38,13 +38,13 @@ class CategoryData(BaseModel):
     name: str
     id: int
     channels: Dict[str, ChannelData] = {}
-    bot_prompt_messages: List[Message] = []
+    bot_prompt_messages: List[ContentMessage] = []
 
 
 class ServerData(BaseModel):
     name: str
     id: int
-    bot_prompt_messages: List[Message] = []
+    bot_prompt_messages: List[ContentMessage] = []
     categories: Dict[str, CategoryData] = {}
 
 def save_as_json(server_data:ServerData, output_directory: str) -> str:
@@ -95,7 +95,7 @@ def save_as_markdown_directory(server_data:ServerData, output_directory: str) ->
                     f.write(f"# {clean_thread_name}\n\n")
                     for message_number, message in enumerate(thread_data.messages):
                         if message_number == 0:
-                            f.write(f"## Starting Message\n\n")
+                            f.write(f"## Starting ContentMessage\n\n")
                         elif message.is_bot:
                             f.write(f"## AI MESSAGE\n\n")
                         else:

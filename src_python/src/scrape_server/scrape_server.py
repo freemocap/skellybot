@@ -2,13 +2,13 @@ import logging
 
 import discord
 
-from src.models.message_models import Message
-from src.models.server_data_model import ChannelData, CategoryData, ServerData, ChatThread
+from src_python.src.models.content_message_models import ContentMessage
+from src_python.src.models.server_data_model import ChannelData, CategoryData, ServerData, ChatThread
 
 logger = logging.getLogger(__name__)
 
 
-async def get_reaction_tagged_messages(channel: discord.TextChannel, target_emoji: str) -> list[Message]:
+async def get_reaction_tagged_messages(channel: discord.TextChannel, target_emoji: str) -> list[ContentMessage]:
     logger.info(f"Getting bot prompt messages from channel: {channel.name}")
     prompt_messages = []
     async for message in channel.history(limit=None, oldest_first=True):
@@ -17,7 +17,7 @@ async def get_reaction_tagged_messages(channel: discord.TextChannel, target_emoj
                 if reaction.emoji == target_emoji:
                     logger.info(
                         f"Found message with target emoji {target_emoji} with content:\n\n{message.clean_content}")
-                    prompt_messages.append(Message.from_discord_message(message))
+                    prompt_messages.append(ContentMessage.from_discord_message(message))
 
     logger.info(f"Found {len(prompt_messages)} messages with target emoji {target_emoji} in channel: {channel.name}")
     return prompt_messages
@@ -32,7 +32,7 @@ async def process_chat_thread(thread: discord.Thread) -> ChatThread:
         if message.content.startswith('~'):
             continue
 
-        chat_thread.messages.append(Message.from_discord_message(message))
+        chat_thread.messages.append(ContentMessage.from_discord_message(message))
 
     # chat_thread.couplets = await build_couplet_list(messages)
     logger.info(f"Found {len(chat_thread.messages)} messages in thread: {thread.name}")
@@ -46,12 +46,12 @@ async def process_channel(channel: discord.TextChannel) -> ChannelData:
     channel_data.channel_description_prompt = channel.topic
 
     try:
-        channel_data.messages = [Message.from_discord_message(message) async for message in
+        channel_data.messages = [ContentMessage.from_discord_message(message) async for message in
                                  channel.history(limit=None, oldest_first=True)]
     except discord.Forbidden:
         logger.warning(f"Permission error extracting messages from {channel.name} - skipping!")
 
-    channel_data.pinned_messages = [Message.from_discord_message(message) for message in await channel.pins()]
+    channel_data.pinned_messages = [ContentMessage.from_discord_message(message) for message in await channel.pins()]
     threads = channel.threads
 
     archived_threads = []

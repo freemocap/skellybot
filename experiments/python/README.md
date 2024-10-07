@@ -1,2 +1,0 @@
-- install w/ `poetry install`
-- run w/ `python skellybot-analysis/__main__.py`

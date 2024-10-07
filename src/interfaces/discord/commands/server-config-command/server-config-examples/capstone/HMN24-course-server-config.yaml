@@ -1,0 +1,82 @@
+roles:
+  - name: "Prof"
+    hoist: true
+    color: "#FF00FF"
+
+  - name: "Student"
+    hoist: true
+    color: "#BEEFED"
+
+categories:
+  - name: "| Assignments |"
+    position: 0
+    botPromptMessages:
+      - "This category will contain channels dedicated to the Assignments in this course."
+      - "Its also fine if the students want to talk about other things"
+
+  - name: "| Topics-Bodies |"
+    position: 1
+    botPromptMessages:
+      - "This category will contain channels dedicated to the discussion of topics associated with the Body, e.g."
+      - "Biomechanics"
+      - "Neuromechanics"
+      - "Motor control neuroscience"
+      - "Motion capture"
+
+  - name: "| Topics-Vision |"
+    position: 1
+    botPromptMessages:
+      - "This category will contain channels dedicated to the discussion of topics associated with Vision, e.g."
+      - "Eye and Retina physiology"
+      - "Visual neuroscience"
+      - "Oculomotor control"
+      - "Eye tracking"
+
+channels:
+  - name: "Biomechanics"
+    type: text
+    parentCategory: "| Topics-Bodies |"
+    topic: |
+      This channel is for questions about Biomechanics. 
+
+  - name: "Neuromechanics"
+    parentCategory: "| Topics-Bodies |"
+    type: text
+    topic: |
+      This channel is for questions about Neuromechanics. 
+
+  - name: "Motor control neuroscience"
+    parentCategory: "| Topics-Bodies |"
+    type: text
+    topic: |
+      This channel is for questions about Motor control neuroscience. 
+
+  - name: "Motion capture"
+    parentCategory: "| Topics-Bodies |"
+    type: text
+    topic: |
+      This channel is for questions about Motion capture. 
+
+  - name: "Eyeball physiology"
+    parentCategory: "| Topics-Vision |"
+    type: text
+    topic: |
+        This channel is for questions about Eyeball and retinal physiology.
+
+  - name: "Visual neuroscience"
+    parentCategory: "| Topics-Vision |"
+    type: text
+    topic: |
+        This channel is for questions about Visual neuroscience.
+
+  - name: "Oculomotor control"
+    parentCategory: "| Topics-Vision |"
+    type: text
+    topic: |
+        This channel is for questions about Oculomotor control.
+
+  - name: "Eye tracking"
+    parentCategory: "| Topics-Vision |"
+    type: text
+    topic: |
+        This channel is for questions about Eye tracking.

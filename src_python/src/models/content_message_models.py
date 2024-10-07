@@ -6,10 +6,7 @@ import discord
 from pydantic import BaseModel, Field
 
 
-class Message(BaseModel):
-    """
-    A message sent by a human.
-    """
+class ContentMessage(BaseModel):
     user_id: int
     is_bot: bool
     content: str = Field(default_factory=str,

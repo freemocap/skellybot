@@ -1,10 +1,10 @@
 roles:
   - name: "Prof"
     hoist: true
-    color: "#0099FF"
+    color: "#FF00FF"
   - name: "Student"
     hoist: true
-    color: "#9900FF"
+    color: "#BEEFED"
 
 categories:
   - name: "| Course Materials |"
