@@ -1,7 +1,6 @@
-from pathlib import Path
-
 from pydantic import BaseModel, Field
 
+from src_python.src.utilities.sanitize_filename import sanitize_name
 
 
 class ExtractedTextData(BaseModel):
@@ -12,22 +11,22 @@ class ExtractedTextData(BaseModel):
     short_summary: str = Field("", description="A short (2-3 sentence) summary of the text")
     very_short_summary: str = Field("", description="A very short one sentence summary of the text")
     extremely_short_summary: str = Field("", description="An extremely short 6-10 word summary of the text")
-    title_slug: str = Field("", description="The a descriptive title of the text, will be used as the H1 header, the filename slug, and the URL slug. It should be short (only a few words) and provide a terse preview of the basic content of the full text, it should include NO colons")
+    title_slug: str = Field("",
+                            description="The a descriptive title of the text, will be used as the H1 header, the filename slug, and the URL slug. It should be short (only a few words) and provide a terse preview of the basic content of the full text, it should include NO colons")
     tags: str = Field("",
-                      description="A list of tags that describe the content of the text, formatted as comma separated #lower-kabob-case")
+                      description="A list of tags that describe the content of the text, formatted as comma separated #lower-kabob-case. These should be like topic tags that can be used to categorize the text within a larger collection of texts")
     backlinks: str = Field("",
-                            description="A list of key concepts and terms that will be used as backlinks in the text, formatted as comma separated wiki style links like `[[backlink 1]], [[backlink 2]], [[backlink 3]]` etc")
+                           description="A list of key concepts and terms that will be used as backlinks in the text, formatted as comma separated wiki style links like `[[backlink 1]], [[backlink 2]], [[backlink 3]]` etc. These shoud be the kinds of things you would expect to find a Wikipedia article about")
 
     @property
     def title(self):
         return self.title_slug.replace("-", " ").title()
+
     @property
     def filename(self, extension="md"):
         if not extension.startswith("."):
             extension = "." + extension
         return sanitize_name(self.title_slug) + f"{extension}"
-
-
 
     def __str__(self):
         tags = "\n".join(self.tags.split(","))
@@ -47,7 +46,7 @@ class ExtractedTextData(BaseModel):
 
 
 if __name__ == "__main__":
-    from src.ai.construct_prompt import construct_analyzer_prompt
+    from src_python.src.ai.construct_prompt import construct_analyzer_prompt
 
     data = ExtractedTextData(
         detailed_summary="This is a detailed summary of the text",

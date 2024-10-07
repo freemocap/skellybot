@@ -2,7 +2,8 @@ import logging
 from typing import Union, Type
 
 from pydantic import BaseModel, Field
-from models.extract_text_data import ExtractedTextData
+
+from src_python.src.models.extract_text_data import ExtractedTextData
 
 logger = logging.getLogger(__name__)
 

@@ -1,3 +1,4 @@
+import asyncio
 import logging
 
 import discord
@@ -61,6 +62,7 @@ async def process_channel(channel: discord.TextChannel) -> ChannelData:
     for thread in all_threads:
         chat_data = await process_chat_thread(thread)
         channel_data.chat_threads[f"name:{chat_data.name},id:{chat_data.id}"] = chat_data
+        await asyncio.sleep(1)
     if len(channel_data.chat_threads) == 0:
         logger.warning(f"No chat threads found in channel: {channel.name}")
     else:

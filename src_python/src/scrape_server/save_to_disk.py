@@ -3,8 +3,8 @@ import pickle
 from datetime import datetime
 from pathlib import Path
 
-from src.models.server_data_model import ServerData, save_as_json, save_as_markdown_directory
-from src.models.student_info import ClassRosterModel
+from src_python.src.models.server_data_model import ServerData, save_as_markdown_directory, save_as_json
+from src_python.src.models.student_info import ClassRosterModel
 
 logger = logging.getLogger(__name__)
 

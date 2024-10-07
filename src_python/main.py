@@ -1,5 +1,6 @@
 import logging
 import os
+from pathlib import Path
 
 import discord
 from discord.ext import commands
@@ -33,7 +34,7 @@ async def on_ready():
     logger.info(f'Logged in as {client.user.name} (ID: {client.user.id})')
     await main_server_scraper(client=client,
                               target_server_id=TARGET_SERVER_ID,
-                              output_directory=OUTPUT_DIRECTORY,
+                              output_directory=str(Path(OUTPUT_DIRECTORY)/"raw"),
                               student_identifiers_path=STUDENT_IDENTIFIERS_CSV_PATH)
     logger.info('------Done!------')
 
@@ -48,8 +49,8 @@ async def main_server_scraper(client: commands.Bot,
         server_data = await process_server(target_server)
         save_server_data_to_disk(output_directory=output_directory, server_data=server_data)
 
-        class_roster = ClassRosterModel.from_csv(student_identifiers_path)
-        save_student_data_to_disk(output_directory=output_directory, server_data=server_data, class_roster=class_roster)
+        # class_roster = ClassRosterModel.from_csv(student_identifiers_path)
+        # save_student_data_to_disk(output_directory=output_directory, server_data=server_data, class_roster=class_roster)
 
 
 if __name__ == "__main__":

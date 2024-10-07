@@ -132,9 +132,6 @@ class LoggerBuilder:
             for handler in handlers:
                 if handler not in logging.getLogger("").handlers:
                     logging.getLogger("").handlers.append(handler)
-        else:
-
-            logger.info("Logging already configured")
 
 
 def ensure_min_brightness(value, threshold=50):

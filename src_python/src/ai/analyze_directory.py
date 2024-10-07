@@ -4,9 +4,13 @@ from typing import Type
 
 from pydantic import BaseModel
 
-from src.ai.analyze_text import logger, analyze_text
-from src.models.extract_text_data import ExtractedTextData
+from src_python.src.ai.analyze_text import analyze_text
+from src_python.src.configure_logging import configure_logging
+from src_python.src.models.extract_text_data import ExtractedTextData
 
+configure_logging()
+import logging
+logger = logging.getLogger(__name__)
 
 async def analyze_directory(input_directory: str,
                             output_directory: str,
@@ -75,11 +79,12 @@ async def analyze_markdown_file(base_prompt_text: str,
 
 
 if __name__ == "__main__":
-    from src.models.extract_text_data import ExtractedTextData
 
-    input_directory_out = r"C:\Users\jonma\Sync\skellybot-data\markdown\2024_NEU_Capstone"
-    output_directory_out = r"C:\Users\jonma\Sync\skellybot-data\markdown\2024_NEU_Capstone_AI_Processed"
-    classbot_prompt_file = r"C:\Users\jonma\Sync\skellybot-data\markdown\classbot_prompt.txt"
+
+    in_server_name = "jonmatthiss_server"
+    input_directory_out = rf"C:\Users\jonma\Sync\skellybot-data\markdown\{in_server_name}"
+    output_directory_out = rf"C:\Users\jonma\Sync\skellybot-data\markdown\{in_server_name}_AI_Processed"
+    classbot_prompt_file = rf"C:\Users\jonma\Sync\skellybot-data\markdown\{in_server_name}\{in_server_name}_classbot_prompt.txt"
 
     with open(classbot_prompt_file, 'r', encoding='utf-8') as f:
         classbot_prompt = f.read()
