@@ -84,7 +84,7 @@ if __name__ == "__main__":
     in_server_name = "jonmatthiss_server"
     input_directory_out = rf"C:\Users\jonma\Sync\skellybot-data\markdown\{in_server_name}"
     output_directory_out = rf"C:\Users\jonma\Sync\skellybot-data\markdown\{in_server_name}_AI_Processed"
-    classbot_prompt_file = rf"C:\Users\jonma\Sync\skellybot-data\markdown\{in_server_name}\{in_server_name}_classbot_prompt.txt"
+    classbot_prompt_file = rf"C:\Users\jonma\Sync\skellybot-data\markdown\{in_server_name}_prompt.txt"
 
     with open(classbot_prompt_file, 'r', encoding='utf-8') as f:
         classbot_prompt = f.read()

@@ -26,7 +26,7 @@ async def analyze_text(input_text: str,
                        json_schema_model: ExtractedTextData,
                        base_prompt_text: str = "",
                        max_input_tokens: int = 1.6e4,
-                       llm_model: str = "gpt-4-turbo") -> BaseModel:
+                       llm_model: str = "gpt-4o-mini") -> BaseModel:
     openai_client = AsyncOpenAI(api_key=OPENAI_API_KEY)
 
     encoding = tiktoken.encoding_for_model(llm_model)
