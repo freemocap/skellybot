@@ -11,7 +11,7 @@ BASE_JSON_PROMPT = "Use the provided INPUT TEXT to construct a JSON object based
 SANDWICH_CAPPER = "Remember! You instructions are to: \n\n"
 
 
-def construct_analyzer_prompt(json_schema_model: ExtractedTextData,
+def construct_analyzer_prompt(json_schema_model: Type[ExtractedTextData],
                               input_text: str,
                               base_prompt_text: str = "",
                               ) -> str:
@@ -29,7 +29,7 @@ def construct_analyzer_prompt(json_schema_model: ExtractedTextData,
 
     input_text_prompt_string = f"BEGIN INPUT TEXT: \n\n{input_text}\n\n END INPUT TEXT\n\n"
 
-    sandwich_cap_prompt = f"{SANDWICH_CAPPER} \n\n {instruction_prompt} \n\n {json_schema_prompt}"
+    sandwich_cap_prompt = f"{SANDWICH_CAPPER} \n\n {BASE_JSON_PROMPT} \n\n {json_schema_prompt}"
 
 
     output_prompt = instruction_prompt + "\n\n" + input_text_prompt_string + "\n\n" + sandwich_cap_prompt + "\n"
@@ -54,7 +54,7 @@ def construct_json_prompt(pydantic_model: Type[BaseModel]) -> str:
     json_prompt = ['{\n']
 
     for name, field in fields.items():
-        field_info = pydantic_model.__fields__[name]
+        field_info = pydantic_model.model_fields[name]
         description = field_info.description or ""
         json_prompt.append(f'"{name}": ({field_info.annotation}) // {description},')
 

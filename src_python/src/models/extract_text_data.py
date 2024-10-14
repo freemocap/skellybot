@@ -4,20 +4,20 @@ from src_python.src.utilities.sanitize_filename import sanitize_name
 
 
 class ExtractedTextData(BaseModel):
-    detailed_summary: str = Field("",
-                                  description="An exhaustively thorough and detailed summary of the major points of this text in markdown bulleted outline format, like `* point 1\n* point 2\n* point 3` etc")
-    highlights: str = Field("",
-                            description="A list of the most important points of the text, formatted as a bulleted list")
-    short_summary: str = Field("", description="A short (2-3 sentence) summary of the text")
-    very_short_summary: str = Field("", description="A very short one sentence summary of the text")
-    extremely_short_summary: str = Field("", description="An extremely short 6-10 word summary of the text")
     title_slug: str = Field("",
                             description="The a descriptive title of the text, will be used as the H1 header, the filename slug, and the URL slug. It should be short (only a few words) and provide a terse preview of the basic content of the full text, it should include NO colons")
     tags: str = Field("",
-                      description="A list of tags that describe the content of the text, formatted as comma separated #lower-kabob-case. These should be like topic tags that can be used to categorize the text within a larger collection of texts")
+                      description="A list of tags that describe the content of the text, formatted as comma separated #lower-kabob-case. These should be like topic tags that can be used to categorize the text within a larger collection of texts. Ignore conversational aspects (such as 'greetings', 'farewells', 'thanks', etc.)")
+    extremely_short_summary: str = Field("", description="An extremely short 6-10 word summary of the text")
+    very_short_summary: str = Field("", description="A very short one sentence summary of the text")
+    short_summary: str = Field("", description="A short (2-3 sentence) summary of the text")
+    highlights: str = Field("",
+                            description="A list of the most important points of the text, formatted as a bulleted list")
+    detailed_summary: str = Field("",
+                                  description="An exhaustively thorough and detailed summary of the major points of this text in markdown bulleted outline format, like `* point 1\n* point 2\n* point 3` etc")
     backlinks: str = Field("",
-                           description="A list of key concepts and terms that will be used as backlinks in the text, formatted as comma separated wiki style links like `[[backlink 1]], [[backlink 2]], [[backlink 3]]` etc. These shoud be the kinds of things you would expect to find a Wikipedia article about")
-
+                           description="A list of key words and phrases in the text which will highlighted as [[backlinks]] within the text, These should be the kinds of things you would expect to find a Wikipedia article about. Format this section as comma separated wiki style links like `[[backlink 1]], [[backlink 2]], [[backlink 3]]` etc. ")
+    pull_quotes: str = Field("",description="A list of the most important quotes from the text which the key points of the contentful aspects of the text, formatted as a bulleted list")
     @property
     def title(self):
         return self.title_slug.replace("-", " ").title()
@@ -26,7 +26,7 @@ class ExtractedTextData(BaseModel):
     def filename(self, extension="md"):
         if not extension.startswith("."):
             extension = "." + extension
-        return sanitize_name(self.title_slug) + f"{extension}"
+        return sanitize_name(self.title_slug.lower()) + f"{extension}"
 
     def __str__(self):
         tags = "\n".join(self.tags.split(","))
@@ -34,6 +34,10 @@ class ExtractedTextData(BaseModel):
 # {self.title}\n\n
 ## Extremely Short Summary\n\n
 {self.extremely_short_summary}\n\n
+## Highlights\n
+{self.highlights}\n\n
+## Pull Quotes\n
+{self.pull_quotes}\n\n
 ## Very Short Summary\n
 {self.very_short_summary}\n\n
 ## Short Summary\n
@@ -42,6 +46,8 @@ class ExtractedTextData(BaseModel):
 {self.detailed_summary}\n\n
 ## Tags\n
 {tags}\n\n
+## Backlinks\n
+{self.backlinks}\n\n
         """
 
 

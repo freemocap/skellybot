@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import pprint
+from typing import Type
 
 import tiktoken
 from dotenv import load_dotenv
@@ -23,7 +24,7 @@ if not OPENAI_API_KEY:
 
 
 async def analyze_text(input_text: str,
-                       json_schema_model: ExtractedTextData,
+                       json_schema_model: Type[ExtractedTextData],
                        base_prompt_text: str = "",
                        max_input_tokens: int = 1.6e4,
                        llm_model: str = "gpt-4o-mini") -> BaseModel:

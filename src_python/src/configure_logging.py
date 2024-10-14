@@ -98,7 +98,7 @@ class LoggerBuilder:
             "INFO": "\033[96m",  # Cyan
             "SUCCESS": "\033[95m",  # Magenta
             "WARNING": "\033[33m",  # Yellow
-            "ERROR": "\033[101m",  # Background Dark Red
+            "ERROR": "\033[30;41m",  # Black text on Red background
         }
 
         def emit(self, record):

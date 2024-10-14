@@ -5,11 +5,13 @@ from pathlib import Path
 
 from src_python.src.models.server_data_model import ServerData, save_as_markdown_directory, save_as_json
 from src_python.src.models.student_info import ClassRosterModel
+from src_python.src.utilities.sanitize_filename import sanitize_name
 
 logger = logging.getLogger(__name__)
 
 
 def save_server_data_to_disk(output_directory: str, server_data: ServerData):
+
     json_save_path = save_as_json(server_data=server_data, output_directory=output_directory)
 
     logger.info(f"Saved server data to disk: {json_save_path}")
@@ -18,12 +20,13 @@ def save_server_data_to_disk(output_directory: str, server_data: ServerData):
         pickle.dump(server_data, open(pickle_save_path, 'wb'))
         logger.info(f"Saved server data to disk: {pickle_save_path}")
     except Exception as e:
-        logger.error(f"Error saving server data as pickle: {e}")
+        raise ValueError(f"Error saving server data as pickle: {e}")
+
     try:
         markdown_save_path = save_as_markdown_directory(server_data=server_data, output_directory=output_directory)
         logger.info(f"Saved server data to disk: {markdown_save_path}")
     except Exception as e:
-        logger.error(f"Error saving server data as markdown: {e}")
+        raise ValueError(f"Error saving server data as markdown: {e}")
 
 
 def save_student_data_to_disk(output_directory: str,
