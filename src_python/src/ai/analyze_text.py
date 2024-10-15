@@ -9,10 +9,10 @@ from dotenv import load_dotenv
 from openai import AsyncOpenAI
 from pydantic import BaseModel
 
-from src_python.src.ai.construct_prompt import construct_analyzer_prompt
-from src_python.src.configure_logging import configure_logging
+from src.ai.construct_prompt import construct_analyzer_prompt
+from src.configure_logging import configure_logging
 
-from src_python.src.models.extract_text_data import ExtractedTextData
+from src.models.extract_text_data import ExtractedTextData
 configure_logging()
 logger = logging.getLogger(__name__)
 
@@ -105,7 +105,7 @@ async def get_ai_response(analyzer_prompt, llm_model, openai_client):
 
 
 if __name__ == "__main__":
-    from src_python.src.tests.test_extraction import TEST_STRING
+    from src.tests.test_extraction import TEST_STRING
     test_string = TEST_STRING
 
     constructed_pydantic_model_out = analyze_text(test_string, ExtractedTextData)

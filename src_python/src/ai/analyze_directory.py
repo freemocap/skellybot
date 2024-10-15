@@ -4,9 +4,9 @@ from typing import Type
 
 from pydantic import BaseModel
 
-from src_python.src.ai.analyze_text import analyze_text
-from src_python.src.configure_logging import configure_logging
-from src_python.src.models.extract_text_data import ExtractedTextData
+from src.ai.analyze_text import analyze_text
+from src.configure_logging import configure_logging
+from src.models.extract_text_data import ExtractedTextData
 
 configure_logging()
 import logging
@@ -80,7 +80,7 @@ async def analyze_markdown_file(base_prompt_text: str,
 
 
 if __name__ == "__main__":
-    from src_python.src.utilities.load_env_variables import OUTPUT_DIRECTORY
+    from src.utilities.load_env_variables import OUTPUT_DIRECTORY
 
     in_server_name = "HMN_Fall24"
     classbot_prompt_file_name = f"{in_server_name}-prompt.txt"

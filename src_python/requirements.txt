@@ -1,6 +1,0 @@
-discord
-openai
-python-dotenv
-pandas
-pydantic[email]
-tiktoken

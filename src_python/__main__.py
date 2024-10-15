@@ -7,9 +7,9 @@ from dotenv import load_dotenv
 
 from src.configure_logging import configure_logging
 
-from src_python.src.scrape_server.save_to_disk import save_server_data_to_disk
-from src_python.src.scrape_server.scrape_server import process_server
-from src_python.src.utilities.load_env_variables import DISCORD_DEV_BOT_ID, OUTPUT_DIRECTORY, TARGET_SERVER_ID, \
+from src.scrape_server.save_to_disk import save_server_data_to_disk
+from src.scrape_server.scrape_server import process_server
+from src.utilities.load_env_variables import DISCORD_DEV_BOT_ID, OUTPUT_DIRECTORY, TARGET_SERVER_ID, \
     STUDENT_IDENTIFIERS_CSV_PATH, DISCORD_DEV_BOT_TOKEN
 
 configure_logging()

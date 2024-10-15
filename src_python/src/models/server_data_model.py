@@ -5,8 +5,8 @@ from typing import Dict, List
 
 from pydantic import BaseModel
 
-from src_python.src.models.content_message_models import ContentMessage
-from src_python.src.utilities.sanitize_filename import sanitize_name
+from src.models.content_message_models import ContentMessage
+from src.utilities.sanitize_filename import sanitize_name
 
 
 class ChatThread(BaseModel):

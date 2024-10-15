@@ -3,8 +3,8 @@ import logging
 
 import discord
 
-from src_python.src.models.content_message_models import ContentMessage
-from src_python.src.models.server_data_model import ChannelData, CategoryData, ServerData, ChatThread
+from src.models.content_message_models import ContentMessage
+from src.models.server_data_model import ChannelData, CategoryData, ServerData, ChatThread
 
 logger = logging.getLogger(__name__)
 

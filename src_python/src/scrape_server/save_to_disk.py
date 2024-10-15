@@ -3,9 +3,9 @@ import pickle
 from datetime import datetime
 from pathlib import Path
 
-from src_python.src.models.server_data_model import ServerData, save_as_markdown_directory, save_as_json
-from src_python.src.models.student_info import ClassRosterModel
-from src_python.src.utilities.sanitize_filename import sanitize_name
+from src.models.server_data_model import ServerData, save_as_markdown_directory, save_as_json
+from src.models.student_info import ClassRosterModel
+from src.utilities.sanitize_filename import sanitize_name
 
 logger = logging.getLogger(__name__)
 

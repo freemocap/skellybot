@@ -1,7 +1,7 @@
 import logging
 from typing import List
 
-from src_python.src.models.content_message_models import ContentMessage
+from src.models.content_message_models import ContentMessage
 
 logger = logging.getLogger(__name__)
 

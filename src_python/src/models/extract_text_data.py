@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 
-from src_python.src.utilities.sanitize_filename import sanitize_name
+from src.utilities.sanitize_filename import sanitize_name
 
 
 class ExtractedTextData(BaseModel):
@@ -52,7 +52,7 @@ class ExtractedTextData(BaseModel):
 
 
 if __name__ == "__main__":
-    from src_python.src.ai.construct_prompt import construct_analyzer_prompt
+    from src.ai.construct_prompt import construct_analyzer_prompt
 
     data = ExtractedTextData(
         detailed_summary="This is a detailed summary of the text",
