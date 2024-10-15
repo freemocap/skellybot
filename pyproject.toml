@@ -1,0 +1,16 @@
+[project]
+name = "skellybot"
+version = "0.1.0"
+description = "Python code for Skellybot"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "discord>=2.3.2",
+    "openai>=1.51.2",
+    "pandas>=2.2.3",
+    "pydantic[email]>=2.9.2",
+    "python-dotenv>=1.0.1",
+    "tiktoken>=0.8.0",
+]
+
+scripts = ["skellybot = skellybot.__main__:main"]
