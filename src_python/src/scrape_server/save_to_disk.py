@@ -15,8 +15,8 @@ def save_as_json(server_data:ServerData, output_directory: str) -> str:
     directory_path.mkdir(parents=True, exist_ok=True)
     server_data_json = server_data.json()
     date_string = datetime.now().isoformat()
-    sanitized_server_name = sanitize_name(server_data.name)
-    base_filename = f"{sanitized_server_name}_{date_string}"
+
+    base_filename = sanitize_name(f"{server_data.name}_{date_string}")
     full_json_path = f"{output_directory}/{base_filename}.json"
     # encoding='utf-8' is necessary to avoid UnicodeEncodeError
     with open(full_json_path, 'w', encoding='utf-8') as f:
