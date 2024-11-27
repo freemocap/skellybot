@@ -37,7 +37,6 @@ export class DiscordImageCommand {
     name: 'image',
     description:
       'Generate an image based on the text in this context (thread, channel, etc)',
-    guilds: ['1198365355698028595'],
   })
   public async handleImageCommand(
     @Context() [interaction]: SlashCommandContext,
