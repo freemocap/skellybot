@@ -20,13 +20,13 @@ export class ImagePromptDto {
   })
   prompt: string = 'Generate a new image';
 
-  @BooleanOption({
-    name: 'use_context',
-    description:
-      'Whether to include text from this Thread/Channel in the image generation prompt',
-    required: false,
-  })
-  useContext: boolean;
+  // @BooleanOption({
+  //   name: 'use_context',
+  //   description:
+  //     'Whether to include text from this Thread/Channel in the image generation prompt',
+  //   required: false,
+  // })
+  // useContext: boolean;
 }
 
 @Injectable()
