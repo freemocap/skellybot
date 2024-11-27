@@ -11,6 +11,7 @@ import { OpenaiImageService } from '../../../core/ai/openai/openai-image.service
 import OpenAI from 'openai';
 import { AttachmentBuilder } from 'discord.js';
 import ImagesResponse = OpenAI.ImagesResponse;
+import { OpenaiTextGenerationService } from '../../../core/ai/openai/openai-text.service';
 
 export class ImagePromptDto {
   @StringOption({
@@ -20,18 +21,21 @@ export class ImagePromptDto {
   })
   prompt: string = 'Generate a new image';
 
-  // @BooleanOption({
-  //   name: 'use_context',
-  //   description:
-  //     'Whether to include text from this Thread/Channel in the image generation prompt',
-  //   required: false,
-  // })
-  // useContext: boolean;
+  @BooleanOption({
+    name: 'use_context',
+    description:
+      'Whether to include text from this Thread/Channel in the image generation prompt',
+    required: false,
+  })
+  useContext: boolean;
 }
 
 @Injectable()
 export class DiscordImageCommand {
-  constructor(private readonly _openaiImageService: OpenaiImageService) {}
+  constructor(
+    private readonly _openaiImageService: OpenaiImageService,
+    private readonly _openaiTextService: OpenaiTextGenerationService,
+  ) {}
 
   @SlashCommand({
     name: 'image',
@@ -42,22 +46,29 @@ export class DiscordImageCommand {
     @Context() [interaction]: SlashCommandContext,
     @Options({ required: false }) imagePromptDto?: ImagePromptDto,
   ) {
+    await interaction.deferReply();
     let promptText = '';
     if (!imagePromptDto || !imagePromptDto.prompt) {
       promptText = 'Generate a new image';
     } else {
       promptText = imagePromptDto.prompt;
     }
-    if (imagePromptDto.useContext) {
+    if (imagePromptDto && imagePromptDto.useContext) {
       const context = interaction.channel;
       const messages = await context.messages.fetch();
       const contextText = messages
         .map((message) => message.content)
         .join(' \n ');
-      promptText = `${promptText} \n\n ${contextText}`;
+
+      promptText = await this._openaiTextService.generateText({
+        prompt: `Condense the provided INPUT TEXT into a 200 word (or less) prompt that will be used to generate an image. Do not generate any text other than the image generation prompt.\n\n--------BEGIN INPUT TEXT\n\n ${contextText} \n\n ---------------END OF INPUT TEXT\n\nREMEMBER! Condense the provided INPUT TEXT into a 200 word (or less) prompt that will be used to generate an image. Do not generate any text other than the image generation prompt.`,
+        model: 'gpt-4o',
+        temperature: 0.5,
+        max_tokens: 300,
+      });
     }
-    await interaction.reply({
-      content: `Generating image from prompt:\n > ${promptText} \n Generating image...`,
+    await interaction.editReply({
+      content: `Generating image from prompt:\n > ${promptText} \n Please wait...`,
     });
     //  generate image
     const response: ImagesResponse =

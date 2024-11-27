@@ -4,6 +4,7 @@ import { GcpModule } from '../../gcp/gcp.module';
 import { OpenaiChatService } from './openai-chat.service';
 import { OpenaiAudioService } from './openai-audio.service';
 import { OpenaiImageService } from './openai-image.service';
+import { OpenaiTextGenerationService } from './openai-text.service';
 
 @Module({
   imports: [GcpModule],
@@ -12,6 +13,7 @@ import { OpenaiImageService } from './openai-image.service';
     OpenaiChatService,
     OpenaiAudioService,
     OpenaiImageService,
+    OpenaiTextGenerationService,
     Logger,
   ],
   exports: [
@@ -19,6 +21,7 @@ import { OpenaiImageService } from './openai-image.service';
     OpenaiChatService,
     OpenaiAudioService,
     OpenaiImageService,
+    OpenaiTextGenerationService,
   ],
 })
 export class OpenaiModule {}
