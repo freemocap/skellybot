@@ -60,15 +60,20 @@ export class DiscordImageCommand {
         .map((message) => message.content)
         .join(' \n ');
 
+      let promptInstructions =
+        'Condense the provided INPUT TEXT into a 200 word (or less) prompt that will be used to generate an image. Do not generate any text other than the image generation prompt';
+      if (imagePromptDto && imagePromptDto.prompt) {
+        promptInstructions = imagePromptDto.prompt;
+      }
       promptText = await this._openaiTextService.generateText({
-        prompt: `Condense the provided INPUT TEXT into a 200 word (or less) prompt that will be used to generate an image. Do not generate any text other than the image generation prompt.\n\n--------BEGIN INPUT TEXT\n\n ${contextText} \n\n ---------------END OF INPUT TEXT\n\nREMEMBER! Condense the provided INPUT TEXT into a 200 word (or less) prompt that will be used to generate an image. Do not generate any text other than the image generation prompt.`,
+        prompt: `${promptInstructions}.\n\n--------BEGIN INPUT TEXT\n\n ${contextText} \n\n ---------------END OF INPUT TEXT\n\nREMEMBER! Your task is toyeah,  ${promptInstructions}.`,
         model: 'gpt-4o',
         temperature: 0.5,
         max_tokens: 300,
       });
     }
     await interaction.editReply({
-      content: `Generating image from prompt:\n > ${promptText} \n Please wait...`,
+      content: `Generating image from prompt:\n > ${promptText} \n\n Please wait...`,
     });
     //  generate image
     const response: ImagesResponse =
