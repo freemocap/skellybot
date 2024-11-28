@@ -12,8 +12,8 @@ import {
 import { DiscordMessageService } from '../services/discord-message.service';
 import { DiscordOnMessageService } from '../services/discord-on-message.service';
 import { DiscordThreadService } from '../services/discord-thread.service';
-import { Message } from 'discord.js';
-
+import { ActionRowBuilder, ButtonBuilder, Message } from 'discord.js';
+import { ButtonStyle } from 'discord-api-types/v10';
 export class StartingTextDto {
   @StringOption({
     name: 'text',
@@ -103,6 +103,17 @@ export class DiscordChatCommand {
       );
 
       const firstThreadMessage = firstThreadMessages[0];
+      await firstThreadMessage.edit({
+        content: firstThreadMessage.content,
+        components: [
+          new ActionRowBuilder<ButtonBuilder>().addComponents(
+            new ButtonBuilder()
+              .setCustomId('BUTTON')
+              .setLabel('LABEL')
+              .setStyle(ButtonStyle.Primary),
+          ),
+        ],
+      });
 
       await this._onMessageService.addActiveChat(firstThreadMessage);
       await this._messageService.respondToMessage(

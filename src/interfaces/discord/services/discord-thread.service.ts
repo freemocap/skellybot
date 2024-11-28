@@ -12,17 +12,7 @@ export class DiscordThreadService {
       if (threadName.length > maxThreadNameLength) {
         threadName = threadName.substring(0, maxThreadNameLength);
       }
-      const threadTitleEmbed = new EmbedBuilder()
-        .setColor(0x0099ff)
-        .setAuthor({
-          name: `Thread created by ${interaction.user.username}`,
-          iconURL: interaction.user.avatarURL(),
-        })
-        .setTimestamp()
-        .addFields({
-          name: '`skellybot` source code:',
-          value: 'https://github.com/freemocap/skellybot',
-        });
+      const anchorMessageEmbed = this._createAnchorMessageEmbed(interaction);
 
       let threadAnchorMessage: Message;
 
@@ -31,14 +21,14 @@ export class DiscordThreadService {
           content: `Thread Created for user: ${userMention(
             interaction.user.id,
           )}`,
-          embeds: [threadTitleEmbed],
+          embeds: [anchorMessageEmbed],
         });
       } else {
         threadAnchorMessage = await interaction.channel.send({
           content: `Thread Created for user: ${userMention(
             interaction.user.id,
           )}`,
-          embeds: [threadTitleEmbed],
+          embeds: [anchorMessageEmbed],
         });
       }
 
@@ -57,5 +47,19 @@ export class DiscordThreadService {
         `Something went wrong during '_createNewThread()':  Caught error: '${error}'`,
       );
     }
+  }
+
+  private _createAnchorMessageEmbed(interaction) {
+    return new EmbedBuilder()
+      .setColor(0x0099ff)
+      .setAuthor({
+        name: `Thread created by ${interaction.user.username}`,
+        iconURL: interaction.user.avatarURL(),
+      })
+      .setTimestamp()
+      .addFields({
+        name: '`skellybot` source code:',
+        value: 'https://github.com/freemocap/skellybot',
+      });
   }
 }
