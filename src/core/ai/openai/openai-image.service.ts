@@ -1,6 +1,6 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { OpenAI } from 'openai';
-import { ImageGenerationDto } from './dto/image-generation.dto'; // Ensure this path is correct
+import { ImageGenerationDto } from './dto/image-generation.dto';
 import { OpenaiSecretsService } from './openai-secrets.service';
 import { ImagesResponse } from 'openai/resources';
 
@@ -23,7 +23,9 @@ export class OpenaiImageService implements OnModuleInit {
     }
   }
 
-  public async generateImage(dto: ImageGenerationDto) {
+  public async generateImage(
+    dto: ImageGenerationDto,
+  ): Promise<ImagesResponse | Error> {
     try {
       const {
         prompt,
@@ -36,7 +38,7 @@ export class OpenaiImageService implements OnModuleInit {
         style = 'vivid',
       } = dto;
 
-      const generationResponse: ImagesResponse =
+      const generationResponse: ImagesResponse | Error =
         await this.openai.images.generate({
           prompt,
           model,
@@ -52,7 +54,7 @@ export class OpenaiImageService implements OnModuleInit {
       return generationResponse;
     } catch (error) {
       this._logger.error('Failed to generate image.', error);
-      throw error;
+      return error;
     }
   }
 }
