@@ -3,6 +3,8 @@ import { Module } from '@nestjs/common';
 import { MainController } from './main.controller';
 import { ConfigModule } from '@nestjs/config';
 import { DiscordModule } from '../interfaces/discord/discord.module';
+import { DatabaseConnectionService } from '../core/database/database-connection.service';
+import { DatabaseModule } from '../core/database/database.module';
 
 @Module({
   imports: [
@@ -16,10 +18,11 @@ import { DiscordModule } from '../interfaces/discord/discord.module';
         '.env.openai',
       ],
     }),
+    DatabaseModule,
     // SlackModule,
     DiscordModule,
   ],
   controllers: [MainController],
-  providers: [],
+  providers: [DatabaseConnectionService],
 })
 export class MainModule {}
