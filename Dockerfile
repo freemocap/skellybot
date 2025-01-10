@@ -43,6 +43,8 @@ FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim AS python-build
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 WORKDIR /app
+# Install git
+RUN apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*
 
 # Clone the Python repository
 RUN git clone https://github.com/freemocap/skellybot-analysis
