@@ -131,10 +131,10 @@ export class OpenaiChatService implements OnModuleInit {
   private _defaultChatConfig() {
     return {
       messages: [],
-      model: 'gpt-4-vision-preview',
+      model: 'gpt-4o',
       temperature: 0.7,
       stream: true,
-      max_tokens: 4096,
+      max_tokens: 40096,
     } as OpenAiChatConfig;
   }
 
