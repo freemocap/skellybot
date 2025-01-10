@@ -62,6 +62,9 @@ FROM node:20.10.0-slim
 # Recreate the appuser in the final stage
 RUN useradd -m appuser
 
+# Ensure dumb-init is installed
+RUN apt-get update && apt-get install -y dumb-init && rm -rf /var/lib/apt/lists/*
+
 # Copy Node.js build artifacts
 COPY --from=node-build /workspace /workspace
 
