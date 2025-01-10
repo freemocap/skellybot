@@ -1,7 +1,8 @@
 # syntax=docker/dockerfile:1.2
 
 # Good base image to start from for most development
-FROM node:20.10.0-slim
+# Stage 1: Node.js environment setup for NestJS
+FROM node:20.10.0-slim AS node-build
 
 # Please remember, the base image we use /must be as small as possible/ for the best
 # production deployments. This is not optional.
@@ -37,6 +38,38 @@ COPY . .
 
 RUN npm run build
 
-ENV NODE_ENV=production
+# Stage 2: Python environment setup
+FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim AS python-build
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
-ENTRYPOINT ["/usr/bin/dumb-init", "--", "npm", "run", "start:prod"]
+WORKDIR /app
+
+# Clone the Python repository
+RUN git clone https://github.com/freemocap/skellybot-analysis
+
+# Sync the Python environment with the frozen lockfile
+RUN uv sync --frozen
+ENV PYTHONPATH="${PYTHONPATH}:/app"
+
+# Stage 3: Final image
+FROM node:20.10.0-slim
+
+# Copy Node.js build artifacts
+COPY --from=node-build /workspace /workspace
+
+# Copy the Python environment
+COPY --from=python-build /app /app
+COPY --from=python-build /uv /uvx /bin/
+
+WORKDIR /workspace
+
+USER appuser
+
+ENV NODE_ENV=production
+ENV PYTHONPATH="${PYTHONPATH}:/app"
+
+# Define entrypoint
+ENTRYPOINT ["/usr/bin/dumb-init", "--"]
+
+# Run both Node.js and Python commands
+CMD ["sh", "-c", "npm run start:prod & uv run skellybot_analysis/__main__.py"]
