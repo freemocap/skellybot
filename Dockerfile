@@ -64,7 +64,6 @@ COPY --from=node-build /workspace /workspace
 
 # Copy the Python environment
 COPY --from=python-build /app /app
-COPY --from=python-build /uv  /bin/
 
 WORKDIR /workspace
 
