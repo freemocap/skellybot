@@ -90,6 +90,7 @@ export class DiscordOnMessageService {
     // Otherwise, don't respond
     return false;
   }
+
   public async handleMessageCreation(message: Message<boolean>) {
     if (!this._shouldRespondToMessage(message)) {
       return;

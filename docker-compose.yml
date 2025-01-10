@@ -5,10 +5,17 @@ services:
   app:
     image: us-east1-docker.pkg.dev/mocap-test-project/jonbot/nestbot
     build:
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.nest
       context: .
       args:
         BUILDKIT_INLINE_CACHE: 1
+
+  fastapi:
+    build:
+      context: .
+      dockerfile: Dockerfile.fastapi
+    ports:
+      - '8100:8100'
 #
 #  # For persistence
 #  # Even if you don't think you need it, chances are you do.
