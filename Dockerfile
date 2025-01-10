@@ -59,6 +59,9 @@ ENV PYTHONPATH="${PYTHONPATH}:/app"
 # Stage 3: Final image
 FROM node:20.10.0-slim
 
+# Recreate the appuser in the final stage
+RUN useradd -m appuser
+
 # Copy Node.js build artifacts
 COPY --from=node-build /workspace /workspace
 
