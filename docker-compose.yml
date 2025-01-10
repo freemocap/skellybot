@@ -5,7 +5,7 @@ services:
   app:
     image: us-east1-docker.pkg.dev/mocap-test-project/jonbot/nestbot
     build:
-      dockerfile: Dockerfile.nest
+      dockerfile: Dockerfile
       context: .
       args:
         BUILDKIT_INLINE_CACHE: 1
