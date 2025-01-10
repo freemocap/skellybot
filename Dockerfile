@@ -49,6 +49,9 @@ RUN apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*
 # Clone the Python repository
 RUN git clone https://github.com/freemocap/skellybot-analysis
 
+# Change to the directory of the cloned repository
+WORKDIR /app/skellybot-analysis
+
 # Sync the Python environment with the frozen lockfile
 RUN uv sync --frozen
 ENV PYTHONPATH="${PYTHONPATH}:/app"
