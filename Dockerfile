@@ -1,8 +1,7 @@
 # syntax=docker/dockerfile:1.2
 
 # Good base image to start from for most development
-# Stage 1: Node.js environment setup for NestJS
-FROM node:20.10.0-slim AS node-build
+FROM node:20.10.0-slim
 
 # Please remember, the base image we use /must be as small as possible/ for the best
 # production deployments. This is not optional.
@@ -38,47 +37,6 @@ COPY . .
 
 RUN npm run build
 
-# Stage 2: Python environment setup
-FROM python:3.12-slim AS python-build
-
-WORKDIR /app
-
-# Install git
-RUN apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*
-
-# Clone the Python repository
-RUN git clone https://github.com/freemocap/skellybot-analysis
-
-# Change to the directory of the cloned repository
-WORKDIR /app/skellybot-analysis
-
-# Install dependencies
-RUN pip install .
-
-# Stage 3: Final image
-FROM node:20.10.0-slim
-
-# Recreate the appuser in the final stage
-RUN useradd -m appuser
-
-# Ensure dumb-init is installed
-RUN apt-get update && apt-get install -y dumb-init && rm -rf /var/lib/apt/lists/*
-
-# Copy Node.js build artifacts
-COPY --from=node-build /workspace /workspace
-
-# Copy the Python environment
-COPY --from=python-build /app /app
-
-WORKDIR /workspace
-
-USER appuser
-
 ENV NODE_ENV=production
-ENV PYTHONPATH="${PYTHONPATH}:/app/skellybot-analysis"
 
-# Define entrypoint
-ENTRYPOINT ["/usr/bin/dumb-init", "--"]
-
-# Run both Node.js and Python commands
-CMD ["sh", "-c", "npm run start:prod & python /app/skellybot-analysis/skellybot_analysis/__main__.py"]
+ENTRYPOINT ["/usr/bin/dumb-init", "--", "npm", "run", "start:prod"]
