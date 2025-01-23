@@ -269,3 +269,4 @@ pyapp-latest/*
 .crates*
 *.dist
 *.build
+*.pyc
