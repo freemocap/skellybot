@@ -73,7 +73,7 @@ export class OpenaiChatService implements OnModuleInit {
     const config = this._getConfigOrThrow(chatId);
     const messageContent: any[] = [{ type: 'text', text: humanMessage }];
     for (const imageURL of imageURLs) {
-      messageContent.push({ type: 'image_url', image_url: imageURL });
+      messageContent.push({ type: 'image_url', image_url: { url: imageURL } });
     }
 
     config.messages.push({ role: 'user', content: messageContent });
@@ -93,7 +93,8 @@ export class OpenaiChatService implements OnModuleInit {
     let fullAiResponseText = '';
     let chunkToYield = '';
     const yieldAtLength = 100;
-    // @ts-ignore
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-expect-error
     for await (const newChunk of chatStream) {
       allStreamedChunks.push(newChunk);
       fullAiResponseText += newChunk.choices[0].delta.content || '';
@@ -131,7 +132,7 @@ export class OpenaiChatService implements OnModuleInit {
   private _defaultChatConfig() {
     return {
       messages: [],
-      model: 'gpt-4-vision-preview',
+      model: 'gpt-4o',
       temperature: 0.7,
       stream: true,
       max_tokens: 4096,

@@ -76,7 +76,10 @@ export class DiscordMessageService {
         respondToChannelOrMessage,
       );
     } catch (error) {
-      this.logger.error(`Error in respondToMessage: ${error}`);
+      this.logger.error(
+        `Error in respondToMessage: ${error.message}`,
+        error.stack,
+      );
     }
   }
 
@@ -215,7 +218,10 @@ export class DiscordMessageService {
         isFirstExchange,
       );
     } catch (error) {
-      this.logger.error(`${error}`);
+      this.logger.error(
+        `Error in _handleResponseStream: ${error.message}`,
+        error.stack,
+      );
     }
   }
 
