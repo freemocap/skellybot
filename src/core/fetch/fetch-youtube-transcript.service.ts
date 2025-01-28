@@ -52,12 +52,12 @@ class YoutubeTranscriptService {
 
   private extractCaptions(videoPageBody: string) {
     this.logger.log('Extracting captions from video page body');
-    const splittedHTML = videoPageBody.split('"captions":');
-    if (splittedHTML.length <= 1) {
+    const splitHTML = videoPageBody.split('"captions":');
+    if (splitHTML.length <= 1) {
       throw new Error('Transcript not available or video is unavailable.');
     }
     const captions = JSON.parse(
-      splittedHTML[1].split(',"videoDetails')[0].replace('\n', ''),
+      splitHTML[1].split(',"videoDetails')[0].replace('\n', ''),
     ).playerCaptionsTracklistRenderer;
     if (!captions || !captions.captionTracks) {
       throw new Error('No transcripts available for this video.');
