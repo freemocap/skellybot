@@ -133,15 +133,3 @@ class YoutubeTranscriptError extends Error {
 }
 
 export { YoutubeTranscriptService, YoutubeTranscriptError };
-
-async function main() {
-  const service = new YoutubeTranscriptService();
-  try {
-    const result = await service.fetchTranscript('59Etzj5gvsE');
-    console.log(result);
-  } catch (error) {
-    console.error(error.message);
-  }
-}
-
-main();
