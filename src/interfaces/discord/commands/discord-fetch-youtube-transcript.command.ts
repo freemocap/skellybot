@@ -42,7 +42,7 @@ export class DiscordFetchYoutubeTranscriptCommand {
       const transcriptJSON = JSON.stringify(transcript, null, 2);
       const buffer = Buffer.from(transcriptJSON, 'utf-8');
       const transcriptAttachment = new AttachmentBuilder(buffer, {
-        name: `${yt_id}_yt_transcript.json`,
+        name: `yt_transcript_${yt_id}.json`,
       });
 
       await interaction.editReply({
