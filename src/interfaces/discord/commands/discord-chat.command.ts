@@ -12,8 +12,11 @@ import {
 import { DiscordMessageService } from '../services/discord-message.service';
 import { DiscordOnMessageService } from '../services/discord-on-message.service';
 import { DiscordThreadService } from '../services/discord-thread.service';
+import { OpenaiChatService } from '../../../core/ai/openai/openai-chat.service';
 import { ActionRowBuilder, ButtonBuilder, Message } from 'discord.js';
 import { ButtonStyle } from 'discord-api-types/v10';
+
+const AVAILABLE_MODELS = OpenaiChatService.prototype.getAvailableLLMs();
 
 export class StartingTextDto {
   @StringOption({
@@ -22,17 +25,14 @@ export class StartingTextDto {
     required: false,
   })
   text: string;
+
   @StringOption({
     name: 'llm',
     description: 'Select a language model',
     required: false,
-    choices: [
-      { name: 'gpt-4o', value: 'gpt-4o' },
-      { name: 'gpt-4', value: 'gpt-4' },
-      { name: 'o1-mini', value: 'gpt-4-vision' },
-    ],
+    choices: AVAILABLE_MODELS.map((model) => ({ name: model, value: model })),
   })
-  llm: string;
+  llm: string = 'gpt-4o';
 }
 
 @Injectable()

@@ -37,7 +37,7 @@ export class OpenaiChatService implements OnModuleInit {
       throw error;
     }
   }
-  public getAvailableModels(): string[] {
+  public getAvailableLLMs(): string[] {
     return [...AVAILABLE_MODELS];
   }
   private _storeConfig(chatbotId: string, config: OpenAiChatConfig) {
