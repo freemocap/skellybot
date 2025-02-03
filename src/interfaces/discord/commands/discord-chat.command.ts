@@ -14,6 +14,7 @@ import { DiscordOnMessageService } from '../services/discord-on-message.service'
 import { DiscordThreadService } from '../services/discord-thread.service';
 import { ActionRowBuilder, ButtonBuilder, Message } from 'discord.js';
 import { ButtonStyle } from 'discord-api-types/v10';
+
 export class StartingTextDto {
   @StringOption({
     name: 'text',
@@ -21,6 +22,17 @@ export class StartingTextDto {
     required: false,
   })
   text: string;
+  @StringOption({
+    name: 'llm',
+    description: 'Select a language model',
+    required: false,
+    choices: [
+      { name: 'gpt-4o', value: 'gpt-4o' },
+      { name: 'gpt-4', value: 'gpt-4' },
+      { name: 'o1-mini', value: 'gpt-4-vision' },
+    ],
+  })
+  llm: string;
 }
 
 @Injectable()

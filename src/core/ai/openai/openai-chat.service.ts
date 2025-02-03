@@ -3,17 +3,19 @@ import { OpenaiSecretsService } from './openai-secrets.service';
 import { OpenAI } from 'openai';
 import { AiChatDocument } from '../../database/collections/ai-chats/ai-chat.schema';
 
+const AVAILABLE_MODELS = [
+  'gpt-4o',
+  'gpt-4-1106-preview',
+  'gpt-4',
+  'gpt-4-vision-preview',
+  'gpt-4-32k',
+  'gpt-3.5-turbo',
+  'gpt-3.5-turbo-16k',
+] as const;
+
 export interface OpenAiChatConfig {
-  //https://platform.openai.com/docs/api-reference/chat
   messages: any[];
-  model:
-    | 'gpt-4o'
-    | 'gpt-4-1106-preview'
-    | 'gpt-4'
-    | 'gpt-4-vision-preview'
-    | 'gpt-4-32k'
-    | 'gpt-3.5-turbo'
-    | 'gpt-3.5-turbo-16k';
+  model: (typeof AVAILABLE_MODELS)[number];
   temperature: number;
   stream: boolean;
   max_tokens: number;
@@ -36,6 +38,9 @@ export class OpenaiChatService implements OnModuleInit {
       this.logger.error('Failed to initialize OpenAI service.', error);
       throw error;
     }
+  }
+  public getAvailableModels(): string[] {
+    return [...AVAILABLE_MODELS];
   }
   private _storeConfig(chatbotId: string, config: OpenAiChatConfig) {
     this._configs.set(chatbotId, config);
