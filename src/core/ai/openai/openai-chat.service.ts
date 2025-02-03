@@ -5,12 +5,10 @@ import { AiChatDocument } from '../../database/collections/ai-chats/ai-chat.sche
 
 const AVAILABLE_MODELS = [
   'gpt-4o',
-  'gpt-4-1106-preview',
+  'gpt-4o-mini',
   'gpt-4',
-  'gpt-4-vision-preview',
-  'gpt-4-32k',
-  'gpt-3.5-turbo',
-  'gpt-3.5-turbo-16k',
+  'o1-mini',
+  'o1',
 ] as const;
 
 export interface OpenAiChatConfig {
