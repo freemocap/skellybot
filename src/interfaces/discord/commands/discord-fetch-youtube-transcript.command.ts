@@ -46,11 +46,7 @@ export class DiscordFetchYoutubeTranscriptCommand {
       });
 
       await interaction.editReply({
-        content: `Transcript object retrieved for youtube video id ${yt_id}:\n\`\`\`json\nmetadata:\n${JSON.stringify(
-          transcript.metadata,
-          null,
-          2,
-        )}\`\`\``,
+        content: `Transcript object retrieved for ${transcript.metadata.url}.`,
         files: [transcriptAttachment],
       });
     } catch (error) {

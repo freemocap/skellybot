@@ -103,6 +103,7 @@ class YoutubeTranscriptService {
       commentCount: this.extractField(videoPageBody, 'commentCount'),
       duration: this.extractField(videoPageBody, 'lengthSeconds'),
       thumbnailUrl: this.extractField(videoPageBody, 'thumbnailUrl'),
+      url: `https://www.youtube.com/watch?v=${videoId}`,
       lang: languageCode,
     };
   }
