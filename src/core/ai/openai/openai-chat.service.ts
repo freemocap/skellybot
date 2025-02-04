@@ -138,7 +138,7 @@ export class OpenaiChatService implements OnModuleInit {
       model: 'gpt-4o',
       temperature: 0.7,
       stream: true,
-      max_tokens: 40096,
+      max_tokens: 16384,
     } as OpenAiChatConfig;
   }
 
