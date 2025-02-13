@@ -46,8 +46,8 @@ export class DiscordMessageService {
     await discordMessage.channel.sendTyping();
     this.logger.log(`Responding to message id ${discordMessage.id}`);
     try {
-      let humanInputText = '';
-      let attachmentText = '';
+      let humanInputText: string;
+      let attachmentText: string;
       let imageURLs: string[] = [];
       if (!textToRespondTo) {
         ({ humanInputText, attachmentText, imageURLs } =
