@@ -37,8 +37,8 @@ lerna-debug.log*
 .env.slack
 .env.analysis
 .env.discord
-/.env.openai
 .env.deepseek
+.env.openai
 
 /analysis/env.analysis
 /env.python
