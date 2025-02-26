@@ -38,6 +38,7 @@ lerna-debug.log*
 .env.analysis
 .env.discord
 /.env.openai
+.env.deepseek
 
 /analysis/env.analysis
 /env.python
