@@ -50,7 +50,7 @@ export class DiscordOnMessageService {
         model: 'gpt-4o',
         temperature: 0.7,
         stream: true,
-        max_tokens: 4096,
+        max_tokens: 16384,
       } as OpenAiChatConfig;
 
       this._openaiChatService.createChat(aiChatId, contextPrompt, chatConfig);
@@ -120,7 +120,7 @@ export class DiscordOnMessageService {
         contextInstructions:
           await this._contextPromptService.getContextPromptFromMessage(message),
         couplets: [],
-        modelName: 'gpt-4-vision-preview',
+        modelName: 'gpt-4o',
       },
       populateCouplets,
     );
