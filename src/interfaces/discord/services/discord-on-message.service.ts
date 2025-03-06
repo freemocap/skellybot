@@ -25,29 +25,33 @@ export class DiscordOnMessageService {
     private readonly _usersService: UsersService,
     private readonly _openaiChatService: OpenaiChatService,
   ) {}
-  public async addActiveChat(message: Message) {
+  public async addActiveChat(message: Message, llmModel?: string) {
     try {
-      this.logger.debug(
-        `Adding threadId ${message.channel.id} to active chats`,
-      );
       const aiChatId = message.channel.id;
+
+      // Check if chat exists and handle gracefully
       if (this.activeChats.has(aiChatId)) {
-        throw new Error(`Chat ${aiChatId} already exists in active chats!`);
+        this.logger.warn(
+          `Chat ${aiChatId} already exists in active chats - skipping creation`,
+        );
+        // Return without throwing error
+        return;
       }
+
       this.logger.debug(
-        `Adding threadId ${message.channel.id} to active chats`,
+        `Adding threadId ${message.channel.id} to active chats with model: ${
+          llmModel || 'gpt-4o'
+        }`,
       );
 
       const ownerUser = await this._getOwnerUser(message);
-
       const contextRoute = this._contextRouteService.getContextRoute(message);
-
       const contextPrompt =
         await this._contextPromptService.getContextPromptFromMessage(message);
 
       const chatConfig = {
         messages: [],
-        model: 'gpt-4o',
+        model: llmModel || 'gpt-4o',
         temperature: 0.7,
         stream: true,
         max_tokens: 16384,
@@ -60,7 +64,7 @@ export class DiscordOnMessageService {
         contextRoute,
         contextInstructions: contextPrompt,
         couplets: [],
-        modelName: 'gpt-4o',
+        modelName: llmModel || 'gpt-4o',
       });
 
       this.logger.debug(`Adding threadId ${aiChatId} to active listeners`);

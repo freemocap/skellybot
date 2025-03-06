@@ -75,7 +75,10 @@ export class DiscordChatCommand {
         `Starting new chat with initial message:\n\n> ${chatInitCommand.text}`,
       );
 
-      await this._onMessageService.addActiveChat(firstThreadMessage);
+      await this._onMessageService.addActiveChat(
+        firstThreadMessage,
+        chatInitCommand.llm,
+      );
       await this._messageService.respondToMessage(
         firstThreadMessage,
         firstThreadMessage,

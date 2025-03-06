@@ -74,6 +74,16 @@ export class OpenaiChatService implements OnModuleInit {
   ) {
     this.logger.debug(`Getting AI response stream for chatId: ${chatId}`);
     const config = this._getConfigOrThrow(chatId);
+
+    this.logger.log(
+      `Using OpenAI config for chatId ${chatId}: ${JSON.stringify({
+        model: config.model,
+        temperature: config.temperature,
+        max_tokens: config.max_tokens,
+        message_count: config.messages.length,
+      })}`,
+    );
+
     const messageContent: any[] = [{ type: 'text', text: humanMessage }];
     for (const imageURL of imageURLs) {
       messageContent.push({ type: 'image_url', image_url: { url: imageURL } });
@@ -86,6 +96,17 @@ export class OpenaiChatService implements OnModuleInit {
 
   public async getAiResponse(chatId: string, humanMessage: string) {
     const config = this._getConfigOrThrow(chatId);
+
+    // Add this diagnostic logging
+    this.logger.log(
+      `Using OpenAI config for chatId ${chatId}: ${JSON.stringify({
+        model: config.model,
+        temperature: config.temperature,
+        max_tokens: config.max_tokens,
+        message_count: config.messages.length,
+      })}`,
+    );
+
     config.messages.push({ role: 'user', content: humanMessage });
     return await this.openai.chat.completions.create(config);
   }
@@ -124,11 +145,13 @@ export class OpenaiChatService implements OnModuleInit {
   }
 
   async reloadChat(aiChat: AiChatDocument) {
-    this.createChat(
-      aiChat.aiChatId,
-      aiChat.contextInstructions,
-      this._defaultChatConfig(),
-    );
+    const config = this._defaultChatConfig();
+    // Use the stored model from the database if available
+    if (aiChat.modelName) {
+      config.model = aiChat.modelName as any;
+    }
+
+    this.createChat(aiChat.aiChatId, aiChat.contextInstructions, config);
     this._reloadMessageHistoryFromAiChatDocument(aiChat);
   }
 
