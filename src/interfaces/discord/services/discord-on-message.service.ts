@@ -1,3 +1,4 @@
+// src/interfaces/discord/services/discord-on-message.service.ts
 import { Injectable, Logger } from '@nestjs/common';
 import { AiChatsService } from '../../../core/database/collections/ai-chats/ai-chats.service';
 import { Message, ThreadChannel } from 'discord.js';
@@ -6,10 +7,14 @@ import { AiChatDocument } from '../../../core/database/collections/ai-chats/ai-c
 import { DiscordContextRouteService } from './discord-context-route.service';
 import { UsersService } from '../../../core/database/collections/users/users.service';
 import {
-  OpenAiChatConfig,
+  //OpenAiChatConfig,
   OpenaiChatService,
 } from '../../../core/ai/openai/openai-chat.service';
 import { DiscordContextPromptService } from './discord-context-prompt.service';
+import {
+  OpenAIModelType,
+  OpenaiConfigFactory,
+} from '../../../core/ai/openai/openai-config.factory';
 
 @Injectable()
 export class DiscordOnMessageService {
@@ -24,7 +29,9 @@ export class DiscordOnMessageService {
     private readonly _contextPromptService: DiscordContextPromptService,
     private readonly _usersService: UsersService,
     private readonly _openaiChatService: OpenaiChatService,
+    private readonly _configFactory: OpenaiConfigFactory,
   ) {}
+
   public async addActiveChat(message: Message, llmModel?: string) {
     try {
       const aiChatId = message.channel.id;
@@ -34,14 +41,12 @@ export class DiscordOnMessageService {
         this.logger.warn(
           `Chat ${aiChatId} already exists in active chats - skipping creation`,
         );
-        // Return without throwing error
         return;
       }
 
+      const modelName = llmModel || 'gpt-4o';
       this.logger.debug(
-        `Adding threadId ${message.channel.id} to active chats with model: ${
-          llmModel || 'gpt-4o'
-        }`,
+        `Adding threadId ${message.channel.id} to active chats with model: ${modelName}`,
       );
 
       const ownerUser = await this._getOwnerUser(message);
@@ -49,22 +54,24 @@ export class DiscordOnMessageService {
       const contextPrompt =
         await this._contextPromptService.getContextPromptFromMessage(message);
 
-      const chatConfig = {
-        messages: [],
-        model: llmModel || 'gpt-4o',
-        temperature: 0.7,
-        stream: true,
-        max_tokens: 16384,
-      } as OpenAiChatConfig;
+      // Get validated config from factory
+      const baseConfig = this._configFactory.getConfigForModel(
+        modelName as OpenAIModelType,
+      );
+      const validatedConfig = this._configFactory.validateConfig(baseConfig);
 
-      this._openaiChatService.createChat(aiChatId, contextPrompt, chatConfig);
+      this._openaiChatService.createChat(
+        aiChatId,
+        contextPrompt,
+        validatedConfig,
+      );
       const aiChatDocument = await this._aiChatsService.createAiChat({
         aiChatId,
         ownerUser,
         contextRoute,
         contextInstructions: contextPrompt,
         couplets: [],
-        modelName: llmModel || 'gpt-4o',
+        modelName,
       });
 
       this.logger.debug(`Adding threadId ${aiChatId} to active listeners`);
@@ -77,22 +84,15 @@ export class DiscordOnMessageService {
   }
 
   private _shouldRespondToMessage(message: Message<boolean>): boolean {
-    // Ignore messages from bots or messages that start with `~`
     if (message.author.bot || message.content.startsWith('~')) {
       return false;
     }
     const botId = message.client.user.id;
 
-    // Respond to messages in threads the bot created/owns
-    if (
+    return (
       message.channel instanceof ThreadChannel &&
       message.channel.ownerId === botId
-    ) {
-      return true;
-    }
-
-    // Otherwise, don't respond
-    return false;
+    );
   }
 
   public async handleMessageCreation(message: Message<boolean>) {

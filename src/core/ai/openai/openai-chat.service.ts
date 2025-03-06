@@ -1,7 +1,9 @@
+// src/core/ai/openai/openai-chat.service.ts
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { OpenaiSecretsService } from './openai-secrets.service';
 import { OpenAI } from 'openai';
 import { AiChatDocument } from '../../database/collections/ai-chats/ai-chat.schema';
+import { OpenaiConfigFactory, OpenAIModelType } from './openai-config.factory';
 
 const AVAILABLE_MODELS = [
   'gpt-4o',
@@ -25,9 +27,11 @@ export class OpenaiChatService implements OnModuleInit {
   private openai: OpenAI;
   private _configs: Map<string, OpenAiChatConfig> = new Map();
 
-  constructor(private readonly _openAiSecrets: OpenaiSecretsService) {}
+  constructor(
+    private readonly _openAiSecrets: OpenaiSecretsService,
+    private readonly _configFactory: OpenaiConfigFactory,
+  ) {}
 
-  // OnModuleInit lifecycle hook
   async onModuleInit() {
     try {
       const apiKey = await this._openAiSecrets.getOpenaiApiKey();
@@ -37,12 +41,15 @@ export class OpenaiChatService implements OnModuleInit {
       throw error;
     }
   }
+
   public getAvailableLLMs(): string[] {
     return [...AVAILABLE_MODELS];
   }
+
   private _storeConfig(chatbotId: string, config: OpenAiChatConfig) {
     this._configs.set(chatbotId, config);
   }
+
   private _getConfigOrThrow(chatbotId: string) {
     const config = this._configs.get(chatbotId);
     if (!config) {
@@ -54,17 +61,27 @@ export class OpenaiChatService implements OnModuleInit {
   public createChat(
     chatId: string,
     systemPrompt: string,
-    config: OpenAiChatConfig,
+    config: Partial<OpenAiChatConfig> = {},
   ) {
-    config.messages.push({ role: 'system', content: systemPrompt });
+    // Get default config based on model and validate it
+    const model = config.model || 'gpt-4o';
+    const baseConfig = this._configFactory.getConfigForModel(
+      model as OpenAIModelType,
+    );
+    const mergedConfig = { ...baseConfig, ...config };
+    const validatedConfig = this._configFactory.validateConfig(mergedConfig);
+
+    validatedConfig.messages.push({ role: 'system', content: systemPrompt });
+
     this.logger.debug(
       `Creating chat with id: ${chatId} and config: ${JSON.stringify(
-        config,
+        validatedConfig,
         null,
         2,
       )}`,
     );
-    this._storeConfig(chatId, config);
+
+    this._storeConfig(chatId, validatedConfig);
   }
 
   public getAiResponseStream(
@@ -97,7 +114,6 @@ export class OpenaiChatService implements OnModuleInit {
   public async getAiResponse(chatId: string, humanMessage: string) {
     const config = this._getConfigOrThrow(chatId);
 
-    // Add this diagnostic logging
     this.logger.log(
       `Using OpenAI config for chatId ${chatId}: ${JSON.stringify({
         model: config.model,
@@ -110,6 +126,7 @@ export class OpenaiChatService implements OnModuleInit {
     config.messages.push({ role: 'user', content: humanMessage });
     return await this.openai.chat.completions.create(config);
   }
+
   async *streamResponse(chatConfig: OpenAiChatConfig) {
     const chatStream = await this.openai.chat.completions.create(chatConfig);
 
@@ -145,25 +162,16 @@ export class OpenaiChatService implements OnModuleInit {
   }
 
   async reloadChat(aiChat: AiChatDocument) {
-    const config = this._defaultChatConfig();
-    // Use the stored model from the database if available
-    if (aiChat.modelName) {
-      config.model = aiChat.modelName as any;
-    }
+    const model = (aiChat.modelName as OpenAIModelType) || 'gpt-4o';
+    const config = this._configFactory.getConfigForModel(model);
 
     this.createChat(aiChat.aiChatId, aiChat.contextInstructions, config);
     this._reloadMessageHistoryFromAiChatDocument(aiChat);
   }
 
-  private _defaultChatConfig() {
-    return {
-      messages: [],
-      model: 'gpt-4o',
-      temperature: 0.7,
-      stream: true,
-      max_tokens: 16384,
-    } as OpenAiChatConfig;
-  }
+  // private _defaultChatConfig(model: string = 'gpt-4o'): OpenAiChatConfig {
+  //   return this._configFactory.getConfigForModel(model as OpenAIModelType);
+  // }
 
   private _reloadMessageHistoryFromAiChatDocument(aiChat: AiChatDocument) {
     const chatConfig = this._getConfigOrThrow(aiChat.aiChatId);
