@@ -5,20 +5,17 @@ import { OpenAI } from 'openai';
 import { AiChatDocument } from '../../database/collections/ai-chats/ai-chat.schema';
 import { OpenaiConfigFactory, OpenAIModelType } from './openai-config.factory';
 
-const AVAILABLE_MODELS = [
-  'gpt-4o',
-  'gpt-4o-mini',
-  'gpt-4',
-  'o1-mini',
-  'o1',
-] as const;
+const AVAILABLE_MODELS = ['gpt-4o', 'gpt-4o-mini', 'gpt-4', 'o1'] as const;
 
 export interface OpenAiChatConfig {
   messages: any[];
   model: (typeof AVAILABLE_MODELS)[number];
-  temperature: number;
+  temperature?: number;
   stream: boolean;
-  max_tokens: number;
+  max_tokens?: number;
+  max_completion_tokens?: number;
+  reasoning_effort?: 'low' | 'medium' | 'high';
+  top_p?: number;
 }
 
 @Injectable()
@@ -58,6 +55,8 @@ export class OpenaiChatService implements OnModuleInit {
     return config;
   }
 
+  // src/core/ai/openai/openai-config.factory.ts
+
   public createChat(
     chatId: string,
     systemPrompt: string,
@@ -71,6 +70,8 @@ export class OpenaiChatService implements OnModuleInit {
     const mergedConfig = { ...baseConfig, ...config };
     const validatedConfig = this._configFactory.validateConfig(mergedConfig);
 
+    // Add the system message - always as 'system' role in storage
+    // (transformation happens only at API call time)
     validatedConfig.messages.push({ role: 'system', content: systemPrompt });
 
     this.logger.debug(
@@ -87,7 +88,7 @@ export class OpenaiChatService implements OnModuleInit {
   public getAiResponseStream(
     chatId: string,
     humanMessage: string,
-    imageURLs: string[],
+    imageURLs: string[] = [],
   ) {
     this.logger.debug(`Getting AI response stream for chatId: ${chatId}`);
     const config = this._getConfigOrThrow(chatId);
@@ -97,6 +98,7 @@ export class OpenaiChatService implements OnModuleInit {
         model: config.model,
         temperature: config.temperature,
         max_tokens: config.max_tokens,
+        max_completion_tokens: config.max_completion_tokens,
         message_count: config.messages.length,
       })}`,
     );
@@ -108,7 +110,17 @@ export class OpenaiChatService implements OnModuleInit {
 
     config.messages.push({ role: 'user', content: messageContent });
 
-    return this.streamResponse(config);
+    // Clone the config before passing to streamResponse
+    // to avoid modifying the stored configuration
+    const requestConfig = { ...config };
+
+    // Apply model-specific transformations
+    requestConfig.messages = this._configFactory.transformMessagesForModel(
+      config.messages,
+      config.model as OpenAIModelType,
+    );
+
+    return this.streamResponse(requestConfig, chatId);
   }
 
   public async getAiResponse(chatId: string, humanMessage: string) {
@@ -119,15 +131,24 @@ export class OpenaiChatService implements OnModuleInit {
         model: config.model,
         temperature: config.temperature,
         max_tokens: config.max_tokens,
+        max_completion_tokens: config.max_completion_tokens,
         message_count: config.messages.length,
       })}`,
     );
 
     config.messages.push({ role: 'user', content: humanMessage });
-    return await this.openai.chat.completions.create(config);
+
+    // Clone and transform the config for API compatibility
+    const requestConfig = { ...config };
+    requestConfig.messages = this._configFactory.transformMessagesForModel(
+      config.messages,
+      config.model as OpenAIModelType,
+    );
+
+    return await this.openai.chat.completions.create(requestConfig);
   }
 
-  async *streamResponse(chatConfig: OpenAiChatConfig) {
+  async *streamResponse(chatConfig: OpenAiChatConfig, chatId: string) {
     const chatStream = await this.openai.chat.completions.create(chatConfig);
 
     const allStreamedChunks = [];
@@ -144,18 +165,20 @@ export class OpenaiChatService implements OnModuleInit {
         chunkToYield += chunkText;
       }
       if (
-        chunkToYield.length >= yieldAtLength ||
-        newChunk.choices[0].finish_reason === 'stop' ||
-        newChunk.choices[0].finish_reason === 'length'
+        (chunkToYield.length >= yieldAtLength &&
+          chunkToYield.slice(-1).match(/[\s,.!?]/)) ||
+        newChunk.choices[0].finish_reason
       ) {
-        this.logger.debug(`Streaming text chunk: ${chunkToYield}`);
         yield chunkToYield;
         chunkToYield = '';
       }
     }
     this.logger.log('Stream complete');
 
-    chatConfig.messages.push({
+    // Update the stored messages but don't transform here
+    // (we want to store them in their original form)
+    const config = this._getConfigOrThrow(chatId);
+    config.messages.push({
       role: 'assistant',
       content: fullAiResponseText,
     });
@@ -165,17 +188,14 @@ export class OpenaiChatService implements OnModuleInit {
     const model = (aiChat.modelName as OpenAIModelType) || 'gpt-4o';
     const config = this._configFactory.getConfigForModel(model);
 
+    // Create chat will handle role transformations as needed
     this.createChat(aiChat.aiChatId, aiChat.contextInstructions, config);
     this._reloadMessageHistoryFromAiChatDocument(aiChat);
   }
-
-  // private _defaultChatConfig(model: string = 'gpt-4o'): OpenAiChatConfig {
-  //   return this._configFactory.getConfigForModel(model as OpenAIModelType);
-  // }
-
   private _reloadMessageHistoryFromAiChatDocument(aiChat: AiChatDocument) {
     const chatConfig = this._getConfigOrThrow(aiChat.aiChatId);
 
+    // We add messages in their standard form, transformations happen at API call time
     for (const couplet of aiChat.couplets) {
       chatConfig.messages.push({
         role: 'user',
