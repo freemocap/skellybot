@@ -28,7 +28,7 @@ export interface OpenAiChatConfig {
 @Injectable()
 export class OpenaiChatService implements OnModuleInit {
   private readonly logger = new Logger(OpenaiChatService.name);
-  private openai: OpenAI;
+  // private openai: OpenAI;
   private _configs: Map<string, OpenAiChatConfig> = new Map();
 
   constructor(
