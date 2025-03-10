@@ -5,7 +5,14 @@ import { OpenAI } from 'openai';
 import { AiChatDocument } from '../../database/collections/ai-chats/ai-chat.schema';
 import { OpenaiConfigFactory, OpenAIModelType } from './openai-config.factory';
 
-const AVAILABLE_MODELS = ['gpt-4o', 'gpt-4o-mini', 'gpt-4', 'o1'] as const;
+const AVAILABLE_MODELS = [
+  'gpt-4o',
+  'gpt-4o-mini',
+  'gpt-4',
+  'o1',
+  'deepseek-chat',
+  'deepseek-reasoner',
+] as const;
 
 export interface OpenAiChatConfig {
   messages: any[];
@@ -30,9 +37,9 @@ export class OpenaiChatService implements OnModuleInit {
   ) {}
 
   async onModuleInit() {
+    // Just verify we can get an API key, but don't create a client yet
     try {
-      const apiKey = await this._openAiSecrets.getOpenaiApiKey();
-      this.openai = new OpenAI({ apiKey: apiKey });
+      await this._openAiSecrets.getOpenaiApiKey();
     } catch (error) {
       this.logger.error('Failed to initialize OpenAI service.', error);
       throw error;
@@ -41,6 +48,25 @@ export class OpenaiChatService implements OnModuleInit {
 
   public getAvailableLLMs(): string[] {
     return [...AVAILABLE_MODELS];
+  }
+
+  // In OpenaiChatService.ts
+  private async getOpenAIClient(model: OpenAIModelType): Promise<OpenAI> {
+    const modelConfig = this._configFactory.modelConfigs[model];
+    const apiKey = await this._openAiSecrets.getApiKeyForModel(model);
+
+    this.logger.debug(`Creating client for model ${model}`);
+
+    if (modelConfig?.baseUrl) {
+      this.logger.debug(`Using custom baseURL: ${modelConfig.baseUrl}`);
+      return new OpenAI({
+        apiKey,
+        baseURL: modelConfig.baseUrl,
+      });
+    }
+
+    this.logger.debug('Using default OpenAI baseURL');
+    return new OpenAI({ apiKey });
   }
 
   private _storeConfig(chatbotId: string, config: OpenAiChatConfig) {
@@ -145,12 +171,19 @@ export class OpenaiChatService implements OnModuleInit {
       config.model as OpenAIModelType,
     );
 
-    return await this.openai.chat.completions.create(requestConfig);
+    // Get the appropriate client
+    const client = await this.getOpenAIClient(config.model as OpenAIModelType);
+    return await client.chat.completions.create(requestConfig);
   }
 
   async *streamResponse(chatConfig: OpenAiChatConfig, chatId: string) {
-    const chatStream = await this.openai.chat.completions.create(chatConfig);
+    // Get the appropriate client
+    const client = await this.getOpenAIClient(
+      chatConfig.model as OpenAIModelType,
+    );
+    const chatStream = await client.chat.completions.create(chatConfig);
 
+    // Rest of the method remains the same
     const allStreamedChunks = [];
     let fullAiResponseText = '';
     let chunkToYield = '';

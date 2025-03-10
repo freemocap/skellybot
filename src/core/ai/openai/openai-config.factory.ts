@@ -2,16 +2,23 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OpenAiChatConfig } from './openai-chat.service';
 
-export type OpenAIModelType = 'gpt-4o' | 'gpt-4o-mini' | 'gpt-4' | 'o1';
+export type OpenAIModelType =
+  | 'gpt-4o'
+  | 'gpt-4o-mini'
+  | 'gpt-4'
+  | 'o1'
+  | 'deepseek-chat'
+  | 'deepseek-reasoner';
 
 export type ModelFamily = 'standard' | 'reasoning';
 
-interface ModelConfig {
+export interface ModelConfig {
   maxTokens: number;
   defaultTemperature: number;
   supportsStreaming: boolean;
   modelFamily: ModelFamily;
   parameters: Record<string, any>;
+  baseUrl?: string; // Add this field
 }
 
 @Injectable()
@@ -56,6 +63,28 @@ export class OpenaiConfigFactory {
       parameters: {
         max_completion_tokens: 8192,
         reasoning_effort: 'medium',
+      },
+    },
+    'deepseek-chat': {
+      maxTokens: 4096,
+      defaultTemperature: 0.7,
+      supportsStreaming: true,
+      modelFamily: 'standard',
+      baseUrl: 'https://api.deepseek.com', // Add Deepseek base URL
+      parameters: {
+        temperature: 0.7,
+        max_tokens: 4096,
+      },
+    },
+    'deepseek-reasoner': {
+      maxTokens: 4096,
+      defaultTemperature: 0.7,
+      supportsStreaming: true,
+      modelFamily: 'standard',
+      baseUrl: 'https://api.deepseek.com', // Add Deepseek base URL
+      parameters: {
+        temperature: 0.7,
+        max_tokens: 4096,
       },
     },
   };
