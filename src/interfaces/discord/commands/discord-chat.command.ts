@@ -32,12 +32,12 @@ export class InitialChatDto {
   text: string;
 
   @StringOption({
-    name: 'llm',
+    name: 'model',
     description: 'Select a language model',
     required: false,
     choices: AVAILABLE_MODELS.map((model) => ({ name: model, value: model })),
   })
-  llm: string = 'gpt-4o';
+  model: string = 'gpt-4o';
 }
 
 @Injectable()
@@ -65,16 +65,16 @@ export class DiscordChatCommand {
       if (!chatInitCommand.text) {
         chatInitCommand.text = '.';
       }
-      if (!chatInitCommand.llm) {
-        chatInitCommand.llm = 'gpt-4o';
+      if (!chatInitCommand.model) {
+        chatInitCommand.model = 'gpt-4o';
       }
 
       this.logger.log(
-        `Received '/chat' command with starting text:'${chatInitCommand.text}' and model:'${chatInitCommand.llm}' in channel: name= ${interaction.channel.name}, id=${interaction.channel.id} `,
+        `Received '/chat' command with starting text:'${chatInitCommand.text}' and model:'${chatInitCommand.model}' in channel: name= ${interaction.channel.name}, id=${interaction.channel.id} `,
       );
 
       // Validate the model choice is compatible with parameters
-      const validatedModel = chatInitCommand.llm as OpenAIModelType;
+      const validatedModel = chatInitCommand.model as OpenAIModelType;
 
       const thread = await this._threadService.createNewThread(
         chatInitCommand.text,
