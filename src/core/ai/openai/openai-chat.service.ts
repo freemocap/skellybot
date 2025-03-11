@@ -201,7 +201,7 @@ export class OpenaiChatService implements OnModuleInit {
       // Handle first reasoning chunk - add header only once at the start
       if (!isInReasoningMode && hasReasoningContent) {
         isInReasoningMode = true;
-        yield '```thinking\n'; // Start with > prefix
+        yield '```\n<think>\n'; // Start with > prefix
         isNewLine = false; // We just started a line with >
       }
 
@@ -259,7 +259,7 @@ export class OpenaiChatService implements OnModuleInit {
         }
 
         // Add the Answer header with proper spacing
-        yield '\n```\n';
+        yield '\n</think>\n```\n';
       }
 
       // Process regular content
@@ -296,7 +296,7 @@ export class OpenaiChatService implements OnModuleInit {
         .map((line) => `> ${line}`)
         .join('\n');
 
-      finalResponse = `\`\`\`thinking\n${formattedReasoning}\n\`\`\`\n${fullAiResponseText}`;
+      finalResponse = `\`\`\`\n<think>\n${formattedReasoning}\n</think>\n\`\`\`\n${fullAiResponseText}`;
     }
 
     // Update the stored messages
