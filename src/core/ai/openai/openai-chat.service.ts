@@ -177,7 +177,6 @@ export class OpenaiChatService implements OnModuleInit {
   }
 
   async *streamResponse(chatConfig: OpenAiChatConfig, chatId: string) {
-    // Get the appropriate client
     const client = await this.getOpenAIClient(
       chatConfig.model as OpenAIModelType,
     );
@@ -188,78 +187,36 @@ export class OpenaiChatService implements OnModuleInit {
     let chunkToYield = '';
     const yieldAtLength = 100;
 
-    // Simplified state tracking
     let isInReasoningMode = false;
-    let isNewLine = true; // Track if we're at the start of a line
 
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-expect-error
+    // @ts-expect-error - TS doesn't know about async generators yet
     for await (const newChunk of chatStream) {
       const hasReasoningContent = !!newChunk.choices[0].delta.reasoning_content;
       const hasRegularContent = !!newChunk.choices[0].delta.content;
 
-      // Handle first reasoning chunk - add header only once at the start
+      // Start reasoning mode
       if (!isInReasoningMode && hasReasoningContent) {
         isInReasoningMode = true;
-        yield '```\n<think>\n'; // Start with > prefix
-        isNewLine = false; // We just started a line with >
+        yield '```\n<think>\n\n';
       }
 
       // Process reasoning content
       if (hasReasoningContent) {
         const reasoningChunk = newChunk.choices[0].delta.reasoning_content;
         fullReasoningText += reasoningChunk;
-
-        // Handle line breaks in reasoning chunks
-        if (reasoningChunk.includes('\n')) {
-          const lines = reasoningChunk.split('\n');
-
-          for (let i = 0; i < lines.length; i++) {
-            if (i === 0) {
-              // First line continues the current line
-              chunkToYield += lines[i];
-            } else {
-              // Each new line gets a prefix, but don't add extra > for lines that already have them
-              const lineContent = lines[i].startsWith('>')
-                ? lines[i]
-                : '' + lines[i];
-              chunkToYield += '\n' + lineContent;
-            }
-          }
-          // Update line state based on whether the chunk ended with newline
-          isNewLine = reasoningChunk.endsWith('\n');
-        } else {
-          // For a chunk without newlines
-          if (isNewLine) {
-            // If we're at the start of a line, add the prefix if not already there
-            const content = reasoningChunk.startsWith('>')
-              ? reasoningChunk
-              : '' + reasoningChunk;
-            chunkToYield += content;
-            isNewLine = false;
-          } else {
-            // Continue the current line
-            chunkToYield += reasoningChunk;
-          }
-          // Update line state if this chunk ends with newline
-          if (reasoningChunk.endsWith('\n')) {
-            isNewLine = true;
-          }
-        }
+        chunkToYield += reasoningChunk;
       }
 
-      // Handle the transition from reasoning to answer
+      // Transition from reasoning to answer
       if (isInReasoningMode && !hasReasoningContent && hasRegularContent) {
         isInReasoningMode = false;
 
-        // Yield any pending reasoning content first
         if (chunkToYield.length > 0) {
           yield chunkToYield;
           chunkToYield = '';
         }
 
-        // Add the Answer header with proper spacing
-        yield '\n</think>\n```\n';
+        yield '\n\n</think>\n```\n';
       }
 
       // Process regular content
@@ -269,7 +226,7 @@ export class OpenaiChatService implements OnModuleInit {
         chunkToYield += contentText;
       }
 
-      // Yield chunks at reasonable points
+      // Yield chunks at reasonable intervals
       if (
         (chunkToYield.length >= yieldAtLength &&
           chunkToYield.slice(-1).match(/[\s,.!?]/)) ||
@@ -287,19 +244,13 @@ export class OpenaiChatService implements OnModuleInit {
 
     this.logger.log('Stream complete');
 
-    // Format the final stored message
+    // Format and store the final message
     let finalResponse = fullAiResponseText;
     if (chatConfig.model === 'deepseek-reasoner' && fullReasoningText) {
-      // Format each line with > prefix, including empty lines
-      const formattedReasoning = fullReasoningText
-        .split('\n')
-        .map((line) => `> ${line}`)
-        .join('\n');
-
-      finalResponse = `\`\`\`\n<think>\n${formattedReasoning}\n</think>\n\`\`\`\n${fullAiResponseText}`;
+      finalResponse = `\`\`\`\n<think>\n${fullReasoningText}\n</think>\n\`\`\`\n${fullAiResponseText}`;
     }
 
-    // Update the stored messages
+    // Update stored messages
     const config = this._getConfigOrThrow(chatId);
     config.messages.push({
       role: 'assistant',
