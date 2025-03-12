@@ -143,4 +143,55 @@ export class DiscordOnMessageService {
       },
     });
   }
+
+  async getActiveChatForChannel(
+    channelId: string,
+  ): Promise<AiChatDocument | null> {
+    try {
+      // First check the in-memory cache
+      if (this.allAiChatsById.has(channelId)) {
+        return this.allAiChatsById.get(channelId);
+      }
+
+      // Otherwise fetch from the database
+      const chat = await this._aiChatsService.getAiChatById(channelId);
+      if (chat) {
+        this.allAiChatsById.set(channelId, chat);
+      }
+      return chat;
+    } catch (error) {
+      this.logger.error(
+        `Error fetching active chat for channel ${channelId}: ${error}`,
+      );
+      return null;
+    }
+  }
+
+  async updateActiveChatModel(
+    channelId: string,
+    newModel: OpenAIModelType,
+  ): Promise<void> {
+    try {
+      // Find the chat document
+      const chat = await this.getActiveChatForChannel(channelId);
+      if (!chat) {
+        throw new Error('No active chat found for this channel');
+      }
+
+      // Update the model in the database
+      chat.modelName = newModel;
+      await this._aiChatsService.updateAiChat(chat);
+
+      // Update the in-memory cache
+      this.allAiChatsById.set(channelId, chat);
+
+      // Reload the chat with the new model in the OpenAI service
+      await this._openaiChatService.reloadChat(chat);
+
+      this.logger.log(`Updated model for chat ${chat.aiChatId} to ${newModel}`);
+    } catch (error) {
+      this.logger.error(`Failed to update chat model: ${error}`);
+      throw error;
+    }
+  }
 }
