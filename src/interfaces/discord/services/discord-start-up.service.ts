@@ -2,8 +2,8 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Context, ContextOf, On, Once } from 'necord';
 import { DiscordOnMessageService } from './discord-on-message.service';
 import { Client, RateLimitData } from 'discord.js';
-import { DiscordChatCommand } from '../commands/discord-chat.command';
-import { DiscordModelCommand } from '../commands/discord-model.command';
+// import { DiscordChatCommand } from '../commands/discord-chat.command';
+// import { DiscordModelCommand } from '../commands/discord-model.command';
 
 @Injectable()
 export class DiscordStartUpService implements OnModuleInit {
@@ -12,8 +12,8 @@ export class DiscordStartUpService implements OnModuleInit {
   public constructor(
     private readonly client: Client,
     private readonly _onMessageService: DiscordOnMessageService,
-    private readonly discordChatCommand: DiscordChatCommand,
-    private readonly discordModelCommand: DiscordModelCommand, // Add this line to inject the model command
+    // private readonly discordChatCommand: DiscordChatCommand,
+    // private readonly discordModelCommand: DiscordModelCommand, // Add this line to inject the model command
   ) {}
 
   async onModuleInit() {

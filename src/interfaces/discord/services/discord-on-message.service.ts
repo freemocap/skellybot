@@ -171,13 +171,14 @@ export class DiscordOnMessageService {
     channelId: string,
     newModel: OpenAIModelType,
   ): Promise<void> {
-    try {
-      // Find the chat document
-      const chat = await this.getActiveChatForChannel(channelId);
-      if (!chat) {
-        throw new Error('No active chat found for this channel');
-      }
+    // Find the chat document
+    const chat = await this.getActiveChatForChannel(channelId);
+    if (!chat) {
+      this.logger.error(`No active chat found for channel ${channelId}`);
+      throw new Error('No active chat found for this channel');
+    }
 
+    try {
       // Update the model in the database
       chat.modelName = newModel;
       await this._aiChatsService.updateAiChat(chat);
