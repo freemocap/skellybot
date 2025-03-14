@@ -98,4 +98,32 @@ export class AiChatsService {
       )
       .exec();
   }
+  async updateAiChat(aiChat: AiChatDocument): Promise<AiChatDocument> {
+    // Make sure the chat exists
+    const existingChat = await this.aiChatModel
+      .findOne({ aiChatId: aiChat.aiChatId })
+      .exec();
+    if (!existingChat) {
+      throw new Error(`AiChat with id ${aiChat.aiChatId} not found`);
+    }
+
+    // Update the document with the new values
+    return this.aiChatModel
+      .findOneAndUpdate(
+        { aiChatId: aiChat.aiChatId },
+        {
+          $set: {
+            modelName: aiChat.modelName,
+            contextInstructions: aiChat.contextInstructions,
+            contextRoute: aiChat.contextRoute,
+          },
+        },
+        { new: true },
+      )
+      .exec();
+  }
+
+  async getAiChatById(channelId: string): Promise<AiChatDocument | null> {
+    return this.aiChatModel.findOne({ aiChatId: channelId }).exec();
+  }
 }

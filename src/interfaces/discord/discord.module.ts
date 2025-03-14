@@ -23,6 +23,7 @@ import { DiscordContextPromptService } from './services/discord-context-prompt.s
 import { DiscordConfigureCategoryService } from './commands/server-config-command/discord-configure-category.service';
 import { DiscordConfigureChannelService } from './commands/server-config-command/discord-configure-channel.service';
 import { DiscordImageCommand } from './commands/discord-image.command';
+import { DiscordModelCommand } from './commands/discord-model.command';
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { DiscordImageCommand } from './commands/discord-image.command';
     DiscordPingWowCommand,
     DiscordChatCommand,
     DiscordImageCommand,
+    DiscordModelCommand,
     DiscordDeployServerCommand,
     DiscordConfigureCategoryService,
     DiscordConfigureChannelService,
