@@ -256,6 +256,18 @@ export class OpenaiChatService implements OnModuleInit {
       role: 'assistant',
       content: finalResponse,
     });
+
+    // Emit an event or return a value indicating completion
+    return {
+      complete: true,
+      messages: [...config.messages],
+    };
+  }
+
+  // Add to OpenaiChatService class
+  public getChatMessages(chatId: string) {
+    const config = this._getConfigOrThrow(chatId);
+    return [...config.messages]; // Return a copy to prevent modification
   }
 
   async reloadChat(aiChat: AiChatDocument) {
