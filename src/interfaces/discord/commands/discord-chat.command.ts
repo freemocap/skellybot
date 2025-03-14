@@ -82,7 +82,7 @@ export class DiscordChatCommand {
       );
 
       const firstThreadMessage = await thread.send(
-        `Starting new chat with initial message:\n\n> ${chatInitCommand.text}\nUsing model: ${validatedModel}`,
+        `\`\`\`New chat created.\n\nmodel: ${validatedModel}\n\ninitial message: ${chatInitCommand.text}\n\`\`\``,
       );
 
       await this._onMessageService.addActiveChat(
