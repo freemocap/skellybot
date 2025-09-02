@@ -14,7 +14,7 @@ RUN rm -rf /etc/apt/apt.conf.d/docker-clean
 
 COPY ./bin/builds/ .
 
-# Switch to non-root user
+# Create non-root user and set up directories
 RUN mkdir /home/.npm
 RUN useradd -m appuser && chown -R appuser /workspace && chown -R appuser "/home/.npm"
 
@@ -26,15 +26,15 @@ RUN --mount=type=cache,target=/var/cache/apt ./install_packages \
     python3
 
 ENV PATH=/root/.local/bin:$PATH
-COPY package-lock.json .
-COPY package.json .
+COPY --chown=appuser:appuser package-lock.json package.json ./
 RUN --mount=type=cache,target=/root/.cache npm ci
 
 USER appuser
 
-# Copy project files
-COPY . .
+# Copy project files with correct ownership
+COPY --chown=appuser:appuser . .
 
+# Build the application
 RUN npm run build
 
 ENV NODE_ENV=production
