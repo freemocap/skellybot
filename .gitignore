@@ -273,3 +273,4 @@ pyapp-latest/*
 *.dist
 *.build
 *.pyc
+/.env.deepseek
