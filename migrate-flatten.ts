@@ -1,0 +1,385 @@
+#!/usr/bin/env ts-node
+
+/**
+ * Complete migration script to flatten all nested fields across collections
+ * Usage: ts-node migrate-flatten-all.ts [verify|rollback]
+ */
+
+import * as mongoose from 'mongoose';
+import { config } from 'dotenv';
+
+// Load environment variables
+config();
+
+// Configuration
+const MONGODB_URI =
+  process.env.MONGODB_URI || 'mongodb://localhost:27017/skellybot-local';
+const BATCH_SIZE = 100;
+
+// Get command line argument
+const command = process.argv[2] || 'migrate';
+
+// Helper function to flatten context route
+function flattenContextRoute(contextRoute: any): Record<string, any> {
+  const flattened: Record<string, any> = {
+    sourceInterface: contextRoute.sourceInterface,
+    isDirectMessage: contextRoute.isDirectMessage,
+  };
+
+  for (const identifier of contextRoute.identifiers || []) {
+    switch (identifier.type) {
+      case 'server':
+        flattened.serverId = identifier.contextId;
+        flattened.serverName = identifier.contextName;
+        break;
+      case 'category':
+        flattened.categoryId = identifier.contextId;
+        flattened.categoryName = identifier.contextName;
+        break;
+      case 'channel':
+        flattened.channelId = identifier.contextId;
+        flattened.channelName = identifier.contextName;
+        break;
+      case 'thread':
+        flattened.threadId = identifier.contextId;
+        flattened.threadName = identifier.contextName;
+        break;
+      case 'direct-message':
+        flattened.channelId = identifier.contextId;
+        flattened.channelName = identifier.contextName;
+        break;
+    }
+  }
+
+  return flattened;
+}
+
+// Helper function to flatten user identifiers
+function flattenUserIdentifiers(identifiers: any): Record<string, any> {
+  const flattened: Record<string, any> = {
+    platforms: [],
+  };
+
+  // Extract Discord identifiers
+  if (identifiers?.discord) {
+    if (identifiers.discord.userId || identifiers.discord.id) {
+      flattened.discordId =
+        identifiers.discord.userId || identifiers.discord.id;
+      flattened.platforms.push('discord');
+    }
+    if (identifiers.discord.userName || identifiers.discord.username) {
+      flattened.discordUsername =
+        identifiers.discord.userName || identifiers.discord.username;
+    }
+  }
+
+  // Extract Slack identifiers
+  if (identifiers?.slack) {
+    if (identifiers.slack.userId || identifiers.slack.id) {
+      flattened.slackId = identifiers.slack.userId || identifiers.slack.id;
+      flattened.platforms.push('slack');
+    }
+    if (identifiers.slack.userName || identifiers.slack.username) {
+      flattened.slackUsername =
+        identifiers.slack.userName || identifiers.slack.username;
+    }
+  }
+
+  return flattened;
+}
+
+// Migration function for collections with ContextRoute
+async function migrateContextRouteCollection(
+  collectionName: string,
+  collection: mongoose.Collection,
+): Promise<number> {
+  console.log(`\n📦 Migrating ${collectionName} collection...`);
+
+  let processedCount = 0;
+  let hasMore = true;
+
+  while (hasMore) {
+    // Find documents that need migration
+    const documents = await collection
+      .find({ sourceInterface: { $exists: false } })
+      .limit(BATCH_SIZE)
+      .toArray();
+
+    if (documents.length === 0) {
+      hasMore = false;
+      break;
+    }
+
+    // Prepare bulk operations
+    const bulkOps = documents
+      .filter((doc) => doc.contextRoute)
+      .map((doc) => {
+        const flattened = flattenContextRoute(doc.contextRoute);
+        return {
+          updateOne: {
+            filter: { _id: doc._id },
+            update: { $set: flattened },
+          },
+        };
+      });
+
+    // Execute bulk update
+    if (bulkOps.length > 0) {
+      await collection.bulkWrite(bulkOps);
+      processedCount += bulkOps.length;
+      process.stdout.write(`\r  Migrated ${processedCount} documents...`);
+    }
+  }
+
+  console.log(`\n  ✅ Completed: ${processedCount} documents migrated`);
+  return processedCount;
+}
+
+// Migration function for Users collection
+async function migrateUsersCollection(
+  collection: mongoose.Collection,
+): Promise<number> {
+  console.log(`\n👥 Migrating users collection...`);
+
+  let processedCount = 0;
+  let hasMore = true;
+
+  while (hasMore) {
+    // Find users that need migration
+    const users = await collection
+      .find({
+        $and: [
+          { platforms: { $exists: false } },
+          { identifiers: { $exists: true } },
+        ],
+      })
+      .limit(BATCH_SIZE)
+      .toArray();
+
+    if (users.length === 0) {
+      hasMore = false;
+      break;
+    }
+
+    // Prepare bulk operations
+    const bulkOps = users
+      .filter((user) => user.identifiers)
+      .map((user) => {
+        const flattened = flattenUserIdentifiers(user.identifiers);
+        return {
+          updateOne: {
+            filter: { _id: user._id },
+            update: { $set: flattened },
+          },
+        };
+      });
+
+    // Execute bulk update
+    if (bulkOps.length > 0) {
+      await collection.bulkWrite(bulkOps);
+      processedCount += bulkOps.length;
+      process.stdout.write(`\r  Migrated ${processedCount} users...`);
+    }
+  }
+
+  console.log(`\n  ✅ Completed: ${processedCount} users migrated`);
+  return processedCount;
+}
+
+async function verifyMigration(db: mongoose.Connection): Promise<void> {
+  console.log('\n📊 Verification Results:');
+  console.log('========================');
+
+  // Check collections with ContextRoute
+  const contextRouteCollections = ['messages', 'aichats', 'couplets'];
+
+  for (const collectionName of contextRouteCollections) {
+    const collection = db.collection(collectionName);
+
+    const total = await collection.countDocuments({});
+    const migrated = await collection.countDocuments({
+      sourceInterface: { $exists: true },
+    });
+    const pending = total - migrated;
+
+    console.log(`\n${collectionName}:`);
+    console.log(`  Total:    ${total}`);
+    console.log(`  Migrated: ${migrated}`);
+    console.log(`  Pending:  ${pending}`);
+
+    if (pending > 0) {
+      console.log(`  ⚠️  ${pending} documents need migration`);
+    } else {
+      console.log(`  ✅ All documents migrated`);
+    }
+  }
+
+  // Check Users collection separately
+  const usersCollection = db.collection('users');
+  const totalUsers = await usersCollection.countDocuments({});
+  const migratedUsers = await usersCollection.countDocuments({
+    platforms: { $exists: true },
+  });
+  const pendingUsers = totalUsers - migratedUsers;
+
+  console.log(`\nusers:`);
+  console.log(`  Total:    ${totalUsers}`);
+  console.log(`  Migrated: ${migratedUsers}`);
+  console.log(`  Pending:  ${pendingUsers}`);
+
+  if (pendingUsers > 0) {
+    console.log(`  ⚠️  ${pendingUsers} users need migration`);
+  } else {
+    console.log(`  ✅ All users migrated`);
+  }
+}
+
+async function rollbackMigration(db: mongoose.Connection): Promise<void> {
+  console.log('\n⚠️  Rolling back migration...');
+
+  // Fields to remove from collections with ContextRoute
+  const contextRouteFieldsToRemove = {
+    $unset: {
+      sourceInterface: '',
+      serverId: '',
+      serverName: '',
+      categoryId: '',
+      categoryName: '',
+      channelId: '',
+      channelName: '',
+      threadId: '',
+      threadName: '',
+      isDirectMessage: '',
+    },
+  };
+
+  // Fields to remove from Users collection
+  const userFieldsToRemove = {
+    $unset: {
+      discordId: '',
+      discordUsername: '',
+      slackId: '',
+      slackUsername: '',
+      platforms: '',
+    },
+  };
+
+  // Rollback collections with ContextRoute
+  const contextRouteCollections = ['messages', 'aichats', 'couplets'];
+  for (const collectionName of contextRouteCollections) {
+    const collection = db.collection(collectionName);
+    const result = await collection.updateMany({}, contextRouteFieldsToRemove);
+    console.log(
+      `  ${collectionName}: Removed fields from ${result.modifiedCount} documents`,
+    );
+  }
+
+  // Rollback Users collection
+  const usersCollection = db.collection('users');
+  const usersResult = await usersCollection.updateMany({}, userFieldsToRemove);
+  console.log(
+    `  users: Removed fields from ${usersResult.modifiedCount} documents`,
+  );
+
+  console.log('✅ Rollback completed');
+}
+
+async function main(): Promise<void> {
+  console.log('🚀 MongoDB Complete Flattening Migration');
+  console.log('=========================================');
+  console.log(`Command: ${command}`);
+  console.log(`MongoDB URI: ${MONGODB_URI.replace(/\/\/.*@/, '//***@')}`);
+  console.log(`Collections: messages, aichats, couplets, users`);
+
+  try {
+    // Connect to MongoDB
+    console.log('\n📡 Connecting to MongoDB...');
+    await mongoose.connect(MONGODB_URI);
+    console.log('✅ Connected successfully');
+
+    const db = mongoose.connection;
+
+    switch (command) {
+      case 'verify':
+        await verifyMigration(db);
+        break;
+
+      case 'rollback':
+        const confirmRollback = process.env.CONFIRM_ROLLBACK === 'true';
+        if (!confirmRollback) {
+          console.log('\n❌ Rollback requires confirmation.');
+          console.log('   Run with CONFIRM_ROLLBACK=true to proceed');
+          break;
+        }
+        await rollbackMigration(db);
+        break;
+
+      case 'migrate':
+      default:
+        // First check current status
+        console.log('\n📊 Checking current migration status...');
+        await verifyMigration(db);
+
+        // Ask for confirmation in production
+        if (process.env.NODE_ENV === 'production') {
+          console.log('\n⚠️  WARNING: Running in production mode');
+          console.log('   Set CONFIRM_MIGRATION=true to proceed');
+
+          if (process.env.CONFIRM_MIGRATION !== 'true') {
+            console.log('❌ Migration cancelled');
+            break;
+          }
+        }
+
+        // Run migration
+        console.log('\n🔄 Starting migration...');
+        const startTime = Date.now();
+
+        // Migrate all collections
+        const messagesCount = await migrateContextRouteCollection(
+          'messages',
+          db.collection('messages'),
+        );
+        const chatsCount = await migrateContextRouteCollection(
+          'aichats',
+          db.collection('aichats'),
+        );
+        const coupletsCount = await migrateContextRouteCollection(
+          'couplets',
+          db.collection('couplets'),
+        );
+        const usersCount = await migrateUsersCollection(db.collection('users'));
+
+        const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+
+        console.log('\n✨ Migration Summary');
+        console.log('====================');
+        console.log(`  Messages migrated: ${messagesCount}`);
+        console.log(`  Chats migrated:    ${chatsCount}`);
+        console.log(`  Couplets migrated: ${coupletsCount}`);
+        console.log(`  Users migrated:    ${usersCount}`);
+        console.log(
+          `  Total documents:   ${
+            messagesCount + chatsCount + coupletsCount + usersCount
+          }`,
+        );
+        console.log(`  Duration:          ${duration}s`);
+
+        // Final verification
+        await verifyMigration(db);
+        break;
+    }
+  } catch (error) {
+    console.error('\n❌ Migration failed:', error);
+    process.exit(1);
+  } finally {
+    await mongoose.disconnect();
+    console.log('\n👋 Disconnected from MongoDB');
+  }
+}
+
+// Run the migration
+main().catch((error) => {
+  console.error('Fatal error:', error);
+  process.exit(1);
+});
