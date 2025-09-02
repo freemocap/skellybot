@@ -18,6 +18,7 @@ import { CronJobsModule } from '../core/cron-jobs/cron-jobs.module';
         '.env.discord',
         '.env.mongo',
         '.env.openai',
+        '.env.deepseek',
       ],
     }),
     ScheduleModule.forRoot(),

@@ -1,15 +1,27 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Context, ContextOf, On, Once } from 'necord';
 import { DiscordOnMessageService } from './discord-on-message.service';
-import { RateLimitData } from 'discord.js';
+import { Client, RateLimitData } from 'discord.js';
+// import { DiscordChatCommand } from '../commands/discord-chat.command';
+// import { DiscordModelCommand } from '../commands/discord-model.command';
 
 @Injectable()
-export class DiscordStartUpService {
+export class DiscordStartUpService implements OnModuleInit {
   private readonly logger = new Logger(DiscordStartUpService.name);
 
   public constructor(
+    private readonly client: Client,
     private readonly _onMessageService: DiscordOnMessageService,
+    // private readonly discordChatCommand: DiscordChatCommand,
+    // private readonly discordModelCommand: DiscordModelCommand, // Add this line to inject the model command
   ) {}
+
+  async onModuleInit() {
+    this.logger.log('DiscordStartUpService initialized');
+    this.logger.log(`DEV_GUILD_IDS: ${process.env.DEV_GUILD_IDS}`);
+    // This will ensure commands are registered at startup
+    await this._logRegisteredCommands();
+  }
 
   @Once('ready')
   public async onReady(@Context() [client]: ContextOf<'ready'>) {
@@ -20,7 +32,10 @@ export class DiscordStartUpService {
       );
     });
     this.logger.log(`Logged in as ${client.user.tag}!`);
-    this._logRegisteredCommands(client);
+
+    // Force refresh commands registration
+    this.logger.log('Refreshing command registrations...');
+    await this._logRegisteredCommands();
   }
 
   @On('warn')
@@ -35,18 +50,28 @@ export class DiscordStartUpService {
     await this._onMessageService.handleMessageCreation(message);
   }
 
-  private _logRegisteredCommands(client: ContextOf<'ready'>[0]) {
-    client.application.commands
-      .fetch()
-      .then((commands) => {
+  private async _logRegisteredCommands() {
+    try {
+      const commands = await this.client.application?.commands.fetch();
+      if (commands) {
         this.logger.log(
           `Registered commands: "${commands
             .map((cmd) => cmd.name)
             .join('", "')}"`,
         );
-      })
-      .catch((error) => {
-        this.logger.error('Error fetching registered commands:', error);
-      });
+
+        // Check if model command is registered
+        const modelCommand = commands.find((cmd) => cmd.name === 'model');
+        if (!modelCommand) {
+          this.logger.warn("'model' command is not registered with Discord!");
+        } else {
+          this.logger.log("'model' command is registered successfully.");
+        }
+      } else {
+        this.logger.warn('No commands fetched from application.');
+      }
+    } catch (error) {
+      this.logger.error(`Error fetching registered commands: ${error}`);
+    }
   }
 }
