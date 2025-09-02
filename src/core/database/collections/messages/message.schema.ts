@@ -28,11 +28,52 @@ export class Message {
   @Prop({ required: true })
   messageSentTimestamp: Date;
 
+  // Original nested structure - kept for backwards compatibility
   @Prop({ required: true, type: ContextRoute })
   contextRoute: ContextRoute;
 
+  // === 2025-09-02 - ADDED FLATTENED FIELDS FOR EASIER QUERYING ===
+
+  // Top-level source interface for quick filtering
+  @Prop({ required: true, enum: ['discord', 'slack'], index: true })
+  sourceInterface: string;
+
+  // Flattened context IDs for easy querying
+  @Prop({ required: false, index: true })
+  serverId: string;
+
+  @Prop({ required: false })
+  serverName: string;
+
+  @Prop({ required: false, index: true })
+  categoryId: string;
+
+  @Prop({ required: false })
+  categoryName: string;
+
+  @Prop({ required: false, index: true })
+  channelId: string;
+
+  @Prop({ required: false })
+  channelName: string;
+
+  @Prop({ required: false, index: true })
+  threadId: string;
+
+  @Prop({ required: false })
+  threadName: string;
+
+  @Prop({ required: false, index: true })
+  isDirectMessage: boolean;
+
+  // Compound index for common query patterns
   @Prop({ type: Object })
   metadata: Record<string, unknown>;
 }
 
 export const MessageSchema = SchemaFactory.createForClass(Message);
+
+// Add compound indexes for common query patterns
+MessageSchema.index({ speakerId: 1, serverId: 1, channelId: 1 });
+MessageSchema.index({ serverId: 1, channelId: 1, messageSentTimestamp: -1 });
+MessageSchema.index({ channelId: 1, messageSentTimestamp: -1 });

@@ -11,6 +11,7 @@ export class AiChat {
   @Prop({ required: true, unique: true })
   aiChatId: string;
 
+  // Original nested structure - kept for backwards compatibility
   @Prop({ type: ContextRoute, required: true })
   contextRoute: ContextRoute;
 
@@ -25,10 +26,45 @@ export class AiChat {
 
   @Prop({ type: [{ type: Types.ObjectId, ref: 'Couplet' }], required: true })
   couplets: Couplet[];
+
+  // === NEW FLATTENED FIELDS FOR EASIER QUERYING ===
+
+  // Top-level source interface for quick filtering
+  @Prop({ required: true, enum: ['discord', 'slack'], index: true })
+  sourceInterface: string;
+
+  // Flattened context IDs for easy querying
+  @Prop({ required: false, index: true })
+  serverId: string;
+
+  @Prop({ required: false })
+  serverName: string;
+
+  @Prop({ required: false, index: true })
+  categoryId: string;
+
+  @Prop({ required: false })
+  categoryName: string;
+
+  @Prop({ required: false, index: true })
+  channelId: string;
+
+  @Prop({ required: false })
+  channelName: string;
+
+  @Prop({ required: false, index: true })
+  threadId: string;
+
+  @Prop({ required: false })
+  threadName: string;
+
+  @Prop({ required: false, index: true })
+  isDirectMessage: boolean;
 }
 
 export const AiChatSchema = SchemaFactory.createForClass(AiChat);
 
+// Keep the existing validation
 AiChatSchema.post(
   'save',
   function (doc: AiChatDocument, next: (err?: Error) => void) {
@@ -45,3 +81,8 @@ AiChatSchema.post(
     }
   },
 );
+
+// Add compound indexes for common query patterns
+AiChatSchema.index({ ownerUser: 1, serverId: 1, channelId: 1 });
+AiChatSchema.index({ serverId: 1, channelId: 1, createdAt: -1 });
+AiChatSchema.index({ channelId: 1, createdAt: -1 });
