@@ -1,47 +1,37 @@
-# syntax=docker/dockerfile:1.2
-
-# Good base image to start from for most development
 FROM node:20.10.0-slim
-
-# Please remember, the base image we use /must be as small as possible/ for the best
-# production deployments. This is not optional.
 
 WORKDIR /workspace
 
-# The official Debian/Ubuntu Docker Image automatically removes the cache by default!
-# Removing the docker-clean file manages that issue.
-RUN rm -rf /etc/apt/apt.conf.d/docker-clean
-
-# Install system dependencies first (as root)
-RUN --mount=type=cache,target=/var/cache/apt apt-get update && apt-get install -y \
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
     dumb-init \
-    htop \
+    python3 \
     make \
     g++ \
-    python3 \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy package files first (for better layer caching)
+# Copy package files first for better caching
 COPY package*.json ./
 
-# Install npm dependencies (still as root for permissions)
-RUN --mount=type=cache,target=/root/.cache npm ci
+# Install dependencies with unsafe-perm to avoid permission issues
+RUN npm ci --unsafe-perm
 
-# Copy the rest of the application files
-COPY . .
+# Copy source code and config files
+COPY src ./src
+COPY tsconfig.json ./
+COPY tsconfig.build.json ./
+COPY nest-cli.json ./
 
-# Build the application (as root to ensure write permissions)
+# Build the application
 RUN npm run build
 
-# Verify the build output exists
-RUN ls -la /workspace/dist/ || echo "dist directory not found!"
+# Verify the build succeeded
+RUN test -f dist/main.js || (echo "Build failed - dist/main.js not found!" && ls -la dist/ && exit 1)
 
-# Create non-root user and set permissions AFTER building
+# Create non-root user for runtime
 RUN useradd -m appuser && chown -R appuser:appuser /workspace
-
-# Switch to non-root user for runtime
 USER appuser
 
 ENV NODE_ENV=production
 
-ENTRYPOINT ["/usr/bin/dumb-init", "--", "npm", "run", "start:prod"]
+ENTRYPOINT ["/usr/bin/dumb-init", "--", "node", "dist/main"]
