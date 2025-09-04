@@ -1,50 +1,43 @@
 # syntax=docker/dockerfile:1.2
 
+# Good base image to start from for most development
 FROM node:20.10.0-slim
+
+# Please remember, the base image we use /must be as small as possible/ for the best
+# production deployments. This is not optional.
 
 WORKDIR /workspace
 
-# Remove the docker-clean file to preserve apt cache
+# The official Debian/Ubuntu Docker Image automatically removes the cache by default!
+# Removing the docker-clean file manages that issue.
 RUN rm -rf /etc/apt/apt.conf.d/docker-clean
 
-# Install system dependencies
-RUN --mount=type=cache,target=/var/cache/apt apt-get update && apt-get install -y \
+COPY ./bin/builds/ .
+
+# Switch to non-root user
+RUN mkdir /home/.npm
+RUN useradd -m appuser && chown -R appuser /workspace && chown -R appuser "/home/.npm"
+
+RUN --mount=type=cache,target=/var/cache/apt ./install_packages \
     dumb-init \
     htop \
     make \
     g++ \
-    python3 \
-    && rm -rf /var/lib/apt/lists/*
+    python3
 
-# Create non-root user and set up directories
-RUN useradd -m appuser && \
-    mkdir -p /home/appuser/.npm && \
-    chown -R appuser:appuser /home/appuser/.npm && \
-    chown -R appuser:appuser /workspace
+ENV PATH=/root/.local/bin:$PATH
+COPY package-lock.json .
+COPY package.json .
+RUN --mount=type=cache,target=/root/.cache npm ci
 
-# Switch to appuser for all subsequent operations
 USER appuser
 
-# Copy package files
-COPY --chown=appuser:appuser package*.json ./
+# Copy project files
+COPY . .
 
-# Install dependencies with cache mount
-RUN --mount=type=cache,target=/home/appuser/.npm,uid=1000,gid=1000 \
-    npm ci --cache /home/appuser/.npm
+RUN npm run build
 
-# Copy source code and all project files
-COPY --chown=appuser:appuser . .
-
-# Build the NestJS application
-RUN npm run build && \
-    echo "=== Build complete, checking output ===" && \
-    ls -la && \
-    ls -la dist/ && \
-    test -f dist/main.js || (echo "ERROR: dist/main.js not found after build!" && exit 1)
-
-# Set production environment
 ENV NODE_ENV=production
 
-# Use dumb-init to handle signals properly
-ENTRYPOINT ["/usr/bin/dumb-init", "--"]
-CMD ["npm", "run", "start:prod"]
+ENTRYPOINT ["/usr/bin/dumb-init", "--", "npm", "run", "start:prod"]
+
