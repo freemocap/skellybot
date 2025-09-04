@@ -12,32 +12,36 @@ WORKDIR /workspace
 # Removing the docker-clean file manages that issue.
 RUN rm -rf /etc/apt/apt.conf.d/docker-clean
 
-COPY ./bin/builds/ .
-
-# Switch to non-root user
-RUN mkdir /home/.npm
-RUN useradd -m appuser && chown -R appuser /workspace && chown -R appuser "/home/.npm"
-
-RUN --mount=type=cache,target=/var/cache/apt ./install_packages \
+# Install system dependencies first (as root)
+RUN --mount=type=cache,target=/var/cache/apt apt-get update && apt-get install -y \
     dumb-init \
     htop \
     make \
     g++ \
-    python3
+    python3 \
+    && rm -rf /var/lib/apt/lists/*
 
-ENV PATH=/root/.local/bin:$PATH
-COPY package-lock.json .
-COPY package.json .
+# Copy package files first (for better layer caching)
+COPY package*.json ./
+
+# Install npm dependencies (still as root for permissions)
 RUN --mount=type=cache,target=/root/.cache npm ci
 
-USER appuser
-
-# Copy project files
+# Copy the rest of the application files
 COPY . .
 
+# Build the application (as root to ensure write permissions)
 RUN npm run build
+
+# Verify the build output exists
+RUN ls -la /workspace/dist/ || echo "dist directory not found!"
+
+# Create non-root user and set permissions AFTER building
+RUN useradd -m appuser && chown -R appuser:appuser /workspace
+
+# Switch to non-root user for runtime
+USER appuser
 
 ENV NODE_ENV=production
 
 ENTRYPOINT ["/usr/bin/dumb-init", "--", "npm", "run", "start:prod"]
-
