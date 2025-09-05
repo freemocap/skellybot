@@ -38,7 +38,7 @@
     "@nestjs/platform-express": "^10.0.0",
     "@nestjs/schedule": "^4.1.2",
     "@nestjs/swagger": "^7.1.17",
-    "axios": "^1.6.5",
+    "axios": "1.7.8",
     "bson": "^6.2.0",
     "bufferutil": "^4.0.8",
     "class-transformer": "^0.5.1",
@@ -58,7 +58,8 @@
     "toml": "^3.0.0",
     "uuid": "^9.0.1",
     "yaml": "^2.4.1",
-    "yml": "^1.0.0"
+    "yml": "^1.0.0",
+    "zod": "^3.24.2"
   },
   "devDependencies": {
     "@golevelup/nestjs-discovery": "^4.0.0",

@@ -1,9 +1,16 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { AttachmentBuilder, Message, TextBasedChannel } from 'discord.js';
+import {
+  AttachmentBuilder,
+  Message,
+  TextBasedChannel,
+  ThreadChannel,
+} from 'discord.js';
 import { DiscordPersistenceService } from './discord-persistence.service';
 import { DiscordContextRouteService } from './discord-context-route.service';
 import { DiscordAttachmentService } from './discord-attachment.service';
 import { OpenaiChatService } from '../../../core/ai/openai/openai-chat.service';
+import { OpenaiAnalysisService } from '../../../core/ai/openai/openai-analysis.service';
+import { DiscordThreadService } from './discord-thread.service';
 
 /**
  * Checks if the given text ends with an unclosed code block.
@@ -34,6 +41,8 @@ export class DiscordMessageService {
     private readonly _contextService: DiscordContextRouteService,
     private readonly _discordAttachmentService: DiscordAttachmentService,
     private readonly _openaiChatService: OpenaiChatService,
+    private readonly _analysisService: OpenaiAnalysisService,
+    private readonly _threadService: DiscordThreadService,
   ) {}
 
   public async respondToMessage(
@@ -222,6 +231,54 @@ export class DiscordMessageService {
         `Error in _handleResponseStream: ${error.message}`,
         error.stack,
       );
+    }
+
+    try {
+      // Only process thread summaries if we're in a thread channel and not the first exchange
+      if (discordMessage.channel instanceof ThreadChannel && !isFirstExchange) {
+        const threadChannel = discordMessage.channel as ThreadChannel;
+
+        // Check if we can rename the thread before doing expensive summary generation
+        const renameStatus = await this._threadService.canRenameThread(
+          threadChannel.id,
+        );
+
+        if (renameStatus.canRename) {
+          this.logger.debug('Can rename thread - generating summary');
+
+          // Get the complete chat history from OpenAI chat service
+          const chatMessages = this._openaiChatService.getChatMessages(
+            discordMessage.channel.id,
+          );
+
+          // Generate summary
+          const summary =
+            await this._analysisService.summarizeChat(chatMessages);
+
+          // Update thread title
+          const newThreadTitle = `${summary.emojis} ${summary.title}`;
+          await this._threadService.updateThreadTitle(
+            threadChannel,
+            newThreadTitle,
+          );
+          this.logger.debug(`Updated thread title to: ${newThreadTitle}`);
+        } else {
+          const timeRemainingSeconds = Math.ceil(
+            renameStatus.timeRemaining / 1000,
+          );
+          this.logger.debug(
+            `Skipping thread summarization due to rate limit (${timeRemainingSeconds}s remaining before next rename)`,
+          );
+        }
+      } else if (isFirstExchange) {
+        this.logger.debug('Skipping thread summarization for first exchange');
+      }
+    } catch (error) {
+      this.logger.error(
+        `Error summarizing conversation: ${error.message}`,
+        error.stack,
+      );
+      // Don't let summarization failures break the core functionality
     }
   }
 
