@@ -3,6 +3,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { OpenAiChatConfig } from './openai-chat.service';
 
 export type OpenAIModelType =
+  | 'gpt-4.1'
   | 'gpt-4o'
   | 'gpt-4o-mini'
   | 'gpt-4'
@@ -25,6 +26,16 @@ export interface ModelConfig {
 export class OpenaiConfigFactory {
   private readonly logger = new Logger(OpenaiConfigFactory.name);
   readonly modelConfigs: Record<OpenAIModelType, ModelConfig> = {
+    'gpt-4.1': {
+      maxTokens: 16384,
+      defaultTemperature: 0.7,
+      supportsStreaming: true,
+      modelFamily: 'standard',
+      parameters: {
+        temperature: 0.7,
+        max_tokens: 16384,
+      },
+    },
     'gpt-4o': {
       maxTokens: 16384,
       defaultTemperature: 0.7,

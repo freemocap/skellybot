@@ -6,6 +6,7 @@ import { AiChatDocument } from '../../database/collections/ai-chats/ai-chat.sche
 import { OpenaiConfigFactory, OpenAIModelType } from './openai-config.factory';
 
 const AVAILABLE_MODELS = [
+  'gpt-4.1',
   'gpt-4o',
   'gpt-4o-mini',
   'gpt-4',
