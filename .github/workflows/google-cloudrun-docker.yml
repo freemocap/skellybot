@@ -1,13 +1,3 @@
-# This workflow build and push a Docker container to Google Artifact Registry and deploy it on Cloud Run when a commit is pushed to the "main" branch
-#
-# Overview:
-#
-# 1. Authenticate to Google Cloud
-# 2. Authenticate Docker to Artifact Registry
-# 3. Build a docker container
-# 4. Publish it to Google Artifact Registry
-# 5. Deploy it to Cloud Run
-#
 # To configure this workflow:
 #
 # 1. Ensure the required Google Cloud APIs are enabled:
@@ -47,6 +37,8 @@ name: Build and Deploy to Cloud Run
 on:
   push:
     branches: [ "main" ]
+    paths-ignore:
+      - 'Writerside/**' #don't build if changes are only to docs
 
 env:
   PROJECT_ID: mocap-test-project # TODO: update Google Cloud project id
@@ -103,13 +95,10 @@ jobs:
       # END - Docker auth and build
       - name: Deploy to GCE
         run: |
-          gcloud compute instances stop the-bots --zone=us-central1-a
-          gcloud compute instances start the-bots --zone=us-central1-a
           gcloud compute instances stop skelly-bot-testing --zone=us-central1-a
           gcloud compute instances start skelly-bot-testing --zone=us-central1-a
 
       # If required, use the Cloud Run url output in later steps
       - name: Show Output
         run: echo ${{ steps.deploy.outputs.url }}
-
 
