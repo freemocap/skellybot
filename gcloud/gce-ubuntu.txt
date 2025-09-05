@@ -1,0 +1,19 @@
+# Same specs as your current instance but with Ubuntu
+gcloud compute instances create skellybot-ubuntu \
+    --image-family=ubuntu-2204-lts \
+    --image-project=ubuntu-os-cloud \
+    --machine-type=e2-micro \
+    --zone=us-central1-a \
+    --boot-disk-size=10GB
+
+# SSH in
+gcloud compute ssh skellybot-ubuntu --zone=us-central1-a
+
+# Install Node and run your app
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt-get install -y nodejs git
+git clone https://github.com/freemocap/skellybot
+cd skellybot
+npm install
+npm run build
+npm run start:prod

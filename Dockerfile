@@ -5,7 +5,6 @@ WORKDIR /workspace
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     dumb-init \
-    python3 \
     make \
     g++ \
     && rm -rf /var/lib/apt/lists/*
