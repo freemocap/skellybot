@@ -37,14 +37,19 @@ export class DiscordContextPromptService {
       const channelTopic =
         `CHANNEL ${channel.name} TOPIC:\n\n${channel.topic}` || '';
 
-      const channelPinnedInstructions =
-        await this._getPinnedInstructions(channel);
-
-      const categoryInstructions = await this.getCategoryInstructions(
+      const channelPinnedInstructions = await this._getPinnedInstructions(channel);
+      
+      let categoryInstructions = ''
+      try{
+      categoryInstructions = await this.getCategoryInstructions(
         server,
         channel.parent as CategoryChannel,
       );
-
+      } catch (error) {
+        this.logger.error(
+          `Failed to get category instructions with error: ${error}`,
+        )
+      }
       const serverInstructions = await this.getServerInstructions(server);
 
       return [
