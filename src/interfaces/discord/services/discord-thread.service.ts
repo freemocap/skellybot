@@ -4,6 +4,8 @@ import { EmbedBuilder, Message, ThreadChannel, userMention } from 'discord.js';
 @Injectable()
 export class DiscordThreadService {
   private readonly logger = new Logger(DiscordThreadService.name);
+  private lastThreadRenames = new Map<string, number>(); // Maps threadId -> timestamp
+  private readonly RENAME_TIMEOUT = 5 * 60 * 1000; // 5 minutes in milliseconds
 
   public async createNewThread(startingTextString: string, interaction) {
     try {
@@ -61,5 +63,54 @@ export class DiscordThreadService {
         name: '`skellybot` source code:',
         value: 'https://github.com/freemocap/skellybot',
       });
+  }
+
+  // Add to DiscordThreadService class
+  public async updateThreadTitle(thread: ThreadChannel, newTitle: string) {
+    try {
+      const threadId = thread.id;
+      const currentTime = Date.now();
+      const lastRenameTime = this.lastThreadRenames.get(threadId) || 0;
+
+      // Check if enough time has passed since the last rename
+      if (currentTime - lastRenameTime < this.RENAME_TIMEOUT) {
+        this.logger.debug(
+          `Skipping thread rename for ${threadId}: rate limit cooldown (renamed ${
+            (currentTime - lastRenameTime) / 1000
+          } seconds ago)`,
+        );
+        return false;
+      }
+
+      this.logger.debug(`Updating thread ${threadId} title to: ${newTitle}`);
+      await thread.setName(newTitle);
+
+      // Update the last rename timestamp
+      this.lastThreadRenames.set(threadId, currentTime);
+      return true;
+    } catch (error) {
+      this.logger.error(
+        `Error updating thread title: ${error.message}`,
+        error.stack,
+      );
+      return false;
+    }
+  }
+  public canRenameThread(threadId: string): {
+    canRename: boolean;
+    timeElapsed: number;
+    timeRemaining: number;
+  } {
+    const currentTime = Date.now();
+    const lastRenameTime = this.lastThreadRenames.get(threadId) || 0;
+    const timeElapsed = currentTime - lastRenameTime;
+    const timeRemaining = Math.max(0, this.RENAME_TIMEOUT - timeElapsed);
+
+    // Return an object with timing information
+    return {
+      canRename: timeElapsed >= this.RENAME_TIMEOUT,
+      timeElapsed,
+      timeRemaining,
+    };
   }
 }
