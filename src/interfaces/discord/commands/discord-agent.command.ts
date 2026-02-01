@@ -13,6 +13,8 @@ import {
 import { DiscordMessageService } from '../services/discord-message.service';
 import { DiscordThreadService } from '../services/discord-thread.service';
 import { OpenClawClientService } from '../../../core/openclaw/openclaw-client.service';
+import { DiscordAgentPermissionService } from '../services/discord-agent-permission.service';
+import { DiscordAgentThreadService } from '../services/discord-agent-thread.service';
 import { Message, TextChannel, ThreadChannel } from 'discord.js';
 
 export class InitialAgentDto {
@@ -32,6 +34,8 @@ export class DiscordAgentCommand {
     private readonly _messageService: DiscordMessageService,
     private readonly _threadService: DiscordThreadService,
     private readonly _openclawClient: OpenClawClientService,
+    private readonly _permissionService: DiscordAgentPermissionService,
+    private readonly _agentThreadService: DiscordAgentThreadService,
   ) {}
 
   @SlashCommand({
@@ -45,6 +49,16 @@ export class DiscordAgentCommand {
   ) {
     try {
       await interaction.deferReply();
+      
+      // Check permissions
+      const member = interaction.guild ? await interaction.guild.members.fetch(interaction.user.id) : undefined;
+      const permCheck = await this._permissionService.canUseAgent(interaction.user, member);
+      
+      if (!permCheck.allowed) {
+        this.logger.warn(`User ${interaction.user.tag} denied /agent access: ${permCheck.reason}`);
+        await interaction.editReply(`⛔ ${permCheck.reason}`);
+        return;
+      }
       
       if (!agentInitCommand?.text) {
         agentInitCommand = { text: 'Hello! What can you help me with?' };
@@ -60,8 +74,11 @@ export class DiscordAgentCommand {
         interaction,
       );
 
+      // Register thread with agent service
+      this._agentThreadService.registerThread(thread.id, interaction.user.id);
+
       const firstThreadMessage = await thread.send(
-        `\`\`\`✨ OpenClaw Agent Chat Created\n\nTools enabled:\n- 🔍 Web search\n- 📄 PDF reading\n- 🌐 Web scraping\n- 💻 Code execution\n- 🖼️ Image analysis\n- And more!\n\ninitial message: ${agentInitCommand.text}\n\`\`\``,
+        `\`\`\`✨ OpenClaw Agent Chat Created by ${interaction.user.tag}\n\nTools enabled:\n- 🔍 Web search\n- 📄 PDF reading\n- 🌐 Web scraping\n- 💻 Code execution\n- 🖼️ Image analysis\n- And more!\n\n🔒 Only moderators or ${interaction.user.tag} can interact with this thread.\n\ninitial message: ${agentInitCommand.text}\n\`\`\``,
       );
 
       // Send message to OpenClaw and stream response

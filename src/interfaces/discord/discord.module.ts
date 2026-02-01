@@ -26,6 +26,8 @@ import { DiscordImageCommand } from './commands/discord-image.command';
 import { DiscordModelCommand } from './commands/discord-model.command';
 import { DiscordAgentCommand } from './commands/discord-agent.command';
 import { OpenClawModule } from '../../core/openclaw/openclaw.module';
+import { DiscordAgentPermissionService } from './services/discord-agent-permission.service';
+import { DiscordAgentThreadService } from './services/discord-agent-thread.service';
 
 @Module({
   imports: [
@@ -52,6 +54,8 @@ import { OpenClawModule } from '../../core/openclaw/openclaw.module';
     DiscordPingWowCommand,
     DiscordChatCommand,
     DiscordAgentCommand,
+    DiscordAgentPermissionService,
+    DiscordAgentThreadService,
     DiscordImageCommand,
     DiscordModelCommand,
     DiscordDeployServerCommand,
