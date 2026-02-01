@@ -25,6 +25,7 @@ interface OpenClawEvent {
 export class OpenClawClientService implements OnModuleInit {
   private readonly logger = new Logger(OpenClawClientService.name);
   private ws: WebSocket | null = null;
+  private wasConnected = false; // Track if we've ever successfully connected
   private pendingRequests = new Map<string, {
     resolve: (value: any) => void;
     reject: (error: any) => void;
@@ -46,21 +47,10 @@ export class OpenClawClientService implements OnModuleInit {
 
       this.ws.on('open', () => {
         this.logger.log('Connected to OpenClaw gateway');
+        this.wasConnected = true; // Mark as successfully connected
         
-        // Send hello/connect frame
-        this.send({
-          type: 'req',
-          method: 'connect',
-          id: this.generateId(),
-          params: {
-            client: 'skellybot',
-            version: '1.0.0',
-            mode: 'agent',
-            auth: {
-              token: this.authToken,
-            },
-          },
-        });
+        // OpenClaw gateway doesn't need an initial connect message
+        // Just wait for it to send us events or respond to RPC calls
         
         resolve();
       });
@@ -75,14 +65,21 @@ export class OpenClawClientService implements OnModuleInit {
       });
 
       this.ws.on('error', (error) => {
-        this.logger.error(`WebSocket error: ${error}`);
-        reject(error);
+        this.logger.error(`WebSocket error: ${error.message || error}`);
+        if (!this.wasConnected) {
+          this.logger.warn('OpenClaw gateway not available - agent features will be disabled');
+          // Don't reject on initial connection failure - allow app to start without OpenClaw
+          resolve();
+        }
       });
 
-      this.ws.on('close', () => {
-        this.logger.warn('Disconnected from OpenClaw gateway');
-        // Attempt reconnection after delay
-        setTimeout(() => this.connect(), 5000);
+      this.ws.on('close', (code, reason) => {
+        this.logger.warn(`Disconnected from OpenClaw gateway (code: ${code}, reason: ${reason.toString()})`);
+        // Only attempt reconnection if we had successfully connected before
+        if (this.wasConnected) {
+          this.logger.log('Attempting reconnection in 5 seconds...');
+          setTimeout(() => this.connect(), 5000);
+        }
       });
     });
   }
@@ -120,9 +117,20 @@ export class OpenClawClientService implements OnModuleInit {
   }
 
   /**
+   * Check if OpenClaw is connected
+   */
+  isConnected(): boolean {
+    return this.ws !== null && this.ws.readyState === WebSocket.OPEN;
+  }
+
+  /**
    * Send an RPC request and wait for response
    */
   private async rpc(method: string, params?: any): Promise<any> {
+    if (!this.isConnected()) {
+      throw new Error('OpenClaw gateway not connected');
+    }
+    
     const id = this.generateId();
     
     return new Promise((resolve, reject) => {

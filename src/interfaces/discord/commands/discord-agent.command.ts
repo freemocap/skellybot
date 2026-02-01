@@ -42,6 +42,7 @@ export class DiscordAgentCommand {
     name: 'agent',
     description:
       'Opens a thread with OpenClaw AI (tools enabled: web search, PDFs, etc)',
+    guilds: process.env.DEV_GUILD_IDS?.split(',').filter(Boolean),
   })
   public async onSlashAgentCommand(
     @Context() [interaction]: SlashCommandContext,
@@ -49,6 +50,12 @@ export class DiscordAgentCommand {
   ) {
     try {
       await interaction.deferReply();
+      
+      // Check if OpenClaw is available
+      if (!this._openclawClient.isConnected()) {
+        await interaction.editReply('⚠️ OpenClaw gateway is not available. Agent features are currently disabled.');
+        return;
+      }
       
       // Get user permission level (for AI tool restrictions)
       const member = interaction.guild ? await interaction.guild.members.fetch(interaction.user.id) : undefined;
@@ -125,6 +132,12 @@ export class DiscordAgentCommand {
   ) {
     await interaction.deferReply();
     try {
+      // Check if OpenClaw is available
+      if (!this._openclawClient.isConnected()) {
+        await interaction.editReply('⚠️ OpenClaw gateway is not available. Agent features are currently disabled.');
+        return;
+      }
+      
       // Get user permission level
       const member = interaction.guild ? await interaction.guild.members.fetch(interaction.user.id) : undefined;
       const userPermissions = this._permissionService.getUserPermissionLevel(interaction.user, member);
