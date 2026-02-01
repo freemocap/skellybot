@@ -24,6 +24,8 @@ import { DiscordConfigureCategoryService } from './commands/server-config-comman
 import { DiscordConfigureChannelService } from './commands/server-config-command/discord-configure-channel.service';
 import { DiscordImageCommand } from './commands/discord-image.command';
 import { DiscordModelCommand } from './commands/discord-model.command';
+import { DiscordAgentCommand } from './commands/discord-agent.command';
+import { OpenClawModule } from '../../core/openclaw/openclaw.module';
 
 @Module({
   imports: [
@@ -37,6 +39,7 @@ import { DiscordModelCommand } from './commands/discord-model.command';
     CoupletsModule,
     MessagesModule,
     OpenaiModule,
+    OpenClawModule,
   ],
   providers: [
     DiscordOnMessageService,
@@ -48,6 +51,7 @@ import { DiscordModelCommand } from './commands/discord-model.command';
     DiscordPersistenceService,
     DiscordPingWowCommand,
     DiscordChatCommand,
+    DiscordAgentCommand,
     DiscordImageCommand,
     DiscordModelCommand,
     DiscordDeployServerCommand,
