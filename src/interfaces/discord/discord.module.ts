@@ -16,6 +16,7 @@ import { OpenaiModule } from '../../core/ai/openai/openai.module';
 import { DiscordAttachmentService } from './services/discord-attachment.service';
 import { DiscordOnMessageService } from './services/discord-on-message.service';
 import { DiscordChatCommand } from './commands/discord-chat.command';
+import { DiscordAgentCommand } from './commands/discord-agent.command';
 import { DiscordDeployServerCommand } from './commands/server-config-command/discord-deploy-server-command.service';
 import { DiscordThreadService } from './services/discord-thread.service';
 import { DiscordServerConfigService } from './commands/server-config-command/discord-server-configuration.service';
@@ -48,6 +49,7 @@ import { DiscordModelCommand } from './commands/discord-model.command';
     DiscordPersistenceService,
     DiscordPingWowCommand,
     DiscordChatCommand,
+    DiscordAgentCommand,
     DiscordImageCommand,
     DiscordModelCommand,
     DiscordDeployServerCommand,

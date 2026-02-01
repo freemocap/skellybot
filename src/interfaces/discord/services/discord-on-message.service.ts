@@ -6,66 +6,57 @@ import { DiscordMessageService } from './discord-message.service';
 import { AiChatDocument } from '../../../core/database/collections/ai-chats/ai-chat.schema';
 import { DiscordContextRouteService } from './discord-context-route.service';
 import { UsersService } from '../../../core/database/collections/users/users.service';
-import {
-  //OpenAiChatConfig,
-  OpenaiChatService,
-} from '../../../core/ai/openai/openai-chat.service';
+import { OpenaiChatService } from '../../../core/ai/openai/openai-chat.service';
+import { OpenaiAgentService } from '../../../core/ai/openai/openai-agent.service';
 import { DiscordContextPromptService } from './discord-context-prompt.service';
-import {
-  OpenAIModelType,
-  OpenaiConfigFactory,
-} from '../../../core/ai/openai/openai-config.factory';
+import { OpenAIModelType, OpenaiConfigFactory } from '../../../core/ai/openai/openai-config.factory';
 
 @Injectable()
 export class DiscordOnMessageService {
   private activeChats = new Set<string>();
+  private activeAgents = new Set<string>();
   private allAiChatsById = new Map<string, AiChatDocument>();
   private readonly logger = new Logger(DiscordOnMessageService.name);
 
   public constructor(
-    private readonly _aiChatsService: AiChatsService,
-    private readonly _messageService: DiscordMessageService,
-    private readonly _contextRouteService: DiscordContextRouteService,
-    private readonly _contextPromptService: DiscordContextPromptService,
-    private readonly _usersService: UsersService,
-    private readonly _openaiChatService: OpenaiChatService,
-    private readonly _configFactory: OpenaiConfigFactory,
+    private readonly aiChatsService: AiChatsService,
+    private readonly messageService: DiscordMessageService,
+    private readonly contextRouteService: DiscordContextRouteService,
+    private readonly contextPromptService: DiscordContextPromptService,
+    private readonly usersService: UsersService,
+    private readonly openaiChatService: OpenaiChatService,
+    private readonly openaiAgentService: OpenaiAgentService,
+    private readonly configFactory: OpenaiConfigFactory,
   ) {}
 
-  public async addActiveChat(message: Message, llmModel?: string) {
+  public async addActiveChat(message: Message, llmModel?: string, isAgent: boolean = false) {
     try {
       const aiChatId = message.channel.id;
 
-      // Check if chat exists and handle gracefully
       if (this.activeChats.has(aiChatId)) {
-        this.logger.warn(
-          `Chat ${aiChatId} already exists in active chats - skipping creation`,
-        );
+        this.logger.warn('Chat already exists in active chats');
         return;
       }
 
       const modelName = llmModel || 'gpt-4o';
-      this.logger.debug(
-        `Adding threadId ${message.channel.id} to active chats with model: ${modelName}`,
-      );
+      this.logger.debug('Adding chat with model: ' + modelName + ' (isAgent: ' + isAgent + ')');
 
       const ownerUser = await this._getOwnerUser(message);
-      const contextRoute = this._contextRouteService.getContextRoute(message);
-      const contextPrompt =
-        await this._contextPromptService.getContextPromptFromMessage(message);
+      const contextRoute = this.contextRouteService.getContextRoute(message);
+      const contextPrompt = await this.contextPromptService.getContextPromptFromMessage(message);
 
-      // Get validated config from factory
-      const baseConfig = this._configFactory.getConfigForModel(
-        modelName as OpenAIModelType,
-      );
-      const validatedConfig = this._configFactory.validateConfig(baseConfig);
+      if (isAgent) {
+        this.openaiAgentService.createAgent(aiChatId, contextPrompt, []);
+        this.activeAgents.add(aiChatId);
+        this.logger.debug(`✓ Created agent for channel ${aiChatId}`);
+      } else {
+        const baseConfig = this.configFactory.getConfigForModel(modelName as OpenAIModelType);
+        const validatedConfig = this.configFactory.validateConfig(baseConfig);
+        this.openaiChatService.createChat(aiChatId, contextPrompt, validatedConfig);
+        this.logger.debug(`✓ Created chat for channel ${aiChatId}`);
+      }
 
-      this._openaiChatService.createChat(
-        aiChatId,
-        contextPrompt,
-        validatedConfig,
-      );
-      const aiChatDocument = await this._aiChatsService.createAiChat({
+      const aiChatDocument = await this.aiChatsService.createAiChat({
         aiChatId,
         ownerUser,
         contextRoute,
@@ -74,11 +65,10 @@ export class DiscordOnMessageService {
         modelName,
       });
 
-      this.logger.debug(`Adding threadId ${aiChatId} to active listeners`);
       this.allAiChatsById.set(aiChatId, aiChatDocument);
       this.activeChats.add(aiChatId);
     } catch (error) {
-      this.logger.error(`Error in addActiveChat: ${error}`);
+      this.logger.error('Error in addActiveChat: ' + String(error));
       throw error;
     }
   }
@@ -88,41 +78,42 @@ export class DiscordOnMessageService {
       return false;
     }
     const botId = message.client.user.id;
-
-    return (
-      message.channel instanceof ThreadChannel &&
-      message.channel.ownerId === botId
-    );
+    return message.channel instanceof ThreadChannel && message.channel.ownerId === botId;
   }
 
   public async handleMessageCreation(message: Message<boolean>) {
     if (!this._shouldRespondToMessage(message)) {
       return;
     }
-    this.logger.debug(`Handling creation of message ${message.id}`);
+    this.logger.debug('Handling message creation');
     if (!this.activeChats.has(message.channel.id)) {
       await this._reloadChatFromDatabase(message);
     }
-    await this._messageService.respondToMessage(
+    
+    // Check if this is an agent or regular chat
+    const isAgent = this.activeAgents.has(message.channel.id);
+    this.logger.debug(`Message in channel ${message.channel.id} - isAgent: ${isAgent}`);
+    
+    await this.messageService.respondToMessage(
       message,
       message,
       message.author.id,
+      false,
+      undefined,
+      isAgent, // Pass the isAgent flag!
     );
   }
 
   private async _reloadChatFromDatabase(message: Message<boolean>) {
-    this.logger.log(
-      `Loading chatbot for threadId: ${message.channel.id} from database`,
-    );
+    this.logger.log('Loading chat from database');
     const ownerUser = await this._getOwnerUser(message);
     const populateCouplets = true;
-    const aiChat = await this._aiChatsService.getOrCreateAiChat(
+    const aiChat = await this.aiChatsService.getOrCreateAiChat(
       {
         aiChatId: message.channel.id,
         ownerUser,
-        contextRoute: this._contextRouteService.getContextRoute(message),
-        contextInstructions:
-          await this._contextPromptService.getContextPromptFromMessage(message),
+        contextRoute: this.contextRouteService.getContextRoute(message),
+        contextInstructions: await this.contextPromptService.getContextPromptFromMessage(message),
         couplets: [],
         modelName: 'gpt-4o',
       },
@@ -130,11 +121,18 @@ export class DiscordOnMessageService {
     );
     this.allAiChatsById.set(aiChat.aiChatId, aiChat);
 
-    await this._openaiChatService.reloadChat(aiChat);
+    const isAgent = this.activeAgents.has(aiChat.aiChatId);
+    this.logger.debug(`Reloaded chat ${aiChat.aiChatId} - isAgent: ${isAgent}`);
+    
+    if (isAgent) {
+      await this.openaiAgentService.reloadAgent(aiChat);
+    } else {
+      await this.openaiChatService.reloadChat(aiChat);
+    }
   }
 
   private async _getOwnerUser(message: Message<boolean>) {
-    return await this._usersService.getOrCreateUser({
+    return await this.usersService.getOrCreateUser({
       identifiers: {
         discord: {
           id: message.author.id,
@@ -144,54 +142,45 @@ export class DiscordOnMessageService {
     });
   }
 
-  async getActiveChatForChannel(
-    channelId: string,
-  ): Promise<AiChatDocument | null> {
+  async getActiveChatForChannel(channelId: string): Promise<AiChatDocument | null> {
     try {
-      // First check the in-memory cache
       if (this.allAiChatsById.has(channelId)) {
         return this.allAiChatsById.get(channelId);
       }
 
-      // Otherwise fetch from the database
-      const chat = await this._aiChatsService.getAiChatById(channelId);
+      const chat = await this.aiChatsService.getAiChatById(channelId);
       if (chat) {
         this.allAiChatsById.set(channelId, chat);
       }
       return chat;
     } catch (error) {
-      this.logger.error(
-        `Error fetching active chat for channel ${channelId}: ${error}`,
-      );
+      this.logger.error('Error fetching active chat: ' + String(error));
       return null;
     }
   }
 
-  async updateActiveChatModel(
-    channelId: string,
-    newModel: OpenAIModelType,
-  ): Promise<void> {
-    // Find the chat document
+  async updateActiveChatModel(channelId: string, newModel: OpenAIModelType): Promise<void> {
     const chat = await this.getActiveChatForChannel(channelId);
     if (!chat) {
-      this.logger.error(`No active chat found for channel ${channelId}`);
+      this.logger.error('No active chat found');
       throw new Error('No active chat found for this channel');
     }
 
     try {
-      // Update the model in the database
       chat.modelName = newModel;
-      await this._aiChatsService.updateAiChat(chat);
-
-      // Update the in-memory cache
+      await this.aiChatsService.updateAiChat(chat);
       this.allAiChatsById.set(channelId, chat);
 
-      // Reload the chat with the new model in the OpenAI service
-      await this._openaiChatService.reloadChat(chat);
+      const isAgent = this.activeAgents.has(channelId);
+      if (isAgent) {
+        await this.openaiAgentService.reloadAgent(chat);
+      } else {
+        await this.openaiChatService.reloadChat(chat);
+      }
 
-      this.logger.log(`Updated model for chat ${chat.aiChatId} to ${newModel}`);
+      this.logger.log('Updated model for chat');
     } catch (error) {
-      this.logger.error(`Failed to update chat model: ${error}`);
+      this.logger.error('Failed to update chat model: ' + String(error));
       throw error;
     }
   }

@@ -4,29 +4,54 @@ import { DiscordPersistenceService } from './discord-persistence.service';
 import { DiscordContextRouteService } from './discord-context-route.service';
 import { DiscordAttachmentService } from './discord-attachment.service';
 import { OpenaiChatService } from '../../../core/ai/openai/openai-chat.service';
+import { OpenaiAgentService } from '../../../core/ai/openai/openai-agent.service';
 
-/**
- * Checks if the given text ends with an unclosed code block.
- * @param text The text to check
- * @returns True if the text ends with an unclosed code block, false otherwise
- */
 function hasUnclosedCodeBlock(text: string): boolean {
   const codeBlockPattern = /```/g;
   let match;
   let codeBlockCount = 0;
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   while ((match = codeBlockPattern.exec(text)) !== null) {
     codeBlockCount++;
   }
 
-  // A code block is unclosed if the count of ```  is odd
   return codeBlockCount % 2 !== 0;
+}
+
+function suppressUrlPreviews(text: string): string {
+  // Wrap URLs in angle brackets to prevent Discord from showing previews
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  return text.replace(urlRegex, '<$1>');
+}
+
+function tryParseStructuredResponse(text: string): { summary: string; details: string; type: string; rawData?: any } | null {
+  try {
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) return null;
+    
+    const parsed = JSON.parse(jsonMatch[0]);
+    
+    if (parsed.summary && parsed.details && parsed.type) {
+      return parsed;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function formatStructuredResponse(structured: { summary: string; details: string; type: string }): string {
+  const suppressedSummary = suppressUrlPreviews(structured.summary);
+  const suppressedDetails = suppressUrlPreviews(structured.details);
+  return `\`\`
+${suppressedSummary}
+\`\`\`\n\n${suppressedDetails}`;
 }
 
 @Injectable()
 export class DiscordMessageService {
-  private readonly maxMessageLength = 2000 * 0.85; // discord max message length is 2000 characters (and * 0.85 to be safe)
+  private readonly maxMessageLength = 2000 * 0.85;
+  private readonly maxSummaryLength = 1900;
   private readonly logger = new Logger(DiscordMessageService.name);
 
   constructor(
@@ -34,6 +59,7 @@ export class DiscordMessageService {
     private readonly _contextService: DiscordContextRouteService,
     private readonly _discordAttachmentService: DiscordAttachmentService,
     private readonly _openaiChatService: OpenaiChatService,
+    private readonly _openaiAgentService: OpenaiAgentService,
   ) {}
 
   public async respondToMessage(
@@ -42,6 +68,7 @@ export class DiscordMessageService {
     humanUserId: string,
     isFirstExchange: boolean = false,
     textToRespondTo?: string,
+    isAgent: boolean = false,
   ) {
     await discordMessage.channel.sendTyping();
     this.logger.log(`Responding to message id ${discordMessage.id}`);
@@ -74,6 +101,7 @@ export class DiscordMessageService {
         discordMessage,
         isFirstExchange,
         respondToChannelOrMessage,
+        isAgent,
       );
     } catch (error) {
       this.logger.error(
@@ -98,7 +126,6 @@ export class DiscordMessageService {
     }
 
     if (messageParts.length > 1) {
-      // Send the rest of the message parts as replies to the first message
       for (const textChunk of messageParts.slice(1)) {
         replyMessages.push(
           await replyMessages[replyMessages.length - 1].reply(textChunk),
@@ -133,17 +160,22 @@ export class DiscordMessageService {
     discordMessage: Message<boolean>,
     isFirstExchange: boolean = false,
     respondToChannelOrMessage: Message<boolean> | TextBasedChannel,
+    isAgent: boolean = false,
   ) {
     this.logger.debug(
-      `Handling response stream for message id ${discordMessage.id}`,
+      `Handling response stream for message id ${discordMessage.id} (isAgent: ${isAgent})`,
     );
     try {
-      const aiResponseStream = this._openaiChatService.getAiResponseStream(
-        discordMessage.channel.id,
-        inputMessageText + attachmentText,
-        imageURLs,
-      );
-      const maxMessageLength = 2000 * 0.9; // discord max message length is 2000 characters (and *0.9 to be safe)
+      const aiResponseStream = isAgent
+        ? this._openaiAgentService.getAgentResponseStream(
+            discordMessage.channel.id,
+            inputMessageText + attachmentText,
+          )
+        : this._openaiChatService.getAiResponseStream(
+            discordMessage.channel.id,
+            inputMessageText + attachmentText,
+            imageURLs,
+          );
 
       let currentReplyMessage: Message<boolean>;
       if (respondToChannelOrMessage instanceof Message) {
@@ -157,6 +189,7 @@ export class DiscordMessageService {
 
       let currentReplyMessageText = '';
       let fullAiTextResponse = '';
+      
       for await (const incomingTextChunk of aiResponseStream) {
         if (!incomingTextChunk) {
           continue;
@@ -164,19 +197,17 @@ export class DiscordMessageService {
         fullAiTextResponse += incomingTextChunk;
         const inCodeBlock = hasUnclosedCodeBlock(fullAiTextResponse);
 
-        // If the proposed text is less than the max message length, just add it to the current text
         if (
           currentReplyMessageText.length + incomingTextChunk.length <
-          maxMessageLength
+          this.maxMessageLength
         ) {
           currentReplyMessageText += incomingTextChunk;
           let replyMessageToSend = currentReplyMessageText;
           if (inCodeBlock) {
             replyMessageToSend += '\n```\n';
           }
-          await currentReplyMessage.edit(replyMessageToSend);
+          await currentReplyMessage.edit(suppressUrlPreviews(replyMessageToSend));
         } else {
-          // Otherwise, split the message and start a new one
           this.logger.debug(
             'Reply message too long, splitting into multiple messages',
           );
@@ -184,7 +215,7 @@ export class DiscordMessageService {
             -50,
           )}'...\n\n`;
           if (inCodeBlock) {
-            continuingFromString += '```\n';
+            continuingFromString += '\n```\n';
           }
 
           replyMessages.push(
@@ -192,7 +223,7 @@ export class DiscordMessageService {
           );
           currentReplyMessage = replyMessages[replyMessages.length - 1];
           currentReplyMessageText = continuingFromString + incomingTextChunk;
-          await currentReplyMessage.edit(currentReplyMessageText);
+          await currentReplyMessage.edit(suppressUrlPreviews(currentReplyMessageText));
         }
       }
 
@@ -200,13 +231,38 @@ export class DiscordMessageService {
         `Stream done! Full Ai response: \n\n${fullAiTextResponse}`,
       );
 
-      if (replyMessages.length > 1) {
+      const structured = tryParseStructuredResponse(fullAiTextResponse);
+      
+      if (structured) {
+        this.logger.debug('Parsed structured response from agent');
+        
+        const formattedResponse = formatStructuredResponse(structured);
+        
+        const messageParts = this._getChunks(formattedResponse, this.maxMessageLength);
+        await replyMessages[0].edit(messageParts[0]);
+        
+        if (messageParts.length > 1) {
+          for (const textChunk of messageParts.slice(1)) {
+            replyMessages.push(
+              await replyMessages[replyMessages.length - 1].reply(textChunk),
+            );
+          }
+        }
+        
+        const formattedJson = JSON.stringify(structured, null, 2);
+        await this._sendFullResponseAsAttachment(
+          formattedJson,
+          discordMessage.id,
+          replyMessages[replyMessages.length - 1],
+        );
+      } else if (replyMessages.length > 1) {
         await this._sendFullResponseAsAttachment(
           fullAiTextResponse,
           discordMessage.id,
           replyMessages[replyMessages.length - 1],
         );
       }
+
       await this._persistenceService.persistInteraction(
         humanUserId,
         discordMessage.channel.id,
@@ -251,10 +307,10 @@ export class DiscordMessageService {
         if (attachment.contentType.split('/')[0] == 'image') {
           imageURLs.push(
             await this._discordAttachmentService.getImageDataFromURL(
-              attachment.url, //.split('?')[0]
+              attachment.url,
             ),
           );
-          this.logger.debug('pushed img url to attachmentURLs');
+          this.logger.debug('pushed img url');
           continue;
         }
         if (!attachmentText) {
@@ -298,11 +354,8 @@ export class DiscordMessageService {
     replyMessage: Message<boolean>,
   ) {
     const attachment = new AttachmentBuilder(Buffer.from(fullAiResponse), {
-      name: `full_response_to_discordMessageId_${discordMessageId}.md`,
-      description:
-        'The full Ai response to message ID:${discordMessage.id}, ' +
-        'which was split across multiple messages so is being sent as an' +
-        ' attachment for convenience.',
+      name: `response_${discordMessageId}.md`,
+      description: `Full AI response`,
     });
     await replyMessage.edit({
       content: replyMessage.content,
