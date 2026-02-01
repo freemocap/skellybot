@@ -1,234 +1,234 @@
-# Agent Thread Permissions & Security
+# Agent Tool Access Controls
 
-## Problem
+## Philosophy
 
-When using `/agent` in public Discord servers, you need to prevent random users from:
-- Hijacking your agent sessions
-- Accessing your context/memory
-- Polluting the conversation with unwanted messages
+**Anyone can use `/agent`**, but **tool access depends on Discord permissions:**
 
-## Solution
+- **Regular users**: Read-only AI (web search, fetch, analysis) ✅
+- **Moderators**: Full tool access (can edit files, run code) ✅  
+- **Admins (allowlist)**: Full tool access everywhere ✅
 
-The `/agent` command now has built-in permission controls:
+## How It Works
 
-### Default Behavior
+When you use `/agent`, the bot checks your Discord role and passes permission context to the AI:
 
-**Who can create `/agent` threads:**
-- Server moderators (anyone with MANAGE_MESSAGES or ADMINISTRATOR permissions)
-- Users in the allowlist (configured per-bot)
-- Anyone in DMs (if enabled)
+```
+[SYSTEM: User Permission Context]
+User is REGULAR USER - Tool restrictions apply:
+- ⛔ NO file write/edit operations (read-only)
+- ⛔ NO code execution or installs
+- ✅ Web search, fetch, and read operations OK
+- ✅ Analysis and information tasks OK
+User: JohnDoe#1234 (Regular User)
+[END SYSTEM CONTEXT]
 
-**Who can interact with existing threads:**
-- The thread owner (person who created it)
-- Server moderators
-- Users in the allowlist
-
-### How It Works
-
-1. **When `/agent` is run:**
-   - Check if user has mod permissions OR is in allowlist
-   - If no: Deny with message explaining why
-   - If yes: Create thread and register ownership
-
-2. **When someone messages in an agent thread:**
-   - Check if they're the owner OR a mod
-   - If no: Reply with permission error, ignore message
-   - If yes: Send message to OpenClaw
-
-3. **Session isolation:**
-   - Each thread = isolated OpenClaw session
-   - Sessions keyed by thread ID: `discord:agent:{threadId}`
-   - No cross-contamination between threads
-
-## Configuration
-
-### Option 1: Add Your User ID to Allowlist
-
-Edit `discord-agent-permission.service.ts`:
-
-```typescript
-private config: AgentAccessConfig = {
-  requireModPermissions: true,
-  allowInDMs: true,
-  allowedUserIds: ['YOUR_DISCORD_USER_ID_HERE'], // <-- Add yours!
-};
+User message: Can you search for AI news?
 ```
 
-**To find your Discord user ID:**
-1. Enable Developer Mode in Discord (Settings → Advanced → Developer Mode)
-2. Right-click your name → Copy ID
-
-### Option 2: Require Specific Roles
-
-```typescript
-private config: AgentAccessConfig = {
-  requireModPermissions: false, // Turn off mod requirement
-  requiredRoleNames: ['Agent User', 'Trusted'], // Require one of these roles
-  allowInDMs: true,
-};
-```
-
-### Option 3: Mod-Only (Most Secure)
-
-```typescript
-private config: AgentAccessConfig = {
-  requireModPermissions: true, // Only mods can use
-  allowInDMs: false, // Disable DMs entirely
-};
-```
-
-### Option 4: Open Access (Not Recommended for Public Servers)
-
-```typescript
-private config: AgentAccessConfig = {
-  requireModPermissions: false,
-  allowInDMs: true,
-  // No restrictions - anyone can use /agent
-};
-```
+**The AI reads this and restricts itself accordingly.**
 
 ## What Users See
 
-### When Denied Permission:
+### Regular User Creates Thread:
 
 ```
-⛔ You need moderator permissions to use /agent in this server
+✨ OpenClaw Agent Chat Created
 
-Only moderators or the thread owner can interact with agent threads.
-```
-
-### When Thread is Created:
-
-```
-✨ OpenClaw Agent Chat Created by YourUsername#1234
-
-Tools enabled:
+📖 Read-Only Tool Access:
 - 🔍 Web search
 - 📄 PDF reading
 - 🌐 Web scraping
-- 💻 Code execution
 - 🖼️ Image analysis
-- And more!
+- ⛔ File operations: Admin only
+- ⛔ Code execution: Admin only
 
-🔒 Only moderators or YourUsername#1234 can interact with this thread.
+User: JohnDoe#1234 (Regular User)
 
 initial message: Hello!
 ```
 
-### When Non-Mod Tries to Message:
+### Admin/Mod Creates Thread:
 
 ```
-⛔ You need moderator permissions to use /agent in this server
+✨ OpenClaw Agent Chat Created
 
-Only moderators or the thread owner can interact with agent threads.
+✅ Full Tool Access (Admin/Mod):
+- 🔍 Web search
+- 📄 PDF reading
+- 🌐 Web scraping
+- 💻 Code execution
+- 📝 File operations
+- 🖼️ Image analysis
+
+User: AdminUser#5678 (Admin)
+
+initial message: Hello!
 ```
+
+## Configuration
+
+Edit `src/interfaces/discord/services/discord-agent-permission.service.ts`:
+
+```typescript
+private config: AgentAccessConfig = {
+  requireModPermissions: false, // Allow anyone to use
+  allowInDMs: true,
+  allowedUserIds: [
+    'YOUR_DISCORD_USER_ID', // Add yours for full access everywhere
+  ],
+};
+```
+
+**To find your Discord User ID:**
+1. Enable Developer Mode (Settings → Advanced)
+2. Right-click your name → Copy ID
+
+## Permission Levels
+
+### Regular User
+- ✅ Can create `/agent` threads
+- ✅ Web search, fetch, scraping
+- ✅ PDF reading, image analysis
+- ✅ Information and analysis tasks
+- ⛔ NO file write/edit
+- ⛔ NO code execution
+- ⛔ NO installs
+
+### Moderator (MANAGE_MESSAGES or ADMINISTRATOR)
+- ✅ Everything regular users can do
+- ✅ File operations (read, write, edit)
+- ✅ Code execution
+- ✅ Install packages/tools
+
+### Admin (Allowlist)
+- ✅ Full access in all servers
+- ✅ Same as moderator, but portable
+
+## AI Tool Restrictions
+
+The AI enforces these rules **itself** based on the permission context:
+
+**Regular user asks:**  
+"Can you edit this file?"
+
+**AI responds:**  
+"I can't edit files for regular users. You need moderator permissions for file operations. I can help you with web search, analysis, or read-only tasks though!"
+
+**Admin asks:**  
+"Can you edit this file?"
+
+**AI responds:**  
+*[Edits the file]*  
+"Done! Updated the file as requested."
 
 ## Security Features
 
-✅ **Permission checks on every message** - Not just thread creation  
-✅ **Thread ownership tracking** - Owner always has access  
-✅ **Mod override** - Mods can help in any thread  
-✅ **Session isolation** - Each thread = separate OpenClaw session  
-✅ **Allowlist support** - Trusted users across all servers  
-✅ **DM control** - Enable/disable private messages  
+✅ **Permission context on every message** - Not just thread creation  
+✅ **AI self-enforcement** - The AI knows its boundaries  
+✅ **Clear user feedback** - Users know what tools they have access to  
+✅ **Configurable per server** - Mods determined by Discord roles  
+✅ **Admin allowlist** - Trusted users get full access everywhere  
 
-## Advanced: Dynamic Configuration
+## Testing
 
-Want to let server admins configure this?
+### Test as Regular User:
+
+1. Use `/agent` in a server where you're NOT a mod
+2. See "Read-Only Tool Access" message
+3. Ask: "Can you edit a file?" → Should refuse
+4. Ask: "Can you search for X?" → Should work
+
+### Test as Mod:
+
+1. Use `/agent` in a server where you ARE a mod
+2. See "Full Tool Access" message
+3. Ask: "Can you edit a file?" → Should work
+4. Ask: "Can you search for X?" → Should work
+
+### Test as Admin (Allowlist):
+
+1. Add your user ID to allowlist
+2. Use `/agent` anywhere
+3. Should have full access in all servers
+
+## Advanced: Per-Server Configuration
+
+Want different rules per server? Store config in database:
 
 ```typescript
-// In a server config command:
-@SlashCommand({
-  name: 'agent-config',
-  description: 'Configure agent permissions',
-})
-async onAgentConfig(@Context() [interaction]: SlashCommandContext) {
-  // Check if user is admin
-  if (!interaction.memberPermissions.has(PermissionsBitField.Flags.Administrator)) {
-    await interaction.reply('⛔ Admin only');
-    return;
+async getUserPermissionLevel(user: User, member?: GuildMember) {
+  // Load server-specific config
+  const serverConfig = await this.loadServerConfig(member?.guild.id);
+  
+  // Apply server rules
+  if (serverConfig.allowedRoles?.includes(member.roles.highest.id)) {
+    return { canUseFileTools: true, ... };
   }
-
-  // Update config
-  this._permissionService.updateConfig({
-    requireModPermissions: true,
-    requiredRoleNames: ['Agent Access'],
-  });
-
-  await interaction.reply('✅ Agent permissions updated!');
+  
+  // Fall back to defaults
+  ...
 }
 ```
+
+## FAQ
+
+**Q: Can regular users see admin files?**  
+A: No! File `read` is also restricted. They can only web search, fetch public URLs, analyze images.
+
+**Q: Can users escalate permissions?**  
+A: No. Permission context is injected by the bot based on Discord roles, not user input.
+
+**Q: What if someone asks the AI to ignore restrictions?**  
+A: The AI is instructed to refuse. If it doesn't, that's a bug - report it!
+
+**Q: Can I make certain channels admin-only?**  
+A: Yes! Use Discord's channel permissions to restrict who can post in those channels.
+
+**Q: What about DMs?**  
+A: DM users are treated as regular users unless they're in the admin allowlist.
+
+## Example Conversations
+
+### Regular User in Public Server:
+
+**User:** "/agent text:Can you help me organize my workspace?"
+
+**Bot:** [Creates thread with Read-Only Tool Access message]
+
+**User:** "Can you create a folder called 'projects'?"
+
+**AI:** "I can't create folders for regular users - file operations require moderator permissions. However, I can help you plan your folder structure and provide commands you can run yourself!"
+
+### Admin in Any Server:
+
+**User:** "/agent text:Organize my workspace"
+
+**Bot:** [Creates thread with Full Tool Access message]
+
+**User:** "Create a folder called 'projects'"
+
+**AI:** "Creating folder..."  
+*[Creates folder]*  
+"Done! Created `projects/` directory."
 
 ## Logging
 
 All permission checks are logged:
 
 ```
-[DiscordAgentPermissionService] User JohnDoe#1234 allowed via allowlist
-[DiscordAgentPermissionService] User BadActor#5678 denied /agent access: You need moderator permissions
+[DiscordAgentPermissionService] getUserPermissionLevel: User JohnDoe#1234 - Regular User (no file tools)
+[DiscordAgentPermissionService] getUserPermissionLevel: User AdminUser#5678 - Admin (full access)
+[DiscordAgentThreadService] Registered agent thread 123456 for user 789012 (Regular User)
 ```
 
-Monitor logs to see who's trying to access agents.
-
-## Testing
-
-### Test Permission Checks:
-
-1. **As non-mod** in public server → Should be denied
-2. **As mod** in public server → Should work
-3. **As allowlist user** → Should work everywhere
-4. **In DMs** → Should work (if enabled)
-
-### Test Thread Isolation:
-
-1. Create two `/agent` threads
-2. Talk about different topics in each
-3. Verify they don't cross-contaminate
-
-### Test Thread Ownership:
-
-1. User A creates `/agent` thread
-2. User B (non-mod) tries to message in it → Should be denied
-3. User A messages in it → Should work
-
-## Cleanup
-
-Old threads are tracked in memory. To clean up:
-
-```typescript
-// In a cron job or scheduled task:
-this._agentThreadService.cleanupOldThreads(24); // Remove threads older than 24h
-```
-
-## Next Steps
-
-1. **Set your user ID** in the allowlist
-2. **Deploy** to GCP
-3. **Test** in a public server
-4. **Monitor logs** for permission denials
-5. **Adjust config** as needed
-
-## FAQ
-
-**Q: Can I have different configs per server?**  
-A: Yes! Store config in database keyed by guild ID, load on command execution.
-
-**Q: What if I want some users to have read-only access?**  
-A: Possible! Add a `canViewOnly` permission that allows reading but not sending.
-
-**Q: Can thread owners revoke their own thread?**  
-A: Add a `/agent-close` command that removes thread from active tracking.
-
-**Q: What about rate limiting?**  
-A: Add rate limiting per user in `handleThreadMessage()` using a Map<userId, lastMessageTime>.
+Monitor logs to see what permission levels are being assigned.
 
 ## Summary
 
-- ✅ Mod-only by default (secure for public servers)
-- ✅ Allowlist for trusted users
-- ✅ Thread ownership enforced
-- ✅ Every message checked
-- ✅ Session isolation guaranteed
-- ✅ Configurable per your needs
+- ✅ **Open access**: Anyone can use `/agent`
+- ✅ **Smart restrictions**: AI knows what it can/can't do based on role
+- ✅ **Clear feedback**: Users see their tool access level upfront
+- ✅ **Configurable**: Allowlist for trusted users, mods auto-detected
+- ✅ **Secure**: Permissions enforced by bot + AI, not user input
 
-You're safe to use `/agent` in public servers now! 🎉
+**Safe for public servers!** Regular users get helpful AI without file system access. 🎉

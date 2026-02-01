@@ -50,15 +50,9 @@ export class DiscordAgentCommand {
     try {
       await interaction.deferReply();
       
-      // Check permissions
+      // Get user permission level (for AI tool restrictions)
       const member = interaction.guild ? await interaction.guild.members.fetch(interaction.user.id) : undefined;
-      const permCheck = await this._permissionService.canUseAgent(interaction.user, member);
-      
-      if (!permCheck.allowed) {
-        this.logger.warn(`User ${interaction.user.tag} denied /agent access: ${permCheck.reason}`);
-        await interaction.editReply(`⛔ ${permCheck.reason}`);
-        return;
-      }
+      const userPermissions = this._permissionService.getUserPermissionLevel(interaction.user, member);
       
       if (!agentInitCommand?.text) {
         agentInitCommand = { text: 'Hello! What can you help me with?' };
@@ -75,11 +69,37 @@ export class DiscordAgentCommand {
       );
 
       // Register thread with agent service
-      this._agentThreadService.registerThread(thread.id, interaction.user.id);
+      const permissionSummary = userPermissions.isAdmin ? 'Admin' : 
+                               userPermissions.isModerator ? 'Moderator' : 
+                               'Regular User';
+      this._agentThreadService.registerThread(thread.id, interaction.user.id, permissionSummary);
 
-      const firstThreadMessage = await thread.send(
-        `\`\`\`✨ OpenClaw Agent Chat Created by ${interaction.user.tag}\n\nTools enabled:\n- 🔍 Web search\n- 📄 PDF reading\n- 🌐 Web scraping\n- 💻 Code execution\n- 🖼️ Image analysis\n- And more!\n\n🔒 Only moderators or ${interaction.user.tag} can interact with this thread.\n\ninitial message: ${agentInitCommand.text}\n\`\`\``,
-      );
+      // Build capability message based on permissions
+      let capabilityMessage = '✨ OpenClaw Agent Chat Created\n\n';
+      
+      if (userPermissions.canUseFileTools) {
+        capabilityMessage += '✅ Full Tool Access (Admin/Mod):\n';
+        capabilityMessage += '- 🔍 Web search\n';
+        capabilityMessage += '- 📄 PDF reading\n';
+        capabilityMessage += '- 🌐 Web scraping\n';
+        capabilityMessage += '- 💻 Code execution\n';
+        capabilityMessage += '- 📝 File operations\n';
+        capabilityMessage += '- 🖼️ Image analysis\n';
+      } else {
+        capabilityMessage += '📖 Read-Only Tool Access:\n';
+        capabilityMessage += '- 🔍 Web search\n';
+        capabilityMessage += '- 📄 PDF reading\n';
+        capabilityMessage += '- 🌐 Web scraping\n';
+        capabilityMessage += '- 🖼️ Image analysis\n';
+        capabilityMessage += '- ⛔ File operations: Admin only\n';
+        capabilityMessage += '- ⛔ Code execution: Admin only\n';
+      }
+      
+      capabilityMessage += `\nUser: ${interaction.user.tag} (${permissionSummary})\n`;
+      capabilityMessage += `\ninitial message: ${agentInitCommand.text}`;
+
+      const firstThreadMessage = await thread.send(`\`\`\`${capabilityMessage}\`\`\``);
+
 
       // Send message to OpenClaw and stream response
       await this.handleAgentResponse(
@@ -87,6 +107,7 @@ export class DiscordAgentCommand {
         firstThreadMessage,
         agentInitCommand.text,
         interaction.user.id,
+        userPermissions,
       );
       
     } catch (error) {
@@ -104,6 +125,10 @@ export class DiscordAgentCommand {
   ) {
     await interaction.deferReply();
     try {
+      // Get user permission level
+      const member = interaction.guild ? await interaction.guild.members.fetch(interaction.user.id) : undefined;
+      const userPermissions = this._permissionService.getUserPermissionLevel(interaction.user, member);
+
       const { humanInputText, attachmentText } =
         await this._messageService.extractMessageContent(message);
 
@@ -115,6 +140,12 @@ export class DiscordAgentCommand {
         humanInputText + attachmentText,
         interaction,
       );
+
+      // Register thread
+      const permissionSummary = userPermissions.isAdmin ? 'Admin' : 
+                               userPermissions.isModerator ? 'Moderator' : 
+                               'Regular User';
+      this._agentThreadService.registerThread(thread.id, interaction.user.id, permissionSummary);
 
       const firstMessageContent = `✨ Starting OpenClaw agent chat with:\n\n> ${
         humanInputText + attachmentText
@@ -132,6 +163,7 @@ export class DiscordAgentCommand {
         firstThreadMessage,
         humanInputText + attachmentText,
         interaction.user.id,
+        userPermissions,
       );
       
     } catch (error) {
@@ -148,6 +180,7 @@ export class DiscordAgentCommand {
     triggerMessage: Message,
     userMessage: string,
     userId: string,
+    userPermissions: any,
   ): Promise<void> {
     try {
       await thread.sendTyping();
@@ -205,10 +238,15 @@ export class DiscordAgentCommand {
         },
       );
 
-      // Send message to OpenClaw
+      // Build permission context for AI
+      const permissionContext = this.buildPermissionContext(userPermissions);
+
+      // Send message to OpenClaw with permission metadata
+      const messageWithContext = `${permissionContext}\n\nUser message: ${userMessage}`;
+
       await this._openclawClient.sendMessage({
         sessionKey,
-        message: userMessage,
+        message: messageWithContext,
         agentId: 'main',
       });
 
@@ -216,5 +254,31 @@ export class DiscordAgentCommand {
       this.logger.error(`Error in handleAgentResponse: ${error}`);
       await thread.send(`❌ Error communicating with OpenClaw: ${error.message}`);
     }
+  }
+
+  /**
+   * Build permission context string for AI
+   */
+  private buildPermissionContext(permissions: any): string {
+    const lines = [
+      '[SYSTEM: User Permission Context]',
+    ];
+
+    if (permissions.isAdmin) {
+      lines.push('User is ADMIN - Full tool access granted');
+    } else if (permissions.isModerator) {
+      lines.push('User is MODERATOR - Full tool access granted');
+    } else {
+      lines.push('User is REGULAR USER - Tool restrictions apply:');
+      lines.push('- ⛔ NO file write/edit operations (read-only)');
+      lines.push('- ⛔ NO code execution or installs');
+      lines.push('- ✅ Web search, fetch, and read operations OK');
+      lines.push('- ✅ Analysis and information tasks OK');
+    }
+
+    lines.push(`User: ${permissions.displayName}`);
+    lines.push('[END SYSTEM CONTEXT]');
+
+    return lines.join('\n');
   }
 }

@@ -10,6 +10,7 @@ interface AgentThreadMetadata {
   ownerId: string;
   sessionKey: string;
   createdAt: Date;
+  initialUserPermissions: string; // Stored for logging
 }
 
 @Injectable()
@@ -30,7 +31,7 @@ export class DiscordAgentThreadService implements OnModuleInit {
   /**
    * Register a new agent thread
    */
-  registerThread(threadId: string, ownerId: string): string {
+  registerThread(threadId: string, ownerId: string, userPermissions: string): string {
     const sessionKey = `discord:agent:${threadId}`;
     
     this.activeThreads.set(threadId, {
@@ -38,9 +39,10 @@ export class DiscordAgentThreadService implements OnModuleInit {
       ownerId,
       sessionKey,
       createdAt: new Date(),
+      initialUserPermissions: userPermissions,
     });
 
-    this.logger.log(`Registered agent thread ${threadId} for user ${ownerId}`);
+    this.logger.log(`Registered agent thread ${threadId} for user ${ownerId} (${userPermissions})`);
     return sessionKey;
   }
 
@@ -107,15 +109,22 @@ export class DiscordAgentThreadService implements OnModuleInit {
         return; // Empty message
       }
 
+      // Get user permission level
+      const userPermissions = this._permissionService.getUserPermissionLevel(
+        message.author,
+        member ?? undefined,
+      );
+
       // Show typing indicator
       await thread.sendTyping();
 
-      // Send to OpenClaw and handle streaming response
+      // Send to OpenClaw with permission context
       await this.handleThreadMessage(
         thread,
         metadata.sessionKey,
         fullMessage,
         message.author.id,
+        userPermissions,
       );
 
     } catch (error) {
@@ -132,6 +141,7 @@ export class DiscordAgentThreadService implements OnModuleInit {
     sessionKey: string,
     userMessage: string,
     userId: string,
+    userPermissions: any,
   ): Promise<void> {
     try {
       let responseText = '';
@@ -176,10 +186,15 @@ export class DiscordAgentThreadService implements OnModuleInit {
         },
       );
 
-      // Send to OpenClaw
+      // Build permission context for AI
+      const permissionContext = this.buildPermissionContext(userPermissions);
+
+      // Send to OpenClaw with permission metadata prepended
+      const messageWithContext = `${permissionContext}\n\nUser message: ${userMessage}`;
+
       await this._openclawClient.sendMessage({
         sessionKey,
-        message: userMessage,
+        message: messageWithContext,
         agentId: 'main',
       });
 
@@ -187,6 +202,32 @@ export class DiscordAgentThreadService implements OnModuleInit {
       this.logger.error(`Error in handleThreadMessage: ${error}`);
       await thread.send(`❌ Error communicating with OpenClaw: ${error.message}`);
     }
+  }
+
+  /**
+   * Build permission context string for AI
+   */
+  private buildPermissionContext(permissions: any): string {
+    const lines = [
+      '[SYSTEM: User Permission Context]',
+    ];
+
+    if (permissions.isAdmin) {
+      lines.push('User is ADMIN - Full tool access granted');
+    } else if (permissions.isModerator) {
+      lines.push('User is MODERATOR - Full tool access granted');
+    } else {
+      lines.push('User is REGULAR USER - Tool restrictions apply:');
+      lines.push('- ⛔ NO file write/edit operations (read-only)');
+      lines.push('- ⛔ NO code execution or installs');
+      lines.push('- ✅ Web search, fetch, and read operations OK');
+      lines.push('- ✅ Analysis and information tasks OK');
+    }
+
+    lines.push(`User: ${permissions.displayName}`);
+    lines.push('[END SYSTEM CONTEXT]');
+
+    return lines.join('\n');
   }
 
   /**

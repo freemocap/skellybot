@@ -15,15 +15,23 @@ export interface AgentAccessConfig {
   allowInDMs?: boolean;
 }
 
+export interface UserPermissionLevel {
+  isAdmin: boolean;
+  isModerator: boolean;
+  canUseFileTools: boolean;
+  canExecuteCode: boolean;
+  displayName: string;
+}
+
 @Injectable()
 export class DiscordAgentPermissionService {
   private readonly logger = new Logger(DiscordAgentPermissionService.name);
 
-  // Default config: Only mods and specific users can use /agent
+  // Default config: Anyone can use /agent, but tool access restricted by permissions
   private config: AgentAccessConfig = {
-    requireModPermissions: true,
+    requireModPermissions: false, // Allow anyone to use
     allowInDMs: true,
-    allowedUserIds: [], // Add your user ID here
+    allowedUserIds: [], // Add admin user IDs here for full tool access
   };
 
   /**
@@ -107,5 +115,36 @@ export class DiscordAgentPermissionService {
    */
   getConfig(): AgentAccessConfig {
     return { ...this.config };
+  }
+
+  /**
+   * Get permission level for a user (for AI tool restrictions)
+   */
+  getUserPermissionLevel(
+    user: User,
+    member?: GuildMember,
+  ): UserPermissionLevel {
+    // Check if user is in admin allowlist
+    const isAdmin = this.config.allowedUserIds?.includes(user.id) || false;
+
+    // Check if user has mod/admin permissions in server
+    let isModerator = false;
+    if (member) {
+      isModerator = 
+        member.permissions.has(PermissionsBitField.Flags.ManageMessages) ||
+        member.permissions.has(PermissionsBitField.Flags.Administrator);
+    }
+
+    // Admins and mods can use file tools
+    const canUseFileTools = isAdmin || isModerator;
+    const canExecuteCode = isAdmin || isModerator;
+
+    return {
+      isAdmin,
+      isModerator,
+      canUseFileTools,
+      canExecuteCode,
+      displayName: member ? `${user.tag} (${member.roles.highest.name})` : user.tag,
+    };
   }
 }
