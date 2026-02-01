@@ -1,6 +1,6 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Context, ContextOf, On } from 'necord';
-import { Message, ThreadChannel } from 'discord.js';
+import { Message, ThreadChannel, TextBasedChannel } from 'discord.js';
 import { OpenClawClientService } from '../../../core/openclaw/openclaw-client.service';
 import { DiscordAgentPermissionService } from './discord-agent-permission.service';
 import { DiscordMessageService } from './discord-message.service';
@@ -179,7 +179,7 @@ export class DiscordAgentThreadService implements OnModuleInit {
             if (!responseMessage) {
               responseMessage = await thread.send(responseText || '✅ Done');
             } else {
-              await this._messageService.sendChunkedMessage(thread, responseText);
+              await this._messageService.sendChunkedMessage(thread as TextBasedChannel, responseText);
               await responseMessage.delete();
             }
           }
