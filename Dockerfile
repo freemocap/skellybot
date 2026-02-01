@@ -36,12 +36,23 @@ RUN npm run build
 # Verify the build output exists
 RUN ls -la /workspace/dist/ || echo "dist directory not found!"
 
+# Install OpenClaw globally for AI agent capabilities
+RUN npm install -g openclaw
+
 # Create non-root user and set permissions AFTER building
 RUN useradd -m appuser && chown -R appuser:appuser /workspace
+
+# Create OpenClaw config directory for appuser
+RUN mkdir -p /home/appuser/.openclaw && chown -R appuser:appuser /home/appuser/.openclaw
+
+# Copy startup script
+COPY start-with-openclaw.sh /usr/local/bin/start-with-openclaw.sh
+RUN chmod +x /usr/local/bin/start-with-openclaw.sh && chown appuser:appuser /usr/local/bin/start-with-openclaw.sh
 
 # Switch to non-root user for runtime
 USER appuser
 
 ENV NODE_ENV=production
+ENV HOME=/home/appuser
 
-ENTRYPOINT ["/usr/bin/dumb-init", "--", "npm", "run", "start:prod"]
+ENTRYPOINT ["/usr/bin/dumb-init", "--", "/usr/local/bin/start-with-openclaw.sh"]

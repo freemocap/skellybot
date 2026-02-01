@@ -12,34 +12,52 @@ A new `/agent` command in SkellyBot that gives you **full OpenClaw AI + tools**:
 ✅ Code execution  
 ✅ Memory  
 
-## Setup (2 minutes)
+## How It Works
 
-### 1. Add OpenClaw config to .env
+OpenClaw runs **inside the same Docker container** as SkellyBot:
+- Auto-starts when container starts
+- Communicates via localhost (no network config needed)
+- Auth token auto-configured
+- Runs as same user (appuser)
+
+## Setup for GCP Deployment
+
+### 1. Just push to GitHub!
+
+```bash
+# Commit your changes
+git add .
+git commit -m "Add OpenClaw integration"
+git push origin jon/openclaw
+
+# GitHub Actions will:
+# 1. Build Docker image with OpenClaw
+# 2. Push to Artifact Registry
+# 3. Restart GCE VM (pulls new image)
+```
+
+### 2. Test in Discord
+
+Once deployed:
+```
+/agent text:"What's the latest AI news?"
+```
+
+## Local Development Setup
+
+If testing locally (not on GCP):
 
 ```bash
 cd /home/skelly/.openclaw/workspace/skellybot
 
-# Add these lines to your .env file:
-echo "OPENCLAW_GATEWAY_URL=ws://192.168.1.219:18789" >> .env
-echo "OPENCLAW_AUTH_TOKEN=478a4d3fc35f3c88a34a945852b7c6f1b6c89e849828afd1" >> .env
-```
+# Add to .env:
+echo "OPENCLAW_GATEWAY_URL=ws://localhost:18789" >> .env
 
-### 2. Install dependencies (if not already)
-
-```bash
+# Install dependencies
 npm install
-```
 
-### 3. Start SkellyBot
-
-```bash
-npm run start:dev
-```
-
-### 4. Test in Discord
-
-```
-/agent text:"What's the latest AI news?"
+# Start (runs both SkellyBot + OpenClaw)
+./start-with-openclaw.sh
 ```
 
 ## That's It!
