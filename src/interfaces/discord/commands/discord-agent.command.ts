@@ -15,7 +15,7 @@ import { DiscordThreadService } from '../services/discord-thread.service';
 import { OpenClawClientService } from '../../../core/openclaw/openclaw-client.service';
 import { DiscordAgentPermissionService } from '../services/discord-agent-permission.service';
 import { DiscordAgentThreadService } from '../services/discord-agent-thread.service';
-import { Message, TextChannel, ThreadChannel } from 'discord.js';
+import { Message, TextChannel, ThreadChannel, TextBasedChannel } from 'discord.js';
 
 export class InitialAgentDto {
   @StringOption({
@@ -152,7 +152,7 @@ export class DiscordAgentCommand {
       }`;
 
       const firstThreadMessages = await this._messageService.sendChunkedMessage(
-        thread,
+        thread as TextBasedChannel,
         firstMessageContent,
       );
 
@@ -231,7 +231,7 @@ export class DiscordAgentCommand {
               responseMessage = await thread.send(responseText || '✅ Done');
             } else {
               // Final update with full text (chunked if needed)
-              await this._messageService.sendChunkedMessage(thread, responseText);
+              await this._messageService.sendChunkedMessage(thread as TextBasedChannel, responseText);
               await responseMessage.delete();
             }
           }
